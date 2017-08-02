@@ -13,7 +13,14 @@ handlers:
   
 - url: /fonts
   static_dir: fonts
+
+- url: /update_all_channels
+  script: update_channels.app
+  login: admin
   
+- url: /task_update_channel
+  login: admin
+  script: tasks.task_update_channel.app
 
 - url: /.*
   script: hello.app
