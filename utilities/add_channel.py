@@ -20,6 +20,8 @@ def add(channel_id):
     channel.channel_name = 'Channel Name'
     channel.channel_link = 'https://www.youtube.com/'
     channel.last_update_date = last_update_date   
+    videos = []
+    channel.videos = str(videos)
     
     # Put in db
     channel.put()

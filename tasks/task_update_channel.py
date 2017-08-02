@@ -46,38 +46,40 @@ class taskUpdateChannel(webapp2.RequestHandler):
                 
                 logging.info('Getting RSS feed - {}'.format(channel_id))
                 
-                # Update channel name and link
-                channel.channel_name = d.feed.title
-                channel.channel_link = d.feed.link
+                if 'title' in d.feed:
                 
-                videos = []
-                
-                # Loop through all videos/posts
-                for post in d.entries:
-
-                    video = {}
+                    # Update channel name and link
+                    channel.channel_name = d.feed.title
+                    channel.channel_link = d.feed.link
                     
-                    video['title'] = post.title
-                    video['link'] = post.link
-                    video['author'] = d.feed.title
+                    videos = []
                     
-                    post_date = parse(post.published)
-                    post_date = post_date.strftime('%Y-%m-%d %H:%M:%S')
-                    video['post_date'] = post_date
+                    # Loop through all videos/posts
+                    for post in d.entries:
+    
+                        video = {}
+                        
+                        video['title'] = post.title
+                        video['link'] = post.link
+                        video['author'] = d.feed.title
+                        
+                        post_date = parse(post.published)
+                        post_date = post_date.strftime('%Y-%m-%d %H:%M:%S')
+                        video['post_date'] = post_date
+                    
+                        videos.append(video)
                 
-                    videos.append(video)
-            
-                # Convert list to string for ds save    
-                channel.videos = str(videos)
-                
-                # Update last_update_date
-                last_update_date = datetime.now()
-                channel.last_update_date = last_update_date 
-                
-                # Commit to ds
-                channel.put()
-                
-                logging.info('Channel update complete! {}'.format(channel_id))
+                    # Convert list to string for ds save    
+                    channel.videos = str(videos)
+                    
+                    # Update last_update_date
+                    last_update_date = datetime.now()
+                    channel.last_update_date = last_update_date 
+                    
+                    # Commit to ds
+                    channel.put()
+                    
+                    logging.info('Channel update complete! {}'.format(channel_id))
                 
             except Exception as e:
                 logging.exception('Exception caught - {}'.format(e))  

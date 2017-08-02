@@ -21,20 +21,24 @@ def post(subs_channel_list):
         logging.info('Aggregating channel {}'.format(channel_id))
         
         key = ndb.Key(Channel, channel_id)
-        channel = key.get()        
+        channel = key.get() 
         
-        videos_list = channel.videos
+        if channel:
         
-        lit_eval = ast.literal_eval(videos_list)
-        
-        for video in lit_eval:
+            videos_list = channel.videos
             
-            subs_videos.append(video)
+            lit_eval = ast.literal_eval(videos_list)
+            
+            for video in lit_eval:
+                
+                subs_videos.append(video)
             
         
     ordered_subs_video = sorted(subs_videos, key=itemgetter('post_date') , reverse=True) 
     
-    dump = ordered_subs_video
+    small_list = ordered_subs_video[:10]
+    
+    dump = small_list
     dump = pprint.pformat(dump, indent=4)    
     
     return dump
