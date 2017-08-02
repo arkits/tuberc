@@ -44,6 +44,8 @@ class taskUpdateChannel(webapp2.RequestHandler):
                 # Parse RSS Feed
                 d = feedparser.parse(feedurl)
                 
+                logging.info('Getting RSS feed - {}'.format(channel_id))
+                
                 # Update channel name and link
                 channel.channel_name = d.feed.title
                 channel.channel_link = d.feed.link
@@ -74,6 +76,8 @@ class taskUpdateChannel(webapp2.RequestHandler):
                 
                 # Commit to ds
                 channel.put()
+                
+                logging.info('Channel update complete! {}'.format(channel_id))
                 
             except Exception as e:
                 logging.exception('Exception caught - {}'.format(e))  

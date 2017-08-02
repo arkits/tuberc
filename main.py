@@ -13,7 +13,9 @@ from lib import feedparser
 import pprint
 from operator import itemgetter
 import jinja2
-import add_channel
+
+
+from utilities import add_channel
 
 decorator = OAuth2DecoratorFromClientSecrets(os.path.join(os.path.dirname(__file__), 'tuberc.json'),  'https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/plus.login')
 service = build('youtube', 'v3')
