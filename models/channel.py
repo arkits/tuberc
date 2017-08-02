@@ -18,3 +18,20 @@ class Channel(ndb.Model):
     
     # Videos
     videos = ndb.TextProperty()
+    
+    @classmethod
+    def query_all(cls):
+        
+        """
+        Queries the Channel Datastore table and returns a list of all the users.
+
+        Args:
+            cls (Channel):          Class that will be queried.
+
+        Returns:
+            query_result (list):    List of the Channel found.
+        """
+        
+        query_result = cls.query().order(-cls.last_update_date)
+
+        return query_result    

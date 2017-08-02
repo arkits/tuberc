@@ -12,36 +12,30 @@ import logging
     
 class EnqueueTaskHandler(webapp2.RequestHandler):
     
-    def post(self):
-
-        # Receives a POST from DirectoryUpdateStarter class.
-        # Adds a task to the taskqueue begin the directory update process. Triggers /directory_update
-        # Returns a task_response (json):
-                
-        # Create a task to initiate the directory_update
+    def post(self, channel_id):
         
         task_response = taskqueue.add(
             queue_name='update-channel',
             url='/task_update_channel',
-            params={})
+            params={
+            'channel_id':channel_id
+            })
         
         return task_response
 
 
 class updateAllChannels(webapp2.RequestHandler):
 
-    
     def get(self):
-        
-        # Is triggered by a CRON job. Send a POST to EnqueueTaskHandler to the directory update task. 
-        # Returns: response (response.status): A value of 204 to indicate success
            
+        all_channels = Channel.query_all()
         
-        logging.info('Queing task a channel update task from updateAllChannels')
-        
-        handler = EnqueueTaskHandler()
-        task_response = handler.post()
-        
+        for channel in all_channels:
+            
+            channel_id = channel.channel_id
+            logging.info('Queing task a channel update task from updateAllChannels - {}'.format(channel_id))
+            handler = EnqueueTaskHandler()
+            task_response = handler.post(channel_id)
 
 app = webapp2.WSGIApplication([
     ('/update_all_channels', updateAllChannels),

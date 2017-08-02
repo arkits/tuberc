@@ -24,6 +24,8 @@ def add(channel_id):
     # Put in db
     channel.put()
     
+    logging.info('Channel added! - {}'.format(channel_id))
+    
 def add_channel_list(channel_list):
     
     for channel_id in channel_list:

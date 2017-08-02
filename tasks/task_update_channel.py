@@ -12,16 +12,11 @@ import logging
 
 class taskUpdateChannel(webapp2.RequestHandler):
 
-
     def post(self):
+        
+        channel_id = self.request.get('channel_id')
 
-        # Is triggered by a CRON job. Send a POST to EnqueueTaskHandler to the directory update task. 
-        # Returns: response (response.status): A value of 204 to indicate success
-
-
-        logging.info('Yolo from task_update_channel!')
-
-
+        logging.info('Yolo from task_update_channel - {}'.format(channel_id))
 
 
 app = webapp2.WSGIApplication([
