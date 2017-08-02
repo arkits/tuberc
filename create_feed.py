@@ -39,7 +39,7 @@ def post(subs_channel_list):
     small_list = ordered_subs_video[:10]
     
     dump = small_list
-    dump = pprint.pformat(dump, indent=4)    
+    #dump = pprint.pformat(dump, indent=4)    
     
     return dump
     
