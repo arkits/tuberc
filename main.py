@@ -14,6 +14,8 @@ import pprint
 from operator import itemgetter
 import jinja2
 
+import create_feed
+
 
 from utilities import add_channel
 
@@ -101,10 +103,10 @@ class MainPage(webapp2.RequestHandler):
             
             subs_channel_list = ["UCxt9Pvye-9x_AIcb1UtmF1Q", "UCdJdEguB1F1CiYe7OEi3SBg", "UCWCw2Sd7RlYJ2yuNVHDWNOA", "UCZDA1kA3y3EIg25BpcHSpwQ", "UCVYamHliCI9rw1tHR1xbkfw"]
             
-            add_channel.add_channel_list(subs_channel_list)
+            #add_channel.add_channel_list(subs_channel_list)
                 
 
-            dump = 'Wassup!'
+            dump = create_feed.post(subs_channel_list)
         
             template = template_env.get_template('/www/index.html')
             
