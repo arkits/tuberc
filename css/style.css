@@ -1,0 +1,19 @@
+/* Custom Stylesheet */
+
+.icon-block {
+  padding: 0 15px;
+}
+.icon-block .material-icons {
+	font-size: inherit;
+}
+
+  body {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+    background-color: #F5F5F5;
+  }
+
+  main {
+    flex: 1 0 auto;
+  }

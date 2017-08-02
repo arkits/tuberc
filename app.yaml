@@ -4,8 +4,22 @@ threadsafe: false
 
 
 handlers:
+
+- url: /css
+  static_dir: css
+
+- url: /js
+  static_dir: js
+  
+- url: /fonts
+  static_dir: fonts
+  
+
 - url: /.*
   script: hello.app
+  login: admin
+  
+
   
 
 libraries:

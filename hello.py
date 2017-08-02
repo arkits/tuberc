@@ -10,10 +10,15 @@ import time
 from datetime import datetime
 from dateutil.parser import parse 
 from lib import feedparser
+import pprint
 from operator import itemgetter
+import jinja2
 
 decorator = OAuth2DecoratorFromClientSecrets(os.path.join(os.path.dirname(__file__), 'tuberc.json'),  'https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/plus.login')
 service = build('youtube', 'v3')
+
+# Set jinja Environment
+template_env= jinja2.Environment(loader=jinja2.FileSystemLoader(os.getcwd()))
 
 
 def get_user_info():
@@ -86,8 +91,6 @@ class MainPage(webapp2.RequestHandler):
         if decorator.has_credentials():
             
             
-            self.response.headers["Content-Type"] = "text/html"
-            self.response.write("<h1> I'M IN BOIS! </h1>")
             
             start = time.time()
            
@@ -127,24 +130,40 @@ class MainPage(webapp2.RequestHandler):
                     logging.info('exception caught {}'.format(e))
                     
             
-            
             ordered_subs_video = sorted(subs_videos, key=itemgetter('post_date') , reverse=True) 
             
+            dump = ordered_subs_video
+            dump = pprint.pformat(dump, indent=4)
+        
+        
+        
+            template = template_env.get_template('/www/index.html')
             
+            content = {
+            'dump':dump
+            }
             
-            dump = json.dumps(ordered_subs_video)
-            
-            self.response.write(dump)
+            self.response.out.write(template.render(content)) 
             
             print "Elapsed Time: %s" % (time.time() - start)
             
-         
+    
                              
         else:
+            
+            # Get URL
             url = decorator.authorize_url()
-            self.response.headers["Content-Type"] = "text/html"
-            self.response.write("<h1> Sign in karle bsdk... :( </h1>")
-            self.response.write("<a href=" + url +">Click here to login</a>")
+            
+            # Set the template
+            template = template_env.get_template('/www/login.html')
+            
+            # Setup Content
+            content = {
+                'url':url
+                }
+            
+            # Render
+            self.response.out.write(template.render(content)) 
 
 routes = [('/', MainPage),  (decorator.callback_path, decorator.callback_handler())]
 
