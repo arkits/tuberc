@@ -7,7 +7,9 @@ from models.tuberuser import Tuberuser
 from google.appengine.ext import ndb
 from google.appengine.api import users
 import logging
-
+from oauth2client.contrib.appengine import OAuth2DecoratorFromClientSecrets
+from apiclient.discovery import build
+import httplib2
         
 def add(user):
     
@@ -34,6 +36,8 @@ def add(user):
         
     else:
         logging.info('I should update this user - {}'.format(user_email))
+        #tuberuser = get_user(user_id)
+        #refresh_sub_channels(tuberuser)
 
 
 def check_by_user_id(user_id):
@@ -55,7 +59,47 @@ def get_user(user_id):
     tuberuser = key.get()
     return tuberuser
 
-        
-        
+
+def refresh_sub_channels(tuberuser):
     
+    decorator = OAuth2DecoratorFromClientSecrets(os.path.join(os.path.dirname(__file__), 'tuberc.json'),  'https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/plus.login')
+    service = build('youtube', 'v3')    
+    
+    if decorator.has_credentials():
         
+        logging.info('Refreshing sub channels... {}'.format(tuberuser.user_email))   
+        
+        more = True
+        nextPageToken = False    
+    
+        subs_channel_id = []
+    
+        while more: 
+    
+            if nextPageToken:
+                subs = service.subscriptions().list(pageToken = nextPageToken, maxResults=50, part='snippet', mine=True).execute(decorator.http())
+            else:
+                subs = service.subscriptions().list(maxResults=50, part='snippet', mine=True).execute(decorator.http())
+    
+            items = subs.get('items')
+    
+            for item in items:
+                snippet = item.get('snippet')        
+                resourceId = snippet.get('resourceId')
+                channelId = resourceId.get('channelId') 
+                logging.info('channelId - {}'.format(channelId)) 
+                subs_channel_id.append(channelId)
+    
+            nextPageToken = subs.get('nextPageToken')
+    
+            if nextPageToken:
+                logging.info('Recieved nextPageToken...')
+                more = True
+            else:
+                more = False      
+            
+        print subs_channel_id
+        
+    else:
+        print 'pls authorizeeee'
+            

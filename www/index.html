@@ -15,9 +15,11 @@
             <div class="nav-wrapper container">
                <a id="logo-container" href="#" class="brand-logo">TuberC</a>
                <ul class="right hide-on-med-and-down">
+                  <li><a href="/refresh_subs" class = "refreshToaster" >Refresh Subscriptions</a></li>  
                   <li><a href="#">Vannakum {{tuberuser_email}}</a></li>
                </ul>
                <ul id="nav-mobile" class="side-nav">
+                  <li><a href="/refresh_subs">Refresh Subscriptions</a></li>  
                  <li><a href="#">Vannakum {{tuberuser_email}}</a></li>
                </ul>
                <a href="#" data-activates="nav-mobile" class="button-collapse"><i class="material-icons">menu</i></a>
@@ -75,5 +77,13 @@
       <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
       <script src="/js/materialize.js"></script>
       <script src="/js/init.js"></script>
+        <script>
+        $(document).ready(function () {
+          $('.refreshToaster').click(function () {
+            Materialize.toast('Please wait... Refreshing your Subscriptions List. Page will refresh automatically.')
+            $('.refreshToaster').hide();
+          });
+        });
+</script>
    </body>
 </html>

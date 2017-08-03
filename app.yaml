@@ -22,13 +22,14 @@ handlers:
   login: admin
   script: tasks.task_update_channel.app
 
+- url: /refresh_subs
+  login: admin
+  script: refresh_subs.app  
+
 - url: /.*
   script: main.app
   login: admin
   
-
-  
-
 libraries:
 - name: pycrypto
   version: 2.6
