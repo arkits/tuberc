@@ -8,13 +8,13 @@
 from google.appengine.ext import ndb
 
 
-class User(ndb.Model):
+class Tuberuser(ndb.Model):
 
     # General Info
     user_id = ndb.StringProperty()
     user_email = ndb.StringProperty()
     last_request_date = ndb.DateTimeProperty(auto_now_add=True)
-    
+    add_date = ndb.DateTimeProperty(auto_now_add=True)
     # Channels
     sub_channels = ndb.TextProperty()    
     
