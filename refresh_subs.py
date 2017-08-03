@@ -9,6 +9,7 @@ import jinja2
 from google.appengine.api import users
 from utilities import users_utils
 from utilities import add_channel
+import datetime
 
 decorator = OAuth2DecoratorFromClientSecrets(os.path.join(os.path.dirname(__file__), 'tuberc.json'),  'https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/plus.login')
 service = build('youtube', 'v3')
@@ -66,21 +67,16 @@ class refreshSubs(webapp2.RequestHandler):
                 subs_channel_list = get_sub_list()
                 tuberuser = users_utils.get_user(user.user_id())
                 tuberuser.sub_channels = str(subs_channel_list)
+                tuberuser.last_update_date = datetime.datetime.now()
                 tuberuser.put()
+                
                 add_channel.add_channel_list(subs_channel_list)
                 self.redirect("/")                
             except:
                 # Get URL
                 url = decorator.authorize_url()
-                # Set the template
-                template = template_env.get_template('/www/login.html')
-                # Setup Content
-                content = {
-                    'url':url
-                    }
-                # Render
-                self.response.out.write(template.render(content))                 
-                     
+                self.redirect(url)   
+
         else:
             
             # Get URL
