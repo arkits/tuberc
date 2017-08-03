@@ -40,6 +40,7 @@ def get_sub_list():
             channelId = resourceId.get('channelId') 
             logging.info('channelId - {}'.format(channelId)) 
             subs_channel_id.append(channelId)
+            
 
         nextPageToken = subs.get('nextPageToken')
     
@@ -51,14 +52,6 @@ def get_sub_list():
     
     return subs_channel_id
 
-def get_feed(channel_id):
-       
-    feedurl = 'https://www.youtube.com/feeds/videos.xml?channel_id=' + str(channel_id)
-    try:
-        d = feedparser.parse(feedurl)
-    except Exception as e:
-        logging.info('exception caught {}'.format(e))
-    
 
 class refreshSubs(webapp2.RequestHandler):
 
@@ -69,17 +62,16 @@ class refreshSubs(webapp2.RequestHandler):
             
             user = users.get_current_user()
             
-            users_utils.add(user)
+            try:
+                subs_channel_list = get_sub_list()
+            except:
+                self.redirect("/")
             
             tuberuser = users_utils.get_user(user.user_id())
-            
-            tuberuser_email = tuberuser.user_email
-            
-            subs_channel_list = get_sub_list()
-            
             tuberuser.sub_channels = str(subs_channel_list)
-            
             tuberuser.put()
+            
+            add_channel.add_channel_list(subs_channel_list)
             
             self.redirect("/")
                       

@@ -34,8 +34,8 @@ def add(user):
         
         logging.info('Added to db - {}'.format(user_email))
         
-    else:
-        logging.info('I should update this user - {}'.format(user_email))
+    #else:
+        #logging.info('I should update this user - {}'.format(user_email))
         #tuberuser = get_user(user_id)
         #refresh_sub_channels(tuberuser)
 

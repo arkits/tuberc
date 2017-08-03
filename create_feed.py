@@ -18,7 +18,7 @@ def post(subs_channel_list):
            
     for channel_id in subs_channel_list:
         
-        logging.info('Aggregating channel {}'.format(channel_id))
+        logging.debug('Aggregating channel {}'.format(channel_id))
         
         key = ndb.Key(Channel, channel_id)
         channel = key.get() 
@@ -39,7 +39,8 @@ def post(subs_channel_list):
     small_list = ordered_subs_video[:10]
     
     dump = small_list
-    #dump = pprint.pformat(dump, indent=4)    
+     
+    logging.debug('Returning feed - {}'.format(channel_id))
     
     return dump
     
