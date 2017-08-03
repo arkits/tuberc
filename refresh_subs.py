@@ -64,17 +64,23 @@ class refreshSubs(webapp2.RequestHandler):
             
             try:
                 subs_channel_list = get_sub_list()
+                tuberuser = users_utils.get_user(user.user_id())
+                tuberuser.sub_channels = str(subs_channel_list)
+                tuberuser.put()
+                add_channel.add_channel_list(subs_channel_list)
+                self.redirect("/")                
             except:
-                self.redirect("/")
-            
-            tuberuser = users_utils.get_user(user.user_id())
-            tuberuser.sub_channels = str(subs_channel_list)
-            tuberuser.put()
-            
-            add_channel.add_channel_list(subs_channel_list)
-            
-            self.redirect("/")
-                      
+                # Get URL
+                url = decorator.authorize_url()
+                # Set the template
+                template = template_env.get_template('/www/login.html')
+                # Setup Content
+                content = {
+                    'url':url
+                    }
+                # Render
+                self.response.out.write(template.render(content))                 
+                     
         else:
             
             # Get URL
