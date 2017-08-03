@@ -16,6 +16,7 @@ import jinja2
 from google.appengine.api import users
 import create_feed
 from utilities import users_utils
+import ast
 
 
 from utilities import add_channel
@@ -108,25 +109,19 @@ class MainPage(webapp2.RequestHandler):
                 
 
             user = users.get_current_user()
-            
             users_utils.add(user)
             
             tuberuser = users_utils.get_user(user.user_id())
-            
             tuberuser_email = tuberuser.user_email
+            tuberuser_sub_channels = tuberuser.sub_channels
             
-            #subs_channel_list = get_sub_list()
+            tuberuser_sub_channels = ast.literal_eval(tuberuser_sub_channels)
             
-            #tuberuser.sub_channels = str(subs_channel_list)
+            feed = create_feed.post(tuberuser_sub_channels)
             
-            #tuberuser.put()
+            dump = feed
             
-            #dump = create_feed.post(tuberuser.sub_channels)
-        
             template = template_env.get_template('/www/index.html')
-            
-            dump = 'mkc'
-            
 
             content = {
             'dump' : dump,
