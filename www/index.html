@@ -46,17 +46,16 @@
          <div class="container">
             <div class="section">
                <div class="row">
-                  {% for video in dump %} 
-                  <div class="col s3">
-                     <div class="card-panel white">
-                        <span class="black-text">
-                           <h5><a href="{{video.link}}">  {{video.title}} </a>  </h5>
-                           <br>
-                           {{video.author}}
-                        </span>
-                     </div>
+                  <div class="collection">
+                     {% for video in dump %} 
+                     <li class="collection-item avatar">
+                        <i class="material-icons circle red">play_arrow</i>
+                        <span class="title">{{video.title}}</span>
+                        <p>  {{video.author}} </p>
+                        <a href="{{video.link}}" class="secondary-content"><i class="material-icons">airplay</i></a>
+                     </li>
+                     {% endfor %}
                   </div>
-                  {% endfor %}
                </div>
             </div>
          </div>
