@@ -8,7 +8,7 @@ from google.appengine.ext import ndb
 
 class Channel(ndb.Model):
     
-    # Decriptive Info
+    # General Info
     channel_id = ndb.StringProperty()
     channel_name = ndb.StringProperty()
     channel_link = ndb.StringProperty()
