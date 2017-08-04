@@ -139,7 +139,7 @@ class MainPage(webapp2.RequestHandler):
                     
                 
             
-                template = template_env.get_template('/www/index.html')
+                template = template_env.get_template('/www/main.html')
 
                 content = {
                     'dump' : dump,
@@ -177,6 +177,6 @@ class MainPage(webapp2.RequestHandler):
             # Render
             self.response.out.write(template.render(content)) 
 
-routes = [('/', MainPage),  (decorator.callback_path, decorator.callback_handler())]
+routes = [('/main', MainPage),  (decorator.callback_path, decorator.callback_handler())]
 
 app = webapp2.WSGIApplication(routes, debug=True)
