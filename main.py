@@ -131,6 +131,7 @@ class MainPage(webapp2.RequestHandler):
                     next_page = str(page + 1)
                 else:
                     show_next = False
+                    next_page = None
                     
                 if page > 1 :
                     show_back = True
