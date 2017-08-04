@@ -46,16 +46,28 @@
          <div class="container">
             <div class="section">
                <div class="row">
-                  <div class="collection">
+
+
+                   <ul class="collection">
+
                      {% for video in dump %} 
-                     <li class="collection-item avatar">
-                        <i class="material-icons circle red">play_arrow</i>
-                        <span class="title">{{video.title}}</span>
-                        <p>  {{video.author}} </p>
-                        <a href="{{video.link}}" class="secondary-content"><i class="material-icons">airplay</i></a>
-                     </li>
-                     {% endfor %}
-                  </div>
+
+    <li class="collection-item avatar">
+      <img src="{{video.thumbnail}}" alt="" class="circle responsive-img">
+      <span class="title">{{video.title}}</span>
+      <p>{{video.author}}
+      </p>
+      <a href="{{video.link}}" class="secondary-content"><i class="material-icons">play_arrow</i></a>
+    </li>
+
+ {% endfor %}
+
+
+  </ul>
+
+
+
+
                </div>
             </div>
          </div>

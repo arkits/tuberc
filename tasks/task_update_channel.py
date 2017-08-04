@@ -63,6 +63,12 @@ class taskUpdateChannel(webapp2.RequestHandler):
                         video['link'] = post.link
                         video['author'] = d.feed.title
                         
+                        try:
+                            thumbnail =  post.media_thumbnail[0]
+                            video['thumbnail'] = thumbnail['url']                        
+                        except:
+                            video['thumbnail'] = '/img/nahin.jpeg' 
+                            
                         post_date = parse(post.published)
                         post_date = post_date.strftime('%Y-%m-%d %H:%M:%S')
                         video['post_date'] = post_date
