@@ -30,6 +30,9 @@ handlers:
   script: utilities.update_channels.app
   login: admin
   
+- url: /update_channels
+  script: utilities.update_channels_user.app
+  
 - url: /task_update_channel
   login: admin
   script: tasks.task_update_channel.app
