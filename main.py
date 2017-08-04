@@ -28,66 +28,51 @@ service = build('youtube', 'v3')
 template_env= jinja2.Environment(loader=jinja2.FileSystemLoader(os.getcwd()))
 
 
-def get_user_info():
-    
-    request = service.channels().list(mine=True, part='snippet').execute(decorator.http())
-    
-    items = request.get('items')
-    uid = items[0].get('id')
 
-    snippet = items[0].get('snippet')
-    title = snippet.get('title')
-    description = snippet.get('description')
 
-    thumbnails = snippet.get('thumbnails')
-    high = thumbnails.get('high')
-    url = high.get('url')
 
-    self.response.write(uid + '<br>')
-    self.response.write(str(title) + '<br>')
-    self.response.write(str(description) + '<br>')
-    self.response.write('<img src="'+ str(url) + '">')    
-
-def get_sub_list():
+def pretty_date(data):
     
-    more = True
-    nextPageToken = False    
+    time = parse(data)
     
-    subs_channel_id = []
-    
-    while more: 
-                
-        if nextPageToken:
-            subs = service.subscriptions().list(pageToken = nextPageToken, maxResults=50, part='snippet', mine=True).execute(decorator.http())
-        else:
-            subs = service.subscriptions().list(maxResults=50, part='snippet', mine=True).execute(decorator.http())
-        
-        items = subs.get('items')
+    now = datetime.now()
+    if type(time) is int:
+        diff = now - datetime.fromtimestamp(time)
+    elif isinstance(time,datetime):
+        diff = now - time
+    elif not time:
+        diff = now - now
+    second_diff = diff.seconds
+    day_diff = diff.days
 
-        for item in items:
-            snippet = item.get('snippet')        
-            resourceId = snippet.get('resourceId')
-            channelId = resourceId.get('channelId') 
-            logging.info('channelId - {}'.format(channelId)) 
-            subs_channel_id.append(channelId)
+    if day_diff < 0:
+        return ''
 
-        nextPageToken = subs.get('nextPageToken')
-    
-        if nextPageToken:
-            logging.info('Recieved nextPageToken...')
-            more = True
-        else:
-            more = False  
-    
-    return subs_channel_id
+    if day_diff == 0:
+        if second_diff < 10:
+            return "just now"
+        if second_diff < 60:
+            return str(second_diff) + " seconds ago"
+        if second_diff < 120:
+            return "a minute ago"
+        if second_diff < 3600:
+            return str(second_diff / 60) + " minutes ago"
+        if second_diff < 7200:
+            return "an hour ago"
+        if second_diff < 86400:
+            return str(second_diff / 3600) + " hours ago"
+    if day_diff == 1:
+        return "Yesterday"
+    if day_diff < 7:
+        return str(day_diff) + " days ago"
+    if day_diff < 31:
+        return str(day_diff / 7) + " weeks ago"
+    if day_diff < 365:
+        return str(day_diff / 30) + " months ago"
+    return str(day_diff / 365) + " years ago"
 
-def get_feed(channel_id):
-       
-    feedurl = 'https://www.youtube.com/feeds/videos.xml?channel_id=' + str(channel_id)
-    try:
-        d = feedparser.parse(feedurl)
-    except Exception as e:
-        logging.info('exception caught {}'.format(e))
+
+template_env.filters['pretty_date'] = pretty_date
     
 
 class MainPage(webapp2.RequestHandler):

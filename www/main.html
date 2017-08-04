@@ -53,8 +53,8 @@
                      <li class="collection-item avatar">
                         <img src="{{video.thumbnail}}" alt="" class="circle responsive-img">
                         <span class="title">{{video.title}}</span>
-                        <p>{{video.author}}
-                        </p>
+                        <p>{{video.author}}</p>
+                        <p>{{video.post_date | pretty_date}}</p>
                         <a href="{{video.link}}" class="secondary-content"><i class="material-icons">play_arrow</i></a>
                      </li>
                      {% endfor %}
