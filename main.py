@@ -106,20 +106,27 @@ class MainPage(webapp2.RequestHandler):
             tuberuser_email = tuberuser.user_email
             tuberuser_sub_channels = tuberuser.sub_channels
             
-            tuberuser_sub_channels = ast.literal_eval(tuberuser_sub_channels)
+            if len(tuberuser_sub_channels) > 2:
             
-            feed = create_feed.post(tuberuser_sub_channels)
+                tuberuser_sub_channels = ast.literal_eval(tuberuser_sub_channels)
             
-            dump = feed
+                feed = create_feed.post(tuberuser_sub_channels)
             
-            template = template_env.get_template('/www/index.html')
+                dump = feed
+            
+                template = template_env.get_template('/www/index.html')
 
-            content = {
-            'dump' : dump,
-            'tuberuser_email' : tuberuser_email
-            }
+                content = {
+                    'dump' : dump,
+                    'tuberuser_email' : tuberuser_email
+                }
             
-            self.response.out.write(template.render(content)) 
+                self.response.out.write(template.render(content)) 
+                
+            else:
+                
+                template = template_env.get_template('/www/no_subs.html')
+                self.response.out.write(template.render())
             
             elapsed_time = (time.time() - start)
             logging.info('Elapsed Time - {}'.format(elapsed_time))
