@@ -71,7 +71,7 @@ class refreshSubs(webapp2.RequestHandler):
                 tuberuser.put()
                 
                 add_channel.add_channel_list(subs_channel_list)
-                self.redirect("/")                
+                self.redirect("/main")                
             except:
                 # Get URL
                 url = decorator.authorize_url()
