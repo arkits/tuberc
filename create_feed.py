@@ -15,13 +15,20 @@ from operator import itemgetter
 def post(subs_channel_list):
     
     subs_videos = []
+    
+    channel_key_list = []
            
     for channel_id in subs_channel_list:
         
-        logging.debug('Aggregating channel {}'.format(channel_id))
-        
         key = ndb.Key(Channel, channel_id)
-        channel = key.get() 
+        
+        logging.debug('Adding channel_id to list {}'.format(channel_id))
+        
+        channel_key_list.append(key)
+    
+    channels = ndb.get_multi(channel_key_list)
+        
+    for channel in channels:    
         
         if channel:
         
@@ -32,11 +39,11 @@ def post(subs_channel_list):
             for video in lit_eval:
                 
                 subs_videos.append(video)
-            
-        
+                
+                
     ordered_subs_video = sorted(subs_videos, key=itemgetter('post_date') , reverse=True) 
     
-    small_list = ordered_subs_video[:10]
+    small_list = ordered_subs_video[:20]
     
     dump = small_list
      

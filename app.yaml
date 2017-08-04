@@ -5,6 +5,12 @@ threadsafe: false
 
 handlers:
 
+- url: /
+  script: main.app
+  
+- url: /index\.html
+  script: main.app
+  
 - url: /css
   static_dir: css
 
@@ -24,9 +30,11 @@ handlers:
 
 - url: /refresh_subs
   script: refresh_subs.app  
-
+  
 - url: /.*
-  script: main.app
+  script: not_found.app 
+
+
   
 libraries:
 - name: pycrypto
