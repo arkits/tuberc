@@ -97,6 +97,16 @@ class MainPage(webapp2.RequestHandler):
 
         if decorator.has_credentials():
             
+            page = self.request.get('page')
+            
+            show_back = False
+            back_page = None 
+            
+            if page == '':
+                page = 1
+            else:
+                page = int(page)
+                
             start = time.time()
 
             user = users.get_current_user()
@@ -110,15 +120,34 @@ class MainPage(webapp2.RequestHandler):
             
                 tuberuser_sub_channels = ast.literal_eval(tuberuser_sub_channels)
             
-                feed = create_feed.post(tuberuser_sub_channels)
+                feed, number_of_vids = create_feed.post(tuberuser_sub_channels, page)
             
                 dump = feed
+                
+                max_page = page * 20
+                
+                if max_page <= number_of_vids:
+                    show_next = True
+                    next_page = str(page + 1)
+                else:
+                    show_next = False
+                    
+                if page > 1 :
+                    show_back = True
+                    back_page = str(page - 1)                    
+                    
+                
             
                 template = template_env.get_template('/www/index.html')
 
                 content = {
                     'dump' : dump,
-                    'tuberuser_email' : tuberuser_email
+                    'number_of_vids' : number_of_vids, 
+                    'tuberuser_email' : tuberuser_email,
+                    'show_next' : show_next,
+                    'show_back' : show_back,
+                    'next_page' : next_page,
+                    'back_page' : back_page
                 }
             
                 self.response.out.write(template.render(content)) 

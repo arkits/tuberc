@@ -12,7 +12,7 @@ import ast
 from operator import itemgetter
 
 
-def post(subs_channel_list):
+def post(subs_channel_list, page):
     
     subs_videos = []
     
@@ -43,13 +43,22 @@ def post(subs_channel_list):
                 
     ordered_subs_video = sorted(subs_videos, key=itemgetter('post_date') , reverse=True) 
     
-    small_list = ordered_subs_video[:20]
+    if page > 1:
+        min_page = (page - 1) * 20
+    else:
+        min_page = 0
+        
+    max_page  = page * 20
+    
+    small_list = ordered_subs_video[min_page:max_page]
+    
+    number_of_vids = len(ordered_subs_video)
     
     dump = small_list
      
     logging.debug('Returning feed - {}'.format(channel_id))
     
-    return dump
+    return dump, number_of_vids
     
         
     
