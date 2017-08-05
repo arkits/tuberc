@@ -62,6 +62,7 @@ class taskUpdateChannel(webapp2.RequestHandler):
                         video['title'] = post.title
                         video['link'] = post.link
                         video['author'] = d.feed.title
+                        video['videoid'] = post.yt_videoid
                         
                         try:
                             thumbnail =  post.media_thumbnail[0]

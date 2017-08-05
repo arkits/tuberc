@@ -8,6 +8,9 @@
       <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
       <link href="/css/materialize.css" type="text/css" rel="stylesheet" media="screen,projection" />
       <link href="/css/style.css" type="text/css" rel="stylesheet" media="screen,projection" />
+      <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+      <script src="/js/materialize.js"></script>
+      <script src="/js/init.js"></script>
    </head>
    <body>
       <header>
@@ -47,22 +50,49 @@
          <div class="container">
             <div class="section">
                <div class="row">
+                  <div id="video-emb">
+                     <div class="video-container">
+                        <iframe src="//www.youtube.com/embed/Q8TXgCzxEnw?rel=0" id="frame" frameborder="0" allowfullscreen></iframe>
+                     </div>
+                  </div>
+               </div>
+            </div>
+            <div class="section">
+               <div class="row">
                   <ul class="collection">
                      {% for video in dump %}
                      <li class="collection-item avatar">
                         <img src="{{video.thumbnail}}" alt="" class="circle responsive-img">
-                        <span class="title">{{video.title}}</span>
+                        <span class="title truncate">{{video.title}}</span>
                         <p>{{video.author}}</p>
                         <p>{{video.post_date | pretty_date}}</p>
-                        <a href="{{video.link}}" class="secondary-content"><i class="material-icons">play_arrow</i></a>
+                        {% set playerClicker = 'playthis'+ video.link %}
+                        {% set playerClickerLink = '//www.youtube.com/embed/' + video.videoid + '?rel=0' %}
+                        <a  class="secondary-content" id ="{{playerClicker}}" ><i class="material-icons">play_arrow</i></a>
                      </li>
+                     <script>
+                        $(document).ready(function () {
+                           playerClicker = document.getElementById("{{playerClicker}}");
+                           iframe = $('#frame');
+                            $(playerClicker).click(function () {
+                            Materialize.toast('Playing ' + "{{playerClickerLink}}");
+                            console.log('playing this...' + "{{playerClickerLink}}");
+                             iframe.attr('src', "{{playerClickerLink}}");
+                            });
+                        });
+                     </script>
                      {% endfor %}
                   </ul>
                   <center>
-                     <br> {{number_of_vids}} videos in this list <br> <br> {% if show_back == True %} {% set back_page_link = '/?page='
-                     + back_page %}
-                     <a class="btn-floating btn-large waves-effect waves-light red" href="{{back_page_link}}"><i class="material-icons">navigate_before</i></a>            {% endif %} {% if show_next == True %} {% set next_page_link = '/?page=' + next_page %}
-                     <a class="btn-floating btn-large waves-effect waves-light red" href="{{next_page_link}}"><i class="material-icons">navigate_next</i></a>            {% endif %}
+                     <br> {{number_of_vids}} videos in this list 
+                     <br> <br> 
+                     {% if show_back == True %} 
+                     {% set back_page_link = '/?page='+ back_page %}
+                     <a class="btn-floating btn-large waves-effect waves-light red" href="{{back_page_link}}"><i class="material-icons">navigate_before</i></a>            
+                     {% endif %} 
+                     {% if show_next == True %} {% set next_page_link = '/?page=' + next_page %}
+                     <a class="btn-floating btn-large waves-effect waves-light red" href="{{next_page_link}}"><i class="material-icons">navigate_next</i></a>            
+                     {% endif %}
                   </center>
                </div>
             </div>
@@ -93,10 +123,6 @@
             </div>
          </div>
       </footer>
-      <!--  Scripts-->
-      <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
-      <script src="/js/materialize.js"></script>
-      <script src="/js/init.js"></script>
       <script>
          $(document).ready(function () {
            $('.refreshToaster').click(function () {
