@@ -7,12 +7,15 @@ handlers:
   
 - url: /
   script: index.app
+  secure: always
   
 - url: /index\.html
   script: index.app
+  secure: always
   
 - url: /main
   script: main.app
+  secure: always
   
 - url: /css
   static_dir: css
@@ -32,19 +35,24 @@ handlers:
   
 - url: /update_channels
   script: utilities.update_channels_user.app
+  secure: always
   
 - url: /task_update_channel
   login: admin
   script: tasks.task_update_channel.app
+  secure: always
 
 - url: /refresh_subs
   script: refresh_subs.app  
+  secure: always
 
 - url: /oauth2callback
   script: main.app
+  secure: always
   
 - url: /.*
   script: not_found.app 
+  secure: always
 
 
 libraries:
