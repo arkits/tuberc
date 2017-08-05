@@ -68,7 +68,7 @@
                         <p>{{video.author}}</p>
                         <p>{{video.post_date | pretty_date}}</p>
                         {% set playerClicker = 'playthis'+ video.link %}
-                        {% set playerClickerLink = '//www.youtube.com/embed/' + video.videoid + '?rel=0' %}
+                        {% set playerClickerLink = '//www.youtube.com/embed/' + video.videoid + '?rel=0&autoplay=1' %}
                         <a  class="secondary-content" id ="{{playerClicker}}" ><i class="material-icons">play_arrow</i></a>
                      </li>
                      <script>
@@ -76,8 +76,8 @@
                            playerClicker = document.getElementById("{{playerClicker}}");
                            iframe = $('#frame');
                             $(playerClicker).click(function () {
-                            Materialize.toast('Playing ' + "{{video.title}}");
-                             iframe.attr('src', "{{playerClickerLink}}");
+                             iframe.attr('src', '{{playerClickerLink}}');
+                             $("html, body").animate({ scrollTop: 0 }, "slow");
                             });
                         });
                      </script>
