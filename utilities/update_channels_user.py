@@ -38,11 +38,13 @@ class updateChannels(webapp2.RequestHandler):
         
             tuberuser_sub_channels = ast.literal_eval(tuberuser_sub_channels)        
         
-        for channel_id in tuberuser_sub_channels:
-            
-            logging.info('Queing task a channel update task from updateChannels - {}'.format(channel_id))
-            handler = EnqueueTaskHandler()
-            task_response = handler.post(channel_id)
+            for channel_id in tuberuser_sub_channels:
+                
+                logging.info('Queing task a channel update task from updateChannels - {}'.format(channel_id))
+                handler = EnqueueTaskHandler()
+                task_response = handler.post(channel_id)
+                
+        self.redirect("/main") 
 
 app = webapp2.WSGIApplication([
     ('/update_channels', updateChannels),
