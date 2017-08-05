@@ -76,7 +76,7 @@
                            playerClicker = document.getElementById("{{playerClicker}}");
                            iframe = $('#frame');
                             $(playerClicker).click(function () {
-                            Materialize.toast('Playing ' + "{{playerClickerLink}}");
+                            Materialize.toast('Playing ' + "{{video.title}}");
                              iframe.attr('src', "{{playerClickerLink}}");
                             });
                         });
