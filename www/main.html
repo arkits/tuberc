@@ -50,9 +50,10 @@
          <div class="container">
             <div class="section">
                <div class="row">
+                 {% set defaultPlayerLink = '//www.youtube.com/embed/' + dump[0].videoid + '?rel=0'   %}
                   <div id="video-emb">
                      <div class="video-container">
-                        <iframe src="//www.youtube.com/embed/Q8TXgCzxEnw?rel=0" id="frame" frameborder="0" allowfullscreen></iframe>
+                        <iframe src="{{defaultPlayerLink}}" id="frame" frameborder="0" allowfullscreen></iframe>
                      </div>
                   </div>
                </div>
@@ -76,7 +77,6 @@
                            iframe = $('#frame');
                             $(playerClicker).click(function () {
                             Materialize.toast('Playing ' + "{{playerClickerLink}}");
-                            console.log('playing this...' + "{{playerClickerLink}}");
                              iframe.attr('src', "{{playerClickerLink}}");
                             });
                         });
