@@ -20,7 +20,7 @@
                <a id="logo-container" href="/main" class="brand-logo">TuberC</a>
                <a href="#" data-activates="slide-out" class="button-collapse"><i class="material-icons">menu</i></a>
                <ul id="nav-mobile" class="right hide-on-med-and-down">
-                  <li><a href="/update_channels" ><i class="material-icons">refresh</i></a></li>
+                   <li><a href="/update_channels" class="waves-effect freshVidsToaster"><i class="material-icons">refresh</i></a></li>
                   <li><a href="#" data-activates="slide-out" class="button-collapse show-on-large "><i class="material-icons">menu</i></a></li>
                </ul>
                <ul id="slide-out" class="side-nav">
@@ -40,7 +40,7 @@
                      <div class="divider"></div>
                   </li>
                   <li><a class="subheader">Settings</a></li>
-                  <li><a class="waves-effect" href="/update_channels">Refresh User Channels</a></li>
+                  <li><a class="waves-effect freshVidsToaster" href="/update_channels">Refresh User Channels</a></li>
                   <li><a class="waves-effect refreshToaster" href="/refresh_subs">Update Subscription Channel List</a></li>
                   <li>
                      <div class="divider"></div>
@@ -102,9 +102,16 @@
       </footer>
       <script>
          $(document).ready(function () {
+            $("#loading-ak").hide();
            $('.refreshToaster').click(function () {
-             Materialize.toast('Please wait... Refreshing your Subscriptions List. Page will refresh automatically.')
+              $("#loading-ak").show();
+             Materialize.toast('Refreshing your subscribed channels list. Page will refresh automatically...')
              $('.refreshToaster').hide();
+           });
+          $('.freshVidsToaster').click(function () {
+             $("#loading-ak").show();
+             Materialize.toast('Refreshing your subscriptions. Page will refresh automatically...')
+             $('.freshVidsToaster').hide();
            });
          });
       </script>
