@@ -45,7 +45,15 @@ handlers:
 - url: /refresh_subs
   script: refresh_subs.app  
   secure: always
-
+  
+- url: /category
+  script: category.app  
+  secure: always
+  
+- url: /category_list
+  script: category_list.app  
+  secure: always
+  
 - url: /oauth2callback
   script: main.app
   secure: always

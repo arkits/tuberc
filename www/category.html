@@ -4,7 +4,7 @@
       <meta name="theme-color" content="#b71c1c">
       <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0" />
-      <title>TuberC - Home</title>
+      <title>TuberC - Categories</title>
       <!-- CSS  -->
       <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
       <link href="/css/materialize.css" type="text/css" rel="stylesheet" media="screen,projection" />
@@ -35,7 +35,7 @@
                   </li>
                   <li><a class="waves-effect" href="#!"><i class="material-icons">fiber_new</i>Daily Digest</a></li>
                   <li><a class="waves-effect" href="#!"><i class="material-icons">favorite</i>From your favs</a></li>
-                               <li><a class="waves-effect" href="/category_list"><i class="material-icons">computer</i>Categories</a></li>
+                                 <li><a class="waves-effect" href="/category_list"><i class="material-icons">computer</i>Categories</a></li>
                   <li>
                      <div class="divider"></div>
                   </li>
@@ -50,6 +50,12 @@
       <main>
          <div class="container">
             <div class="section">
+               <div class="row center">
+              <h1 class="light red-text darken-4"> {{category}} </h1>
+              <h3 class="light red-text darken-4"> Category </h3>
+               </div>
+
+               {% if dump %}
                <div class="row">
                   {% set defaultPlayerLink = '//www.youtube.com/embed/' + dump[0].videoid + '?rel=0'   %}
                   <div id="video-emb">
@@ -58,6 +64,7 @@
                      </div>
                   </div>
                </div>
+              {% endif %}
             </div>
             <div class="section">
                <div class="row">
