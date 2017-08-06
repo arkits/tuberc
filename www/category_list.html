@@ -50,19 +50,19 @@
       <main>
          <div class="container">
             <br><br>
-            <div class="row center">
+            <div class="row">
                <h1 class="header light red-text">Categories</h1>
                <div class="row">
-                  {% for cat in dump %}
+                  {% for cat, descr in zip(user_categories_list, description_list) %}
+                  {% set categoryLink = '/category?c=' + cat|urlsafe %}
                   <div class="col s12 m6 l3">
-                     <p>
-                     <div class="card-panel">
-                        <span class="blue-text text-darken-2">
-                            {% set categoryLink = '/category?c=' + cat|urlsafe %}
-                           <h4><a href = "{{categoryLink}}"> {{cat}} </a> </h4>
-                        </span>
+                     <div class="card">
+                        <div class="card-content">
+                           <span class="card-title">{{cat}}</span>
+                           <p>{{descr}}</p>
+                        </div>
+                        <a href ="{{categoryLink}}"class="btn-floating halfway-fab waves-effect waves-light red"><i class="material-icons">play_arrow</i></a>
                      </div>
-                     </p>
                   </div>
                   {% endfor %}
                </div>

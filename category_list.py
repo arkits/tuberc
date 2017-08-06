@@ -28,6 +28,8 @@ def urlsafe(data):
     
 template_env.filters['urlsafe'] = urlsafe
 
+template_env.globals.update(zip=zip)
+
 
 class CategoryList(webapp2.RequestHandler):
 
@@ -49,13 +51,14 @@ class CategoryList(webapp2.RequestHandler):
                 
                 tuberuser_sub_channels = ast.literal_eval(tuberuser_sub_channels)
             
-                dump = create_feed.user_categories_list(tuberuser_sub_channels)
+                user_categories_list, description_list = create_feed.user_categories_list(tuberuser_sub_channels)
 
                 template = template_env.get_template('/www/category_list.html')
 
                 content = {
-                    'dump' : dump,
+                    'user_categories_list' : user_categories_list,
                     'tuberuser_email' : tuberuser_email,
+                    'description_list' : description_list
                 }
             
                 self.response.out.write(template.render(content)) 

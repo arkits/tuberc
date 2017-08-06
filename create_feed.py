@@ -116,6 +116,8 @@ def user_categories_list(subs_channel_list):
     
     user_categories_list = []
     
+    description_list = []
+    
     channel_key_list = []
            
     for channel_id in subs_channel_list:
@@ -143,7 +145,15 @@ def user_categories_list(subs_channel_list):
                 if video_category not in user_categories_list:
                 
                     user_categories_list.append(video_category)
-                
+                    
+                    index = user_categories_list.index(video_category)
+                    
+                    try:
+                        description_list[index] = description_list[index] + ", " + video['author']
+                    except:
+                        description_list.append(video['author'])
+                    
+
     dump = user_categories_list
     
-    return dump 
+    return user_categories_list,  description_list
