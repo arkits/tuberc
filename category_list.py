@@ -51,14 +51,13 @@ class CategoryList(webapp2.RequestHandler):
                 
                 tuberuser_sub_channels = ast.literal_eval(tuberuser_sub_channels)
             
-                user_categories_list, description_list = create_feed.user_categories_list(tuberuser_sub_channels)
+                categories_dict = create_feed.user_categories_list(tuberuser_sub_channels)
 
                 template = template_env.get_template('/www/category_list.html')
 
                 content = {
-                    'user_categories_list' : user_categories_list,
-                    'tuberuser_email' : tuberuser_email,
-                    'description_list' : description_list
+                    'categories_dict' : categories_dict,
+                    'tuberuser_email' : tuberuser_email
                 }
             
                 self.response.out.write(template.render(content)) 

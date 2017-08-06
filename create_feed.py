@@ -9,6 +9,7 @@ from google.appengine.ext import ndb
 import logging
 import pprint
 import ast
+from collections import defaultdict
 from operator import itemgetter
 
 
@@ -114,11 +115,10 @@ def feed_cat(subs_channel_list, category, page):
         
 def user_categories_list(subs_channel_list):
     
-    user_categories_list = []
-    
-    description_list = []
     
     channel_key_list = []
+    
+    categories_dict = dict()
            
     for channel_id in subs_channel_list:
         
@@ -142,18 +142,16 @@ def user_categories_list(subs_channel_list):
                     
                 video_category = str(video['category'])
                 
-                if video_category not in user_categories_list:
-                
-                    user_categories_list.append(video_category)
+                video_author = str(video['author'])
                     
-                    index = user_categories_list.index(video_category)
+                if video_category in categories_dict:
                     
-                    try:
-                        description_list[index] = description_list[index] + ", " + video['author']
-                    except:
-                        description_list.append(video['author'])
-                    
+                    if video_author not in categories_dict[video_category]:
+                        
+                        categories_dict[video_category].append(video_author)
+                else:
+                    # create a new array in this slot
+                    categories_dict[video_category] = [video_author]
 
-    dump = user_categories_list
-    
-    return user_categories_list,  description_list
+                    
+    return categories_dict

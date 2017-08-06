@@ -62,7 +62,9 @@
          <div class="container">
             <div class="section">
                <div class="row">
+                 {% if dump %}
                   {% set defaultPlayerLink = '//www.youtube.com/embed/' + dump[0].videoid + '?rel=0'   %}
+                  {% endif %}
                   <div id="video-emb">
                      <div class="video-container">
                         <iframe src="{{defaultPlayerLink}}" id="frame" frameborder="0" allowfullscreen></iframe>

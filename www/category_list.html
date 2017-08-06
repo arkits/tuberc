@@ -55,9 +55,16 @@
       <main>
          <div class="container">
             <br><br>
+
+                {{categories_dict}} <br> <br>
+       
+
+
             <div class="row">
                <h1 class="header light red-text">Categories</h1>
                <div class="row">
+
+
                   {% for cat, descr in zip(user_categories_list, description_list) %}
                   {% set categoryLink = '/category?c=' + cat|urlsafe %}
                   <div class="col s12 m6 l3">
