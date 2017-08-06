@@ -12,12 +12,21 @@ import logging
 import time
 import create_feed
 import ast
+import urllib
 
 decorator = OAuth2DecoratorFromClientSecrets(os.path.join(os.path.dirname(__file__), 'tuberc.json'),  'https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/plus.login')
 service = build('youtube', 'v3')
 
 # Set jinja Environment
-template_env= jinja2.Environment(loader=jinja2.FileSystemLoader(os.getcwd()))
+template_env = jinja2.Environment(loader=jinja2.FileSystemLoader(os.getcwd()))
+
+
+def urlsafe(data):
+    safe = urllib.quote_plus(data)
+    return safe
+    
+    
+template_env.filters['urlsafe'] = urlsafe
 
 
 class CategoryList(webapp2.RequestHandler):
