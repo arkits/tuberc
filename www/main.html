@@ -50,7 +50,7 @@
          <div class="container">
             <div class="section">
                <div class="row">
-                 {% set defaultPlayerLink = '//www.youtube.com/embed/' + dump[0].videoid + '?rel=0'   %}
+                  {% set defaultPlayerLink = '//www.youtube.com/embed/' + dump[0].videoid + '?rel=0'   %}
                   <div id="video-emb">
                      <div class="video-container">
                         <iframe src="{{defaultPlayerLink}}" id="frame" frameborder="0" allowfullscreen></iframe>
@@ -60,16 +60,47 @@
             </div>
             <div class="section">
                <div class="row">
-                  <ul class="collection">
+                  <ul class="collapsible" data-collapsible="accordion">
                      {% for video in dump %}
-                     <li class="collection-item avatar">
-                        <img src="{{video.thumbnail}}" alt="" class="circle responsive-img">
-                        <span class="title truncate">{{video.title}}</span>
-                        <p>{{video.author}}</p>
-                        <p>{{video.post_date | pretty_date}}</p>
-                        {% set playerClicker = 'playthis'+ video.link %}
-                        {% set playerClickerLink = '//www.youtube.com/embed/' + video.videoid + '?rel=0&autoplay=1' %}
-                        <a class="secondary-content" id ="{{playerClicker}}" ><i class="material-icons">play_arrow</i></a>
+                     <li>
+                        <div class="collapsible-header"> 
+                           <span>
+                           <b>{{video.title}}</b> <br>
+                           {{video.author}}  
+                           </span>
+                        </div>
+                        <div class="collapsible-body  blue-grey lighten-5">
+                           <span>
+                              <div class="row">
+                                 <div class="col s12 m4 l3">
+                                    <p>
+                                       <img src="{{video.thumbnail}}" alt="" class="responsive-img">
+                                    </p>
+                                 </div>
+                                 <div class="col s12 m4 l6">
+                                    <p> 
+                                       Uploaded {{video.post_date | pretty_date}} <br>  <br>
+                                    <div class="chip">
+                                       <img src="img/icons/gaming.jpg" alt="Gaming">
+                                       {{video.category}}
+                                    </div>
+                                    </p>
+                                 </div>
+                                 <div class="col s12 m4 l3">
+                                   <center>
+                                    <p>                      
+                                       {% set playerClicker = 'playthis'+ video.link %}
+                                       {% set playerClickerLink = '//www.youtube.com/embed/' + video.videoid + '?rel=0&autoplay=1' %}
+                                       <a class="btn-floating btn-large waves-effect waves-light red" id ="{{playerClicker}}">
+                                       <i class="material-icons medium">play_arrow</i>
+                                       </a> <br> <br>
+                                         <a href="{{video.link}}"class="waves-effect btn-large waves-red btn-flat">Watch on YouTube</a>
+                                    </p>
+                                        </center>
+                                 </div>
+                              </div>
+                           </span>
+                        </div>
                      </li>
                      <script>
                         $(document).ready(function () {
@@ -83,19 +114,21 @@
                      </script>
                      {% endfor %}
                   </ul>
-                  <center>
-                     <br> {{number_of_vids}} videos in this list 
-                     <br> <br> 
-                     {% if show_back == True %} 
-                     {% set back_page_link = '/?page='+ back_page %}
-                     <a class="btn-floating btn-large waves-effect waves-light red" href="{{back_page_link}}"><i class="material-icons">navigate_before</i></a>            
-                     {% endif %} 
-                     {% if show_next == True %} {% set next_page_link = '/?page=' + next_page %}
-                     <a class="btn-floating btn-large waves-effect waves-light red" href="{{next_page_link}}"><i class="material-icons">navigate_next</i></a>            
-                     {% endif %}
-                  </center>
+                  </ul>
                </div>
+               <center>
+                  <br> {{number_of_vids}} videos in this list 
+                  <br> <br> 
+                  {% if show_back == True %} 
+                  {% set back_page_link = '/?page='+ back_page %}
+                  <a class="btn-floating btn-large waves-effect waves-light red" href="{{back_page_link}}"><i class="material-icons">navigate_before</i></a>            
+                  {% endif %} 
+                  {% if show_next == True %} {% set next_page_link = '/?page=' + next_page %}
+                  <a class="btn-floating btn-large waves-effect waves-light red" href="{{next_page_link}}"><i class="material-icons">navigate_next</i></a>            
+                  {% endif %}
+               </center>
             </div>
+         </div>
          </div>
       </main>
       <footer class="page-footer red darken-4">
