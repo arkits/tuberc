@@ -1,1 +1,5 @@
 cron:
+
+- description: 30 m - update all channels
+  url: /update_all_channels
+  schedule: every 30 mins

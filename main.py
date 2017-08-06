@@ -2,23 +2,18 @@ import httplib2
 import os
 import webapp2
 from apiclient.discovery import build
-from google.appengine.ext import webapp
 from oauth2client.contrib.appengine import OAuth2DecoratorFromClientSecrets
 import json
 import logging
 import time
 from datetime import datetime
 from dateutil.parser import parse 
-from lib import feedparser
 import pprint
-from operator import itemgetter
 import jinja2
 from google.appengine.api import users
 import create_feed
 from utilities import users_utils
 import ast
-
-
 from utilities import add_channel
 
 decorator = OAuth2DecoratorFromClientSecrets(os.path.join(os.path.dirname(__file__), 'tuberc.json'),  'https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/plus.login')
@@ -26,9 +21,6 @@ service = build('youtube', 'v3')
 
 # Set jinja Environment
 template_env= jinja2.Environment(loader=jinja2.FileSystemLoader(os.getcwd()))
-
-
-
 
 
 def pretty_date(data):

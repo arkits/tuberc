@@ -11,6 +11,9 @@ import logging
 from lib import feedparser
 from operator import itemgetter
 import json
+import bs4 as bs
+import html
+from urllib2 import urlopen
 
 
 class ChannelUpdateException(Exception):
@@ -18,6 +21,25 @@ class ChannelUpdateException(Exception):
 
 
 class taskUpdateChannel(webapp2.RequestHandler):
+    
+    def getCategory(self, link, author):
+        
+        source = urlopen(link).read()
+        
+        soup = bs.BeautifulSoup(source,"html.parser")
+        
+        video_elements = soup.find_all(attrs={"class": "g-hovercard yt-uix-sessionlink spf-link "})
+        
+        category = 'na'
+        
+        for element in video_elements:
+            classes = element
+            content = classes.string
+            
+            if content != author:
+                category = content
+                
+        return category
 
     def post(self):
         
@@ -63,6 +85,10 @@ class taskUpdateChannel(webapp2.RequestHandler):
                         video['link'] = post.link
                         video['author'] = d.feed.title
                         video['videoid'] = post.yt_videoid
+                        
+                        category = self.getCategory(video['link'], video['author'])
+                        
+                        video['category'] = category
                         
                         try:
                             thumbnail =  post.media_thumbnail[0]

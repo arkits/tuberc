@@ -69,7 +69,7 @@
                         <p>{{video.post_date | pretty_date}}</p>
                         {% set playerClicker = 'playthis'+ video.link %}
                         {% set playerClickerLink = '//www.youtube.com/embed/' + video.videoid + '?rel=0&autoplay=1' %}
-                        <a  class="secondary-content" id ="{{playerClicker}}" ><i class="material-icons">play_arrow</i></a>
+                        <a class="secondary-content" id ="{{playerClicker}}" ><i class="material-icons">play_arrow</i></a>
                      </li>
                      <script>
                         $(document).ready(function () {
