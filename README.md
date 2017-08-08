@@ -5,7 +5,7 @@ TuberC organizes your YouTube Subscriptions to give you videos from people you l
 
 ## Setup
 
-Following are the instruction to fork and setup TubeC by yourself.
+Following are the instruction to fork and setup TubeC by yourself -
 
 * Setup a project on Google Cloud Platform - https://console.cloud.google.com/projectcreate
 * From the API manager on Google Cloud Platform,
@@ -22,3 +22,21 @@ Following are the instruction to fork and setup TubeC by yourself.
 * Install and setup gcloud sdk - https://cloud.google.com/sdk/docs/quickstarts
 * Clone the tuberc repo
 
+## Libraries and Utils Used 
+
+Following libraries are included in /lib/ -
+
+```
+libraries:
+- name: pycrypto
+  version: 2.6
+- name: ssl
+  version: latest
+- name: webapp2
+  version: "2.5.2"
+- name: MySQLdb
+  version: "latest"
+- name: jinja2
+  version: "latest"
+```
+TuberC also uses Materialize CSS, JavaScript and jQuery 
