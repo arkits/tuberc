@@ -19,6 +19,7 @@ Following are the instruction to fork and setup TubeC by yourself -
     * Make sure you IP is listed in the Authorized redirect URIs
     * Download the client secret as a JSON and rename it to tuberc.json
   * Create an API key. Used for YouTube Data API.
+    * Put the API key in variable YOUTUBE_WEBDATA_API_KEY found in settings.py 
 * Install and setup gcloud sdk - https://cloud.google.com/sdk/docs/quickstarts
 * Clone the tuberc repo
 
