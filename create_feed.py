@@ -11,7 +11,7 @@ import pprint
 import ast
 from collections import defaultdict
 from operator import itemgetter
-
+import json
 
 def post(subs_channel_list, page):
     
@@ -153,5 +153,6 @@ def user_categories_list(subs_channel_list):
                     # create a new array in this slot
                     categories_dict[video_category] = [video_author]
 
-                    
+    #categories_dict = json.dumps(categories_dict)     
+    
     return categories_dict

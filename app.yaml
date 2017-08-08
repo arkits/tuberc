@@ -16,6 +16,7 @@ handlers:
 - url: /main
   script: main.app
   secure: always
+  login: required
   
 - url: /css
   static_dir: css
@@ -49,10 +50,12 @@ handlers:
 - url: /category
   script: category.app  
   secure: always
+  login: required
   
 - url: /category_list
   script: category_list.app  
   secure: always
+  login: required
   
 - url: /oauth2callback
   script: main.app

@@ -56,8 +56,7 @@
          <div class="container">
             <br><br>
 
-                {{categories_dict}} <br> <br>
-       
+ 
 
 
             <div class="row">
@@ -65,13 +64,13 @@
                <div class="row">
 
 
-                  {% for cat, descr in zip(user_categories_list, description_list) %}
-                  {% set categoryLink = '/category?c=' + cat|urlsafe %}
+                   {% for key, value in categories_dict.iteritems() %}
+                   {% set categoryLink = '/category?c=' + key|urlsafe %}
                   <div class="col s12 m6 l3">
                      <div class="card">
                         <div class="card-content">
-                           <span class="card-title">{{cat}}</span>
-                           <p>{{descr}}</p>
+                           <span class="card-title">{{key}}</span>
+                           <p>{{value|join(', ')}}</p>
                         </div>
                         <a href ="{{categoryLink}}"class="btn-floating halfway-fab waves-effect waves-light red"><i class="material-icons">play_arrow</i></a>
                      </div>
