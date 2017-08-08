@@ -43,6 +43,12 @@ handlers:
   script: tasks.task_update_channel.app
   secure: always
 
+- url: /api/home
+  login: required
+  script: api.home.app
+  secure: always
+  
+  
 - url: /refresh_subs
   script: refresh_subs.app  
   secure: always
