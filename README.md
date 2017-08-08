@@ -41,3 +41,7 @@ libraries:
   version: "latest"
 ```
 TuberC also uses Materialize CSS, JavaScript and jQuery 
+
+## Questions, Comments, Feedback?
+
+Send them along at `arkits@outlook.com`
