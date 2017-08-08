@@ -16,7 +16,7 @@ Following are the instruction to fork and setup TubeC by yourself -
     * YouTube Reporting API
   * Create an OAuth Consent Screen
   * Create a OAuth 2.0 client ID credential, with the application type as a web application. Used for user account authorization.
-    * Make sure you IP is listed in the Authorized redirect URIs
+    * Make sure your website/localhost is listed in the Authorized redirect URIs
     * Download the client secret as a JSON and rename it to tuberc.json
   * Create an API key. Used for YouTube Data API.
     * Put the API key in variable YOUTUBE_WEBDATA_API_KEY found in settings.py 
