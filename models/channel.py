@@ -12,6 +12,7 @@ class Channel(ndb.Model):
     channel_id = ndb.StringProperty()
     channel_name = ndb.StringProperty()
     channel_link = ndb.StringProperty()
+    display_picture = ndb.StringProperty()
     
     # Housekeeping Info
     last_update_date = ndb.DateTimeProperty(auto_now_add=True)

@@ -14,6 +14,7 @@ import json
 import bs4 as bs
 import html
 from urllib2 import urlopen
+import settings 
 
 
 class ChannelUpdateException(Exception):
@@ -40,6 +41,36 @@ class taskUpdateChannel(webapp2.RequestHandler):
                 category = content
                 
         return category
+    
+    
+    def getDisplayPicture(self, channelid):
+        
+        api_key = settings.YOUTUBE_WEBDATA_API_KEY
+        
+        url_part_a = 'https://www.googleapis.com/youtube/v3/channels?part=snippet&id='
+        
+        url_part_b = '&fields=items%2Fsnippet%2Fthumbnails&key='
+        
+        link = url_part_a + channelid + url_part_b + api_key
+        
+        response = urlopen(link)
+        
+        data = json.load(response)  
+        
+        item = data.get('items')
+        
+        snippet = item[0].get('snippet')
+        
+        thumbnails = snippet.get('thumbnails')
+        
+        #high = thumbnails.get('high')
+        
+        default = thumbnails.get('default')
+        
+        url = default.get('url')        
+    
+        return url    
+    
 
     def post(self):
         
@@ -74,6 +105,9 @@ class taskUpdateChannel(webapp2.RequestHandler):
                     channel.channel_name = d.feed.title
                     channel.channel_link = d.feed.link
                     
+                    url = self.getDisplayPicture(channel_id)
+                    channel.display_picture = url
+                    
                     videos = []
                     
                     # Loop through all videos/posts
@@ -99,6 +133,8 @@ class taskUpdateChannel(webapp2.RequestHandler):
                         post_date = parse(post.published)
                         post_date = post_date.strftime('%Y-%m-%d %H:%M:%S')
                         video['post_date'] = post_date
+                        
+                        video['author_avatar'] = url
                     
                         videos.append(video)
                 

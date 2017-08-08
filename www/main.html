@@ -52,7 +52,7 @@
          </nav>
       </header>
       <main>
-        <br> <br>
+         <br> <br>
          <div id="loading-ak">
             <div class="progress red lighten-4">
                <div class="indeterminate red darken-4"></div>
@@ -62,7 +62,7 @@
          <div class="container">
             <div class="section">
                <div class="row">
-                 {% if dump %}
+                  {% if dump %}
                   {% set defaultPlayerLink = '//www.youtube.com/embed/' + dump[0].videoid + '?rel=0'   %}
                   {% endif %}
                   <div id="video-emb">
@@ -77,11 +77,14 @@
                   <ul class="collapsible" data-collapsible="accordion">
                      {% for video in dump %}
                      <li>
-                        <div class="collapsible-header"> 
+                        <div class="collapsible-header">
+                           <div class = "left">
+                              <img src="{{video.author_avatar}}" alt="" id="avatar" class="circle">
+                           </div>
                            <span>
                            <b>{{video.title}}</b> <br>
                            {{video.author}}  
-                           </span>
+                           </span>  
                         </div>
                         <div class="collapsible-body  blue-grey lighten-5">
                            <span>

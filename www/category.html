@@ -83,10 +83,13 @@
                      {% for video in dump %}
                      <li>
                         <div class="collapsible-header"> 
+                           <div class = "left">
+                              <img src="{{video.author_avatar}}" alt="" id="avatar" class="circle">
+                           </div>
                            <span>
                            <b>{{video.title}}</b> <br>
                            {{video.author}}  
-                           </span>
+                           </span> 
                         </div>
                         <div class="collapsible-body  blue-grey lighten-5">
                            <span>
