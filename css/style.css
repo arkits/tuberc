@@ -38,3 +38,8 @@
 .card .card-content {
     height: 200px;
 }
+
+.scroll {
+    height: 700px;
+    overflow: scroll;
+}

@@ -52,9 +52,12 @@
          </nav>
       </header>
       <main>
+         <div class="container">
+            <h4 class="header heavy red-text">All Subscriptions</h4>
+         </div>
          <br>
          <div id="loading-ak">
-           <br> 
+            <br> 
             <div class="progress red lighten-4">
                <div class="indeterminate red darken-4"></div>
             </div>
@@ -72,68 +75,68 @@
                </div>
             </div>
             <div class="col s12 m12 l4">
-               <ul class="collapsible" data-collapsible="accordion">
-                  {% for video in dump %}
-                  <li>
-                     <div class="collapsible-header">
-                        <div class = "left">
-                           <img src="{{video.author_avatar}}" alt="" id="avatar" class="circle">
-                        </div>
-                        <span>
-                        <b>{{video.title}}</b> <br>
-                        {{video.author}}   
-                        </span>  
-                     </div>
-                     <div class="collapsible-body  blue-grey lighten-5">
-                        <span>
-                           <div class="row">
-                              <div class="col s12 m4 l3">
-                                 <p>
-                                    <img src="{{video.thumbnail}}" alt="" class="responsive-img">
-                                 </p>
-                              </div>
-                              <div class="col s12 m4 l6">
-                                 <p> 
-                                    Uploaded {{video.post_date | pretty_date}} <br> 
-                                     By {{video.author}} <br>
-
-                                    <br>
-                                 <div class="chip">
-                                    <img src="img/icons/gaming.jpg" alt="Gaming">
-                                    {{video.category}}
-                                 </div>
-                                 </p>
-                              </div>
-                              <div class="col s12 m4 l3 center">
-                                 <center>
-                                    <p>                      
-                                       {% set playerClicker = 'playthis'+ video.link %}
-                                       {% set playerClickerLink = '//www.youtube.com/embed/' + video.videoid + '?rel=0&autoplay=1' %}
-                                       <a class="btn-floating btn-large waves-effect waves-light red" id ="{{playerClicker}}">
-                                       <i class="material-icons medium">play_arrow</i>
-                                       </a> <br> <br>
-
-                                       <a class="btn-floating btn-large waves-effect waves-light red" href="{{video.link}}">
-                                       <i class="material-icons medium">cast</i>
-                                       </a>
-                                 </center>
-                              </div>
+               <div class="scroll">
+                  <ul class="collapsible" data-collapsible="accordion">
+                     {% for video in dump %}
+                     <li>
+                        <div class="collapsible-header">
+                           <div class = "left">
+                              <img src="{{video.author_avatar}}" alt="" id="avatar" class="circle">
                            </div>
-                        </span>
-                     </div>
-                  </li>
-                  <script>
-                     $(document).ready(function () {
-                        playerClicker = document.getElementById("{{playerClicker}}");
-                        iframe = $('#frame');
-                         $(playerClicker).click(function () {
-                          iframe.attr('src', '{{playerClickerLink}}');
-                          $("html, body").animate({ scrollTop: 0 }, "slow");
-                         });
-                     });
-                  </script>
-                  {% endfor %}
-               </ul>
+                           <span>
+                           <b>{{video.title}}</b> <br>
+                           {{video.author}}   
+                           </span>  
+                        </div>
+                        <div class="collapsible-body  blue-grey lighten-5">
+                           <span>
+                              <div class="row">
+                                 <div class="col s12 m4 l3">
+                                    <p>
+                                       <img src="{{video.thumbnail}}" alt="" class="responsive-img">
+                                    </p>
+                                 </div>
+                                 <div class="col s12 m4 l6">
+                                    <p> 
+                                       Uploaded {{video.post_date | pretty_date}} <br> 
+                                       By {{video.author}} <br>
+                                       <br>
+                                    <div class="chip">
+                                       <img src="img/icons/gaming.jpg" alt="Gaming">
+                                       {{video.category}}
+                                    </div>
+                                    </p>
+                                 </div>
+                                 <div class="col s12 m4 l3 center">
+                                    <center>
+                                       <p>                      
+                                          {% set playerClicker = 'playthis'+ video.link %}
+                                          {% set playerClickerLink = '//www.youtube.com/embed/' + video.videoid + '?rel=0&autoplay=1' %}
+                                          <a class="btn-floating btn-large waves-effect waves-light red" id ="{{playerClicker}}">
+                                          <i class="material-icons medium">play_arrow</i>
+                                          </a> <br> <br>
+                                          <a class="btn-floating btn-large waves-effect waves-light red" href="{{video.link}}">
+                                          <i class="material-icons medium">cast</i>
+                                          </a>
+                                    </center>
+                                 </div>
+                              </div>
+                           </span>
+                        </div>
+                     </li>
+                     <script>
+                        $(document).ready(function () {
+                           playerClicker = document.getElementById("{{playerClicker}}");
+                           iframe = $('#frame');
+                            $(playerClicker).click(function () {
+                             iframe.attr('src', '{{playerClickerLink}}');
+                             $("html, body").animate({ scrollTop: 0 }, "slow");
+                            });
+                        });
+                     </script>
+                     {% endfor %}
+                  </ul>
+               </div>
             </div>
             <center>
                <br> {{number_of_vids}} videos in this list 
