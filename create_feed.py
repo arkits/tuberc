@@ -143,15 +143,27 @@ def user_categories_list(subs_channel_list):
                 video_category = str(video['category'])
                 
                 video_author = str(video['author'])
-                    
+                
+                #logging.info('categories_dict[video_category] len - ' + str(len(categories_dict[video_category])))
+                
+
                 if video_category in categories_dict:
                     
                     if video_author not in categories_dict[video_category]:
                         
-                        categories_dict[video_category].append(video_author)
+                        if len(categories_dict[video_category]) >= 7:
+                            
+                            pass
+                        
+                        else:                        
+                        
+                            categories_dict[video_category].append(video_author)
+                    
                 else:
                     # create a new array in this slot
                     categories_dict[video_category] = [video_author]
+                    
+                
 
     #categories_dict = json.dumps(categories_dict)     
     

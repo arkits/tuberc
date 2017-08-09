@@ -104,7 +104,7 @@
                                  </div>
                                  </p>
                               </div>
-                              <div class="col s12 m4 l3">
+                              <div class="col s12 m4 l3 center">
                                  <center>
                                     <p>                      
                                        {% set playerClicker = 'playthis'+ video.link %}
@@ -112,8 +112,10 @@
                                        <a class="btn-floating btn-large waves-effect waves-light red" id ="{{playerClicker}}">
                                        <i class="material-icons medium">play_arrow</i>
                                        </a> <br> <br>
-                                       <a href="{{video.link}}"class="waves-effect btn-large waves-teal btn-flat">YouTube</a>
-                                    </p>
+
+                                       <a class="btn-floating btn-large waves-effect waves-light red" href="{{video.link}}">
+                                       <i class="material-icons medium">cast</i>
+                                       </a>
                                  </center>
                               </div>
                            </div>
