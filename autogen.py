@@ -66,9 +66,11 @@ class Autogen(webapp2.RequestHandler):
             
                 #self.response.out.write(template.render(content)) 
                 
+                pretty = pprint.pformat(content)
+                
                     
                     
-                self.response.out.write('<pre>' + str(content) + '</pre>') 
+                self.response.out.write('<pre>' + pretty + '</pre>') 
                 
             else:
                 
