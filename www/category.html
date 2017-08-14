@@ -85,7 +85,8 @@
                            </div>
                            <span>
                            <b>{{video.title}}</b> <br>
-                           {{video.author}}   
+                           {{video.author}}   <br>
+                           {{video.post_date | pretty_date}}   
                            </span>  
                         </div>
                         <div class="collapsible-body  blue-grey lighten-5">
@@ -143,10 +144,10 @@
                <br> {{number_of_vids}} videos in this list 
                <br> <br> 
                {% if show_back == True %} 
-               {% set back_page_link = '?page='+ back_page %}
+               {% set back_page_link = '?c=' + category +  '?page='+ back_page %}
                <a class="btn-floating btn-large waves-effect waves-light red" href="{{back_page_link}}"><i class="material-icons">navigate_before</i></a>            
                {% endif %} 
-               {% if show_next == True %} {% set next_page_link = '?page=' + next_page %}
+               {% if show_next == True %} {% set next_page_link =  '?c=' + category +  '?page=' + next_page %}
                <a class="btn-floating btn-large waves-effect waves-light red" href="{{next_page_link}}"><i class="material-icons">navigate_next</i></a>            
                {% endif %}
             </center>
