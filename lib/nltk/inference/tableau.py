@@ -1,20 +1,20 @@
 # Natural Language Toolkit: First-Order Tableau Theorem Prover
 #
-# Copyright (C) 2001-2017 NLTK Project
+# Copyright (C) 2001-2012 NLTK Project
 # Author: Dan Garrette <dhgarrette@gmail.com>
 #
-# URL: <http://nltk.org/>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
 """
 Module for a tableau-based First Order theorem prover.
 """
-from __future__ import print_function, unicode_literals
 
+from __future__ import print_function
 from nltk.internals import Counter
 
 from nltk.sem.logic import (VariableExpression, EqualityExpression,
-                            ApplicationExpression, Expression,
+                            ApplicationExpression, LogicParser,
                             AbstractVariableExpression, AllExpression,
                             NegatedExpression,
                             ExistsExpression, Variable, ImpExpression,
@@ -489,12 +489,11 @@ class Debug(object):
             if ctx:
                 data = '%s, %s' % (ex, ctx)
             else:
-                data = '%s' % ex
+                data = str(ex)
 
             if isinstance(ex, AllExpression):
                 try:
-                    used_vars = "[%s]" % (",".join("%s" % ve.variable.name for ve in ex._used_vars))
-                    data += ':   %s' % used_vars
+                    data += ':   %s' % str([ve.variable.name for ve in ex._used_vars])
                 except AttributeError:
                     data += ':   []'
 
@@ -550,6 +549,8 @@ def testTableauProver():
 #    tableau_test('-all x.some y.F(x,y) & some x.all y.(-F(x,y))')
 #    tableau_test('some x.all y.sees(x,y)')
 
+    parse = LogicParser().parse
+
     p1 = 'all x.(man(x) -> mortal(x))'
     p2 = 'man(Socrates)'
     c = 'mortal(Socrates)'
@@ -592,8 +593,9 @@ def testHigherOrderTableauProver():
 
 
 def tableau_test(c, ps=None, verbose=False):
-    pc = Expression.fromstring(c)
-    pps = ([Expression.fromstring(p) for p in ps] if ps else [])
+    lp = LogicParser()
+    pc = lp.parse(c)
+    pps = ([lp.parse(p) for p in ps] if ps else [])
     if not ps:
         ps = []
     print('%s |- %s: %s' % (', '.join(ps), pc, TableauProver().prove(pc, pps, verbose=verbose)))

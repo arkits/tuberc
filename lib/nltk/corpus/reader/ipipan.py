@@ -1,16 +1,14 @@
 # Natural Language Toolkit: IPI PAN Corpus Reader
 #
-# Copyright (C) 2001-2017 NLTK Project
+# Copyright (C) 2001-2012 NLTK Project
 # Author: Konrad Goluchowski <kodie@mimuw.edu.pl>
-# URL: <http://nltk.org/>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
 import functools
 
-from six import string_types
-
-from nltk.corpus.reader.util import StreamBackedCorpusView, concat
-from nltk.corpus.reader.api import CorpusReader
+from .util import StreamBackedCorpusView, concat
+from .api import CorpusReader
 
 def _parse_args(fun):
     @functools.wraps(fun)
@@ -63,12 +61,8 @@ class IPIPANCorpusReader(CorpusReader):
     def raw(self, fileids=None):
         if not fileids:
             fileids = self.fileids()
-
-        filecontents = []
-        for fileid in self._list_morph_files(fileids):
-            with open(fileid, 'r') as infile:
-                filecontents.append(infile.read())
-        return ''.join(filecontents)
+        return ''.join([open(fileid, 'r').read()
+            for fileid in self._list_morph_files(fileids)])
 
     def channels(self, fileids=None):
         if not fileids:
@@ -94,11 +88,11 @@ class IPIPANCorpusReader(CorpusReader):
         if channels is None and domains is None and \
                 categories is None:
             return CorpusReader.fileids(self)
-        if isinstance(channels, string_types):
+        if isinstance(channels, basestring):
             channels = [channels]
-        if isinstance(domains, string_types):
+        if isinstance(domains, basestring):
             domains = [domains]
-        if isinstance(categories, string_types):
+        if isinstance(categories, basestring):
             categories = [categories]
         if channels:
             return self._list_morph_files_by('channel', channels)
@@ -172,8 +166,7 @@ class IPIPANCorpusReader(CorpusReader):
 
     def _get_tag(self, f, tag):
         tags = []
-        with open(f, 'r') as infile:
-            header = infile.read()
+        header = open(f, 'r').read()
         tag_end = 0
         while True:
             tag_pos = header.find('<'+tag, tag_end)

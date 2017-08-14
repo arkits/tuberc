@@ -1,18 +1,17 @@
 # Natural Language Toolkit: Chunk format conversions
 #
-# Copyright (C) 2001-2017 NLTK Project
-# Author: Edward Loper <edloper@gmail.com>
-#         Steven Bird <stevenbird1@gmail.com> (minor additions)
-# URL: <http://nltk.org/>
+# Copyright (C) 2001-2012 NLTK Project
+# Author: Edward Loper <edloper@gradient.cis.upenn.edu>
+#         Steven Bird <sb@csse.unimelb.edu.au> (minor additions)
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
-from __future__ import print_function, unicode_literals, division
 
+from __future__ import print_function
 import re
+import string
 
 from nltk.tree import Tree
-from nltk.tag.mapping import map_tag
 from nltk.tag.util import str2tuple
-from nltk.compat import python_2_unicode_compatible
 
 ##//////////////////////////////////////////////////////
 ## EVALUATION
@@ -63,11 +62,11 @@ class ChunkScore(object):
     as ``precision`` and ``f_measure``.  A typical use of the
     ``ChunkScore`` class is::
 
-        >>> chunkscore = ChunkScore()           # doctest: +SKIP
-        >>> for correct in correct_sentences:   # doctest: +SKIP
-        ...     guess = chunkparser.parse(correct.leaves())   # doctest: +SKIP
-        ...     chunkscore.score(correct, guess)              # doctest: +SKIP
-        >>> print('F Measure:', chunkscore.f_measure())       # doctest: +SKIP
+        >>> chunkscore = ChunkScore()
+        >>> for correct in correct_sentences:
+        ...     guess = chunkparser.parse(correct.leaves())
+        ...     chunkscore.score(correct, guess)
+        >>> print 'F Measure:', chunkscore.f_measure()
         F Measure: 0.823
 
     :ivar kwargs: Keyword arguments:
@@ -94,7 +93,7 @@ class ChunkScore(object):
           negative examples.  This does *not* affect any of the
           numerical metrics (precision, recall, or f-measure)
 
-        - chunk_label: A regular expression indicating which chunks
+        - chunk_node: A regular expression indicating which chunks
           should be compared.  Defaults to ``'.*'`` (i.e., all chunks).
 
     :type _tp: list(Token)
@@ -120,7 +119,7 @@ class ChunkScore(object):
         self._max_tp = kwargs.get('max_tp_examples', 100)
         self._max_fp = kwargs.get('max_fp_examples', 100)
         self._max_fn = kwargs.get('max_fn_examples', 100)
-        self._chunk_label = kwargs.get('chunk_label', '.*')
+        self._chunk_node = kwargs.get('chunk_node', '.*')
         self._tp_num = 0
         self._fp_num = 0
         self._fn_num = 0
@@ -151,8 +150,8 @@ class ChunkScore(object):
         :type guessed: chunk structure
         :param guessed: The chunked sentence to be scored.
         """
-        self._correct |= _chunksets(correct, self._count, self._chunk_label)
-        self._guessed |= _chunksets(guessed, self._count, self._chunk_label)
+        self._correct |= _chunksets(correct, self._count, self._chunk_node)
+        self._guessed |= _chunksets(guessed, self._count, self._chunk_node)
         self._count += 1
         self._measuresNeedUpdate = True
         # Keep track of per-tag accuracy (if possible)
@@ -190,7 +189,7 @@ class ChunkScore(object):
         self._updateMeasures()
         div = self._tp_num + self._fp_num
         if div == 0: return 0
-        else: return self._tp_num / div
+        else: return float(self._tp_num) / div
 
     def recall(self):
         """
@@ -202,7 +201,7 @@ class ChunkScore(object):
         self._updateMeasures()
         div = self._tp_num + self._fn_num
         if div == 0: return 0
-        else: return self._tp_num / div
+        else: return float(self._tp_num) / div
 
     def f_measure(self, alpha=0.5):
         """
@@ -276,7 +275,7 @@ class ChunkScore(object):
 
         :rtype: str
         """
-        return '<ChunkScoring of '+repr(len(self))+' chunks>'
+        return '<ChunkScoring of '+`len(self)`+' chunks>'
 
     def __str__(self):
         """
@@ -288,19 +287,19 @@ class ChunkScore(object):
         :rtype: str
         """
         return ("ChunkParse score:\n" +
-                ("    IOB Accuracy: {:5.1f}%%\n".format(self.accuracy()*100)) +
-                ("    Precision:    {:5.1f}%%\n".format(self.precision()*100)) +
-                ("    Recall:       {:5.1f}%%\n".format(self.recall()*100))+
-                ("    F-Measure:    {:5.1f}%%".format(self.f_measure()*100)))
+                ("    IOB Accuracy: %5.1f%%\n" % (self.accuracy()*100)) +
+                ("    Precision:    %5.1f%%\n" % (self.precision()*100)) +
+                ("    Recall:       %5.1f%%\n" % (self.recall()*100))+
+                ("    F-Measure:    %5.1f%%" % (self.f_measure()*100)))
 
 # extract chunks, and assign unique id, the absolute position of
 # the first word of the chunk
-def _chunksets(t, count, chunk_label):
+def _chunksets(t, count, chunk_node):
     pos = 0
     chunks = []
     for child in t:
         if isinstance(child, Tree):
-            if re.match(chunk_label, child.label()):
+            if re.match(chunk_node, child.node):
                 chunks.append(((count, pos), child.freeze()))
             pos += len(child.leaves())
         else:
@@ -308,8 +307,7 @@ def _chunksets(t, count, chunk_label):
     return set(chunks)
 
 
-def tagstr2tree(s, chunk_label="NP", root_label="S", sep='/',
-                source_tagset=None, target_tagset=None):
+def tagstr2tree(s, chunk_node="NP", top_node="S", sep='/'):
     """
     Divide a string of bracketted tagged text into
     chunks and unchunked tokens, and produce a Tree.
@@ -320,45 +318,42 @@ def tagstr2tree(s, chunk_label="NP", root_label="S", sep='/',
 
     :param s: The string to be converted
     :type s: str
-    :param chunk_label: The label to use for chunk nodes
-    :type chunk_label: str
-    :param root_label: The label to use for the root of the tree
-    :type root_label: str
+    :param chunk_node: The label to use for chunk nodes
+    :type chunk_node: str
+    :param top_node: The label to use for the root of the tree
+    :type top_node: str
     :rtype: Tree
     """
 
     WORD_OR_BRACKET = re.compile(r'\[|\]|[^\[\]\s]+')
 
-    stack = [Tree(root_label, [])]
+    stack = [Tree(top_node, [])]
     for match in WORD_OR_BRACKET.finditer(s):
         text = match.group()
         if text[0] == '[':
             if len(stack) != 1:
-                raise ValueError('Unexpected [ at char {:d}'.format(match.start()))
-            chunk = Tree(chunk_label, [])
+                raise ValueError('Unexpected [ at char %d' % match.start())
+            chunk = Tree(chunk_node, [])
             stack[-1].append(chunk)
             stack.append(chunk)
         elif text[0] == ']':
             if len(stack) != 2:
-                raise ValueError('Unexpected ] at char {:d}'.format(match.start()))
+                raise ValueError('Unexpected ] at char %d' % match.start())
             stack.pop()
         else:
             if sep is None:
                 stack[-1].append(text)
             else:
-                word, tag = str2tuple(text, sep)
-                if source_tagset and target_tagset:
-                    tag = map_tag(source_tagset, target_tagset, tag)
-                stack[-1].append((word, tag))
+                stack[-1].append(str2tuple(text, sep))
 
     if len(stack) != 1:
-        raise ValueError('Expected ] at char {:d}'.format(len(s)))
+        raise ValueError('Expected ] at char %d' % len(s))
     return stack[0]
 
 ### CONLL
 
 _LINE_RE = re.compile('(\S+)\s+(\S+)\s+([IOB])-?(\S+)?')
-def conllstr2tree(s, chunk_types=('NP', 'PP', 'VP'), root_label="S"):
+def conllstr2tree(s, chunk_types=('NP', 'PP', 'VP'), top_node="S"):
     """
     Return a chunk structure for a single sentence
     encoded in the given CONLL 2000 style string.
@@ -371,12 +366,12 @@ def conllstr2tree(s, chunk_types=('NP', 'PP', 'VP'), root_label="S"):
     :type s: str
     :param chunk_types: The chunk types to be converted.
     :type chunk_types: tuple
-    :param root_label: The node label to use for the root.
-    :type root_label: str
+    :param top_node: The node label to use for the root.
+    :type top_node: str
     :rtype: Tree
     """
 
-    stack = [Tree(root_label, [])]
+    stack = [Tree(top_node, [])]
 
     for lineno, line in enumerate(s.split('\n')):
         if not line.strip(): continue
@@ -384,7 +379,7 @@ def conllstr2tree(s, chunk_types=('NP', 'PP', 'VP'), root_label="S"):
         # Decode the line.
         match = _LINE_RE.match(line)
         if match is None:
-            raise ValueError('Error on line {:d}'.format(lineno))
+            raise ValueError('Error on line %d' % lineno)
         (word, tag, state, chunk_type) = match.groups()
 
         # If it's a chunk type we don't care about, treat it as O.
@@ -394,7 +389,7 @@ def conllstr2tree(s, chunk_types=('NP', 'PP', 'VP'), root_label="S"):
 
         # For "Begin"/"Outside", finish any completed chunks -
         # also do so for "Inside" which don't match the previous token.
-        mismatch_I = state == 'I' and chunk_type != stack[-1].label()
+        mismatch_I = state == 'I' and chunk_type != stack[-1].node
         if state in 'BO' or mismatch_I:
             if len(stack) == 2: stack.pop()
 
@@ -422,7 +417,7 @@ def tree2conlltags(t):
     tags = []
     for child in t:
         try:
-            category = child.label()
+            category = child.node
             prefix = "B-"
             for contents in child:
                 if isinstance(contents, Tree):
@@ -434,11 +429,11 @@ def tree2conlltags(t):
     return tags
 
 def conlltags2tree(sentence, chunk_types=('NP','PP','VP'),
-                   root_label='S', strict=False):
+                   top_node='S', strict=False):
     """
     Convert the CoNLL IOB format to a tree.
     """
-    tree = Tree(root_label, [])
+    tree = Tree(top_node, [])
     for (word, postag, chunktag) in sentence:
         if chunktag is None:
             if strict:
@@ -450,7 +445,7 @@ def conlltags2tree(sentence, chunk_types=('NP','PP','VP'),
             tree.append(Tree(chunktag[2:], [(word,postag)]))
         elif chunktag.startswith('I-'):
             if (len(tree)==0 or not isinstance(tree[-1], Tree) or
-                tree[-1].label() != chunktag[2:]):
+                tree[-1].node != chunktag[2:]):
                 if strict:
                     raise ValueError("Bad conll tag sequence")
                 else:
@@ -461,7 +456,7 @@ def conlltags2tree(sentence, chunk_types=('NP','PP','VP'),
         elif chunktag == 'O':
             tree.append((word,postag))
         else:
-            raise ValueError("Bad conll tag {0!r}".format(chunktag))
+            raise ValueError("Bad conll tag %r" % chunktag)
     return tree
 
 def tree2conllstr(t):
@@ -473,7 +468,7 @@ def tree2conllstr(t):
     :type t: Tree
     :rtype: str
     """
-    lines = [" ".join(token) for token in tree2conlltags(t)]
+    lines = [string.join(token) for token in tree2conlltags(t)]
     return '\n'.join(lines)
 
 ### IEER
@@ -489,8 +484,8 @@ _IEER_DOC_RE = re.compile(r'<DOC>\s*'
 
 _IEER_TYPE_RE = re.compile('<b_\w+\s+[^>]*?type="(?P<type>\w+)"')
 
-def _ieer_read_text(s, root_label):
-    stack = [Tree(root_label, [])]
+def _ieer_read_text(s, top_node):
+    stack = [Tree(top_node, [])]
     # s will be None if there is no headline in the text
     # return the empty list in place of a Tree
     if s is None:
@@ -512,14 +507,14 @@ def _ieer_read_text(s, root_label):
             else:
                 stack[-1].append(piece)
         except (IndexError, ValueError):
-            raise ValueError('Bad IEER string (error at character {:d})'.format \
-                             (piece_m.start()))
+            raise ValueError('Bad IEER string (error at character %d)' %
+                             piece_m.start())
     if len(stack) != 1:
         raise ValueError('Bad IEER string')
     return stack[0]
 
 def ieerstr2tree(s, chunk_types = ['LOCATION', 'ORGANIZATION', 'PERSON', 'DURATION',
-               'DATE', 'CARDINAL', 'PERCENT', 'MONEY', 'MEASURE'], root_label="S"):
+               'DATE', 'CARDINAL', 'PERCENT', 'MONEY', 'MEASURE'], top_node="S"):
     """
     Return a chunk structure containing the chunked tagged text that is
     encoded in the given IEER style string.
@@ -536,24 +531,24 @@ def ieerstr2tree(s, chunk_types = ['LOCATION', 'ORGANIZATION', 'PERSON', 'DURATI
     m = _IEER_DOC_RE.match(s)
     if m:
         return {
-            'text': _ieer_read_text(m.group('text'), root_label),
+            'text': _ieer_read_text(m.group('text'), top_node),
             'docno': m.group('docno'),
             'doctype': m.group('doctype'),
             'date_time': m.group('date_time'),
             #'headline': m.group('headline')
             # we want to capture NEs in the headline too!
-            'headline': _ieer_read_text(m.group('headline'), root_label),
+            'headline': _ieer_read_text(m.group('headline'), top_node),
             }
     else:
-        return _ieer_read_text(s, root_label)
+        return _ieer_read_text(s, top_node)
 
 
 def demo():
 
     s = "[ Pierre/NNP Vinken/NNP ] ,/, [ 61/CD years/NNS ] old/JJ ,/, will/MD join/VB [ the/DT board/NN ] ./."
     import nltk
-    t = nltk.chunk.tagstr2tree(s, chunk_label='NP')
-    t.pprint()
+    t = nltk.chunk.tagstr2tree(s, chunk_node='NP')
+    print(t.pprint())
     print()
 
     s = """
@@ -587,7 +582,7 @@ better JJR I-ADJP
 """
 
     conll_tree = conllstr2tree(s, chunk_types=('NP', 'PP'))
-    conll_tree.pprint()
+    print(conll_tree.pprint())
 
     # Demonstrate CoNLL output
     print("CoNLL output:")

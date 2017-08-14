@@ -1,24 +1,24 @@
 # Natural Language Toolkit: Interface to the Prover9 Theorem Prover
 #
-# Copyright (C) 2001-2017 NLTK Project
+# Copyright (C) 2001-2012 NLTK Project
 # Author: Dan Garrette <dhgarrette@gmail.com>
 #         Ewan Klein <ewan@inf.ed.ac.uk>
 #
-# URL: <http://nltk.org/>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 """
 A theorem prover that makes use of the external 'Prover9' package.
 """
-from __future__ import print_function
 
+from __future__ import print_function
 import os
 import subprocess
 
 import nltk
-from nltk.sem.logic import Expression, ExistsExpression, AllExpression, \
+from nltk.sem.logic import LogicParser, ExistsExpression, AllExpression, \
     NegatedExpression, AndExpression, IffExpression, OrExpression, \
     EqualityExpression, ImpExpression
-from nltk.inference.api import BaseProverCommand, Prover
+from api import BaseProverCommand, Prover
 
 #
 # Following is not yet used. Return code for 2 actually realized as 512.
@@ -114,7 +114,7 @@ class Prover9Parent(object):
             self._prover9_bin = nltk.internals.find_binary(
                                   name,
                                   path_to_bin=binary_location,
-                                  env_vars=['PROVER9'],
+                                  env_vars=['PROVER9HOME'],
                                   url='http://www.cs.unm.edu/~mccune/prover9/',
                                   binary_names=[name, name + '.exe'],
                                   verbose=verbose)
@@ -160,7 +160,7 @@ class Prover9Parent(object):
             binary_locations += [self._binary_location]
         return nltk.internals.find_binary(name,
             searchpath=binary_locations,
-            env_vars=['PROVER9'],
+            env_vars=['PROVER9HOME'],
             url='http://www.cs.unm.edu/~mccune/prover9/',
             binary_names=[name, name + '.exe'],
             verbose=verbose)
@@ -182,21 +182,17 @@ class Prover9Parent(object):
 
         # Call prover9 via a subprocess
         cmd = [binary] + args
-        try:
-            input_str = input_str.encode("utf8")
-        except AttributeError:
-            pass
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT,
                              stdin=subprocess.PIPE)
-        (stdout, stderr) = p.communicate(input=input_str)
+        (stdout, stderr) = p.communicate(input_str)
 
         if verbose:
             print('Return code:', p.returncode)
             if stdout: print('stdout:\n', stdout, '\n')
             if stderr: print('stderr:\n', stderr, '\n')
 
-        return (stdout.decode("utf-8"), p.returncode)
+        return (stdout, p.returncode)
 
 
 def convert_to_prover9(input):
@@ -348,8 +344,8 @@ class Prover9LimitExceededException(Prover9Exception):
 
 def test_config():
 
-    a = Expression.fromstring('(walk(j) & sing(j))')
-    g = Expression.fromstring('walk(j)')
+    a = LogicParser().parse('(walk(j) & sing(j))')
+    g = LogicParser().parse('walk(j)')
     p = Prover9Command(g, assumptions=[a])
     p._executable_path = None
     p.prover9_search=[]
@@ -363,7 +359,7 @@ def test_convert_to_prover9(expr):
     Test that parsing works OK.
     """
     for t in expr:
-        e = Expression.fromstring(t)
+        e = LogicParser().parse(t)
         print(convert_to_prover9(e))
 
 def test_prove(arguments):
@@ -371,8 +367,8 @@ def test_prove(arguments):
     Try some proofs and exhibit the results.
     """
     for (goal, assumptions) in arguments:
-        g = Expression.fromstring(goal)
-        alist = [Expression.fromstring(a) for a in assumptions]
+        g = LogicParser().parse(goal)
+        alist = [LogicParser().parse(a) for a in assumptions]
         p = Prover9Command(g, assumptions=alist).prove()
         for a in alist:
             print('   %s' % a)

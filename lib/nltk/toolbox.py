@@ -1,7 +1,6 @@
-# coding: utf-8
 # Natural Language Toolkit: Toolbox Reader
 #
-# Copyright (C) 2001-2017 NLTK Project
+# Copyright (C) 2001-2012 NLTK Project
 # Author: Greg Aumann <greg_aumann@sil.org>
 # URL: <http://nltk.org>
 # For license information, see LICENSE.TXT
@@ -10,16 +9,13 @@
 Module for reading, writing and manipulating
 Toolbox databases and settings files.
 """
-from __future__ import print_function
 
+from __future__ import print_function
 import os, re, codecs
+from StringIO import StringIO
 from xml.etree.ElementTree import ElementTree, TreeBuilder, Element, SubElement
 
-from six import u
-
-from nltk.compat import StringIO, PY3
 from nltk.data import PathPointer, ZipFilePathPointer, find
-
 
 class StandardFormat(object):
     """
@@ -64,12 +60,12 @@ class StandardFormat(object):
         join_string = '\n'
         line_regexp = r'^%s(?:\\(\S+)\s*)?(.*)$'
         # discard a BOM in the first line
-        first_line_pat = re.compile(line_regexp % '(?:\xef\xbb\xbf)?')
+        first_line_pat = re.compile(line_regexp % u'(?:\ufeff)?'.encode('utf8'))
         line_pat = re.compile(line_regexp % '')
         # need to get first line outside the loop for correct handling
         # of the first marker if it spans multiple lines
         file_iter = iter(self._file)
-        line = next(file_iter)
+        line = file_iter.next()
         mobj = re.match(first_line_pat, line)
         mkr, line_value = mobj.groups()
         value_lines = [line_value,]
@@ -115,7 +111,7 @@ class StandardFormat(object):
             raise ValueError('unicode_fields is set but not encoding.')
         unwrap_pat = re.compile(r'\n+')
         for mkr, val in self.raw_fields():
-            if encoding and not PY3: # kludge - already decoded in PY3?
+            if encoding:
                 if unicode_fields is not None and mkr in unicode_fields:
                     val = val.decode('utf8', errors)
                 else:
@@ -221,7 +217,7 @@ class ToolboxData(StandardFormat):
     def _tree2etree(self, parent):
         from nltk.tree import Tree
 
-        root = Element(parent.label())
+        root = Element(parent.node)
         for child in parent:
             if isinstance(child, Tree):
                 root.append(self._tree2etree(child))
@@ -231,7 +227,7 @@ class ToolboxData(StandardFormat):
                 e.text = text
         return root
 
-    def _chunk_parse(self, grammar=None, root_label='record', trace=0, **kwargs):
+    def _chunk_parse(self, grammar=None, top_node='record', trace=0, **kwargs):
         """
         Returns an element tree structure corresponding to a toolbox data file
         parsed according to the chunk grammar.
@@ -239,8 +235,8 @@ class ToolboxData(StandardFormat):
         :type grammar: str
         :param grammar: Contains the chunking rules used to parse the
             database.  See ``chunk.RegExp`` for documentation.
-        :type root_label: str
-        :param root_label: The node value that should be used for the
+        :type top_node: str
+        :param top_node: The node value that should be used for the
             top node of the chunk structure.
         :type trace: int
         :param trace: The level of tracing that should be used when
@@ -254,7 +250,7 @@ class ToolboxData(StandardFormat):
         from nltk import chunk
         from nltk.tree import Tree
 
-        cp = chunk.RegexpParser(grammar, root_label=root_label, trace=trace)
+        cp = chunk.RegexpParser(grammar, top_node=top_node, trace=trace)
         db = self.parse(**kwargs)
         tb_etree = Element('toolbox_data')
         header = db.find('header')
@@ -303,9 +299,9 @@ def to_sfm_string(tree, encoding=None, errors='strict', unicode_fields=None):
                 else:
                     cur_encoding = encoding
                 if re.search(_is_value, value):
-                    l.append((u("\\%s %s\n") % (mkr, value)).encode(cur_encoding, errors))
+                    l.append((u"\\%s %s\n" % (mkr, value)).encode(cur_encoding, errors))
                 else:
-                    l.append((u("\\%s%s\n") % (mkr, value)).encode(cur_encoding, errors))
+                    l.append((u"\\%s%s\n" % (mkr, value)).encode(cur_encoding, errors))
             else:
                 if re.search(_is_value, value):
                     l.append("\\%s %s\n" % (mkr, value))
@@ -429,7 +425,8 @@ def _sort_fields(elem, orders_dicts):
     except KeyError:
         pass
     else:
-        tmp = sorted([((order.get(child.tag, 1e9), i), child) for i, child in enumerate(elem)])
+        tmp = [((order.get(child.tag, 1e9), i), child) for i, child in enumerate(elem)]
+        tmp.sort()
         elem[:] = [child for key, child in tmp]
     for child in elem:
         if len(child):

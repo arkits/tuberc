@@ -1,4 +1,4 @@
-.. Copyright (C) 2001-2017 NLTK Project
+.. Copyright (C) 2001-2012 NLTK Project
 .. For license information, see LICENSE.TXT
 
 ================
@@ -9,7 +9,7 @@ The `nltk.corpus` package defines a collection of *corpus reader*
 classes, which can be used to access the contents of a diverse set of
 corpora.  The list of available corpora is given at:
 
-http://www.nltk.org/nltk_data/
+http://nltk.googlecode.com/svn/trunk/nltk_data/index.xml
 
 Each corpus reader class is specialized to handle a specific
 corpus format.  In addition, the `nltk.corpus` package automatically
@@ -41,16 +41,16 @@ means of a "corpus reader" object from ``nltk.corpus``:
 
     >>> import nltk.corpus
     >>> # The Brown corpus:
-    >>> print(str(nltk.corpus.brown).replace('\\\\','/'))
+    >>> nltk.corpus.brown
     <CategorizedTaggedCorpusReader in '.../corpora/brown'...>
     >>> # The Penn Treebank Corpus:
-    >>> print(str(nltk.corpus.treebank).replace('\\\\','/'))
+    >>> nltk.corpus.treebank
     <BracketParseCorpusReader in '.../corpora/treebank/combined'...>
     >>> # The Name Genders Corpus:
-    >>> print(str(nltk.corpus.names).replace('\\\\','/'))
+    >>> nltk.corpus.names
     <WordListCorpusReader in '.../corpora/names'...>
     >>> # The Inaugural Address Corpus:
-    >>> print(str(nltk.corpus.inaugural).replace('\\\\','/'))
+    >>> nltk.corpus.inaugural
     <PlaintextCorpusReader in '.../corpora/inaugural'...>
 
 Most corpora consist of a set of files, each containing a document (or
@@ -69,9 +69,9 @@ words, a list of sentences, or a list of paragraphs.
 
     >>> from nltk.corpus import inaugural
     >>> inaugural.raw('1789-Washington.txt') # doctest: +ELLIPSIS
-    'Fellow-Citizens of the Senate ...'
+    'Fellow-Citizens of the Senate ...
     >>> inaugural.words('1789-Washington.txt')
-    ['Fellow', '-', 'Citizens', 'of', 'the', ...]
+    ['Fellow', '-', 'Citizens', 'of', 'the', 'Senate', ...]
     >>> inaugural.sents('1789-Washington.txt') # doctest: +ELLIPSIS
     [['Fellow', '-', 'Citizens'...], ['Among', 'the', 'vicissitudes'...]...]
     >>> inaugural.paras('1789-Washington.txt') # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
@@ -87,7 +87,7 @@ of the individual documents.
     >>> l1 = len(inaugural.words('1789-Washington.txt'))
     >>> l2 = len(inaugural.words('1793-Washington.txt'))
     >>> l3 = len(inaugural.words(['1789-Washington.txt', '1793-Washington.txt']))
-    >>> print('%s+%s == %s' % (l1, l2, l3))
+    >>> print '%s+%s == %s' % (l1, l2, l3)
     1538+147 == 1685
 
 If the reader methods are called without any arguments, they will
@@ -107,17 +107,26 @@ Plaintext Corpora
 Here are the first few words from each of NLTK's plaintext corpora:
 
     >>> nltk.corpus.abc.words()
-    ['PM', 'denies', 'knowledge', 'of', 'AWB', ...]
+    ['PM', 'denies', 'knowledge', 'of', 'AWB', 'kickbacks', ...]
     >>> nltk.corpus.genesis.words()
     [u'In', u'the', u'beginning', u'God', u'created', ...]
     >>> nltk.corpus.gutenberg.words(fileids='austen-emma.txt')
-    ['[', 'Emma', 'by', 'Jane', 'Austen', '1816', ...]
+    ['[', 'Emma', 'by', 'Jane', 'Austen', '1816', ']', ...]
     >>> nltk.corpus.inaugural.words()
-    ['Fellow', '-', 'Citizens', 'of', 'the', ...]
+    ['Fellow', '-', 'Citizens', 'of', 'the', 'Senate', ...]
     >>> nltk.corpus.state_union.words()
-    ['PRESIDENT', 'HARRY', 'S', '.', 'TRUMAN', "'", ...]
+    ['PRESIDENT', 'HARRY', 'S', '.', 'TRUMAN', "'", 'S', ...]
+    >>> nltk.corpus.udhr.words() # doctest: +NORMALIZE_WHITESPACE
+    ['\xc0\xf3\xe0\xfe\xfb\xf2\xfa\xfb\xfe\xf1\xe0',
+     '\xe8\xe7\xe8\xed6\xfa\xe0', ...]
     >>> nltk.corpus.webtext.words()
     ['Cookie', 'Manager', ':', '"', 'Don', "'", 't', ...]
+
+We can obtain character offsets for tokens in plaintext corpora
+using the ``sourced`` flag:
+
+    >>> nltk.corpus.inaugural.words(sourced=True)
+    ['Fellow'@[0:6], '-'@[6], 'Citizens'@[7:15], ...]
 
 Tagged Corpora
 ==============
@@ -129,46 +138,48 @@ methods ``tagged_*()`` which words as `(word,tag)` tuples, rather
 than just bare word strings.
 
     >>> from nltk.corpus import brown
-    >>> print(brown.words())
-    ['The', 'Fulton', 'County', 'Grand', 'Jury', ...]
-    >>> print(brown.tagged_words())
+    >>> print brown.words()
+    ['The', 'Fulton', 'County', 'Grand', 'Jury', 'said', ...]
+    >>> print brown.tagged_words()
     [('The', 'AT'), ('Fulton', 'NP-TL'), ...]
-    >>> print(brown.sents()) # doctest: +ELLIPSIS
+    >>> print brown.sents() # doctest: +ELLIPSIS
     [['The', 'Fulton', 'County'...], ['The', 'jury', 'further'...], ...]
-    >>> print(brown.tagged_sents()) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    >>> print brown.tagged_sents() # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     [[('The', 'AT'), ('Fulton', 'NP-TL')...],
      [('The', 'AT'), ('jury', 'NN'), ('further', 'RBR')...]...]
-    >>> print(brown.paras(categories='reviews')) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    >>> print brown.paras(categories='reviews') # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     [[['It', 'is', 'not', 'news', 'that', 'Nathan', 'Milstein'...],
       ['Certainly', 'not', 'in', 'Orchestra', 'Hall', 'where'...]],
      [['There', 'was', 'about', 'that', 'song', 'something', ...],
       ['Not', 'the', 'noblest', 'performance', 'we', 'have', ...], ...], ...]
-    >>> print(brown.tagged_paras(categories='reviews')) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    >>> print brown.tagged_paras(categories='reviews') # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     [[[('It', 'PPS'), ('is', 'BEZ'), ('not', '*'), ...],
       [('Certainly', 'RB'), ('not', '*'), ('in', 'IN'), ...]],
      [[('There', 'EX'), ('was', 'BEDZ'), ('about', 'IN'), ...],
       [('Not', '*'), ('the', 'AT'), ('noblest', 'JJT'), ...], ...], ...]
 
-Similarly, the Indian Language POS-Tagged Corpus includes samples of
+Similarly, the Indian Langauge POS-Tagged Corpus includes samples of
 Indian text annotated with part-of-speech tags:
 
     >>> from nltk.corpus import indian
-    >>> print(indian.words()) # doctest: +SKIP
+    >>> print indian.words() # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     ['\xe0\xa6\xae\xe0\xa6\xb9\xe0\xa6\xbf\...',
      '\xe0\xa6\xb8\xe0\xa6\xa8\xe0\xa7\x8d\xe0...', ...]
-    >>> print(indian.tagged_words()) # doctest: +SKIP
+    >>> print indian.tagged_words() # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     [('\xe0\xa6\xae\xe0\xa6\xb9\xe0\xa6\xbf...', 'NN'),
      ('\xe0\xa6\xb8\xe0\xa6\xa8\xe0\xa7\x8d\xe0...', 'NN'), ...]
 
-Several tagged corpora support access to a simplified, universal tagset, e.g. where all nouns
-tags are collapsed to a single category ``NOUN``:
+Tagged corpora support access to simplified tags, e.g. where all nouns
+tags are collapsed to a single category ``N``:
 
-    >>> print(brown.tagged_sents(tagset='universal')) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-    [[('The', 'DET'), ('Fulton', 'NOUN'), ('County', 'NOUN'), ('Grand', 'ADJ'), ('Jury', 'NOUN'), ...],
-     [('The', 'DET'), ('jury', 'NOUN'), ('further', 'ADV'), ('said', 'VERB'), ('in', 'ADP'), ...]...]
+    >>> print brown.tagged_sents(simplify_tags=True) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    [[('The', 'DET'), ('Fulton', 'NP'), ('County', 'N'), ('Grand', 'ADJ'), ...],
+     [('The', 'DET'), ('jury', 'N'), ('further', 'ADV'), ('said', 'VD'), ...]...]
     >>> from nltk.corpus import conll2000, switchboard
-    >>> print(conll2000.tagged_words(tagset='universal')) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-    [('Confidence', 'NOUN'), ('in', 'ADP'), ...]
+    >>> print conll2000.tagged_words(simplify_tags=True) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    [('Confidence', 'N'), ('in', 'P'), ('the', 'DET'), ...]
+    >>> print switchboard.tagged_words(simplify_tags=True) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    [('Uh', 'UH'), (',', ','), ('do', 'V'), ('you', 'PRO'), ...]
 
 Use ``nltk.app.pos_concordance()`` to access a GUI for searching tagged corpora.
 
@@ -180,11 +191,11 @@ flat trees.  The CoNLL 2000 Corpus includes phrasal chunks; and the
 CoNLL 2002 Corpus includes named entity chunks.
 
     >>> from nltk.corpus import conll2000, conll2002
-    >>> print(conll2000.sents()) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    >>> print conll2000.sents() # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     [['Confidence', 'in', 'the', 'pound', 'is', 'widely', ...],
      ['Chancellor', 'of', 'the', 'Exchequer', ...], ...]
     >>> for tree in conll2000.chunked_sents()[:2]:
-    ...     print(tree) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    ...     print tree # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     (S
       (NP Confidence/NN)
       (PP in/IN)
@@ -198,10 +209,10 @@ CoNLL 2002 Corpus includes named entity chunks.
       (PP of/IN)
       (NP the/DT Exchequer/NNP)
       ...)
-    >>> print(conll2002.sents()) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    >>> print conll2002.sents() # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     [[u'Sao', u'Paulo', u'(', u'Brasil', u')', u',', ...], [u'-'], ...]
     >>> for tree in conll2002.chunked_sents()[:2]:
-    ...     print(tree) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    ...     print tree # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     (S
       (LOC Sao/NC Paulo/VMI)
       (/Fpa
@@ -217,28 +228,27 @@ CoNLL 2002 Corpus includes named entity chunks.
    arguments, they will return the contents of the entire corpus,
    *including* the 'test' portions of the corpus.)
 
-SemCor is a subset of the Brown corpus tagged with WordNet senses and
-named entities. Both kinds of lexical items include multiword units,
-which are encoded as chunks (senses and part-of-speech tags pertain
+SemCor is a subset of the Brown corpus tagged with WordNet senses and 
+named entities. Both kinds of lexical items include multiword units, 
+which are encoded as chunks (senses and part-of-speech tags pertain 
 to the entire chunk).
 
     >>> from nltk.corpus import semcor
     >>> semcor.words()
-    ['The', 'Fulton', 'County', 'Grand', 'Jury', ...]
+    ['The', 'Fulton', 'County', 'Grand', 'Jury', 'said', ...]
     >>> semcor.chunks()
-    [['The'], ['Fulton', 'County', 'Grand', 'Jury'], ...]
+    [['The'], ['Fulton', 'County', 'Grand', 'Jury'], ['said'], ...]
     >>> semcor.sents() # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-    [['The', 'Fulton', 'County', 'Grand', 'Jury', 'said', ...],
+    [['The', 'Fulton', 'County', 'Grand', 'Jury', 'said', ...], 
     ['The', 'jury', 'further', 'said', ...], ...]
     >>> semcor.chunk_sents() # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-    [[['The'], ['Fulton', 'County', 'Grand', 'Jury'], ['said'], ...
+    [[['The'], ['Fulton', 'County', 'Grand', 'Jury'], ['said'], ... 
     ['.']], [['The'], ['jury'], ['further'], ['said'], ... ['.']], ...]
     >>> list(map(str, semcor.tagged_chunks(tag='both')[:3]))
-    ['(DT The)', "(Lemma('group.n.01.group') (NE (NNP Fulton County Grand Jury)))", "(Lemma('state.v.01.say') (VB said))"]
-    >>> [[str(c) for c in s] for s in semcor.tagged_sents(tag='both')[:2]]
-    [['(DT The)', "(Lemma('group.n.01.group') (NE (NNP Fulton County Grand Jury)))", ...
+    ['(DT The)', '(group.01 (NE (NNP Fulton County Grand Jury)))', '(say.01 (VB said))']
+    >>> [[str(c) for c in s] for s in semcor.tagged_sents(tag='both')[:2]] # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    [['(DT The)', '(group.01 (NE (NNP Fulton County Grand Jury)))', '(say.01 (VB said))', ...
      '(None .)'], ['(DT The)', ... '(None .)']]
-
 
 The IEER corpus is another chunked corpus.  This corpus is unusual in
 that each corpus item contains multiple documents.  (This reflects the
@@ -251,17 +261,17 @@ in a given item as `IEERDocument` objects:
     ['APW_19980314', 'APW_19980424', 'APW_19980429',
      'NYT_19980315', 'NYT_19980403', 'NYT_19980407']
     >>> docs = ieer.parsed_docs('APW_19980314')
-    >>> print(docs[0])
+    >>> print docs[0]
     <IEERDocument APW19980314.0391: 'Kenyans protest tax hikes'>
-    >>> print(docs[0].docno)
+    >>> print docs[0].docno
     APW19980314.0391
-    >>> print(docs[0].doctype)
+    >>> print docs[0].doctype
     NEWS STORY
-    >>> print(docs[0].date_time)
+    >>> print docs[0].date_time
     03/14/1998 10:36:00
-    >>> print(docs[0].headline)
+    >>> print docs[0].headline
     (DOCUMENT Kenyans protest tax hikes)
-    >>> print(docs[0].text) # doctest: +ELLIPSIS
+    >>> print docs[0].text # doctest: +ELLIPSIS
     (DOCUMENT
       (LOCATION NAIROBI)
       ,
@@ -288,13 +298,13 @@ NLTK data package includes a 10% sample of the Penn Treebank (in
 Reading the Penn Treebank (Wall Street Journal sample):
 
     >>> from nltk.corpus import treebank
-    >>> print(treebank.fileids()) # doctest: +ELLIPSIS
+    >>> print treebank.fileids() # doctest: +ELLIPSIS
     ['wsj_0001.mrg', 'wsj_0002.mrg', 'wsj_0003.mrg', 'wsj_0004.mrg', ...]
-    >>> print(treebank.words('wsj_0003.mrg'))
-    ['A', 'form', 'of', 'asbestos', 'once', 'used', ...]
-    >>> print(treebank.tagged_words('wsj_0003.mrg'))
+    >>> print treebank.words('wsj_0003.mrg')
+    ['A', 'form', 'of', 'asbestos', 'once', 'used', '*', ...]
+    >>> print treebank.tagged_words('wsj_0003.mrg')
     [('A', 'DT'), ('form', 'NN'), ('of', 'IN'), ...]
-    >>> print(treebank.parsed_sents('wsj_0003.mrg')[0]) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    >>> print treebank.parsed_sents('wsj_0003.mrg')[0] # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     (S
       (S-TPC-1
         (NP-SBJ
@@ -304,42 +314,42 @@ Reading the Penn Treebank (Wall Street Journal sample):
       (VP (VBD reported) (SBAR (-NONE- 0) (S (-NONE- *T*-1))))
       (. .))
 
-If you have access to a full installation of the Penn Treebank, NLTK
-can be configured to load it as well. Download the ``ptb`` package,
-and in the directory ``nltk_data/corpora/ptb`` place the ``BROWN``
-and ``WSJ`` directories of the Treebank installation (symlinks work
+If you have access to a full installation of the Penn Treebank, NLTK 
+can be configured to load it as well. Download the ``ptb`` package, 
+and in the directory ``nltk_data/corpora/ptb`` place the ``BROWN`` 
+and ``WSJ`` directories of the Treebank installation (symlinks work 
 as well). Then use the ``ptb`` module instead of ``treebank``:
 
    >>> from nltk.corpus import ptb
-   >>> print(ptb.fileids()) # doctest: +SKIP
+   >>> print ptb.fileids() # doctest: +ELLIPSIS
    ['BROWN/CF/CF01.MRG', 'BROWN/CF/CF02.MRG', 'BROWN/CF/CF03.MRG', 'BROWN/CF/CF04.MRG', ...]
-   >>> print(ptb.words('WSJ/00/WSJ_0003.MRG')) # doctest: +SKIP
+   >>> print ptb.words('WSJ/00/WSJ_0003.MRG')
    ['A', 'form', 'of', 'asbestos', 'once', 'used', '*', ...]
-   >>> print(ptb.tagged_words('WSJ/00/WSJ_0003.MRG')) # doctest: +SKIP
+   >>> print ptb.tagged_words('WSJ/00/WSJ_0003.MRG')
    [('A', 'DT'), ('form', 'NN'), ('of', 'IN'), ...]
 
-...and so forth, like ``treebank`` but with extended fileids. Categories
-specified in ``allcats.txt`` can be used to filter by genre; they consist
-of ``news`` (for WSJ articles) and names of the Brown subcategories
+...and so forth, like ``treebank`` but with extended fileids. Categories 
+specified in ``allcats.txt`` can be used to filter by genre; they consist 
+of ``news`` (for WSJ articles) and names of the Brown subcategories 
 (``fiction``, ``humor``, ``romance``, etc.):
 
-   >>> ptb.categories() # doctest: +SKIP
+   >>> ptb.categories()
    ['adventure', 'belles_lettres', 'fiction', 'humor', 'lore', 'mystery', 'news', 'romance', 'science_fiction']
-   >>> print(ptb.fileids('news')) # doctest: +SKIP
+   >>> print ptb.fileids('news') # doctest: +ELLIPSIS
    ['WSJ/00/WSJ_0001.MRG', 'WSJ/00/WSJ_0002.MRG', 'WSJ/00/WSJ_0003.MRG', ...]
-   >>> print(ptb.words(categories=['humor','fiction'])) # doctest: +SKIP
+   >>> print ptb.words(categories=['humor','fiction'])
    ['Thirty-three', 'Scotty', 'did', 'not', 'go', 'back', ...]
 
-As PropBank and NomBank depend on the (WSJ portion of the) Penn Treebank,
-the modules ``propbank_ptb`` and ``nombank_ptb`` are provided for access
+As PropBank and NomBank depend on the (WSJ portion of the) Penn Treebank, 
+the modules ``propbank_ptb`` and ``nombank_ptb`` are provided for access 
 to a full PTB installation.
 
 Reading the Sinica Treebank:
 
     >>> from nltk.corpus import sinica_treebank
-    >>> print(sinica_treebank.sents()) # doctest: +SKIP
+    >>> print sinica_treebank.sents()
     [['\xe4\xb8\x80'], ['\xe5\x8f\x8b\xe6\x83\x85'], ...]
-    >>> sinica_treebank.parsed_sents()[25] # doctest: +SKIP
+    >>> sinica_treebank.parsed_sents()[25] # doctest: +NORMALIZE_WHITESPACE
     Tree('S',
         [Tree('NP',
             [Tree('Nba', ['\xe5\x98\x89\xe7\x8f\x8d'])]),
@@ -351,11 +361,11 @@ Reading the Sinica Treebank:
 Reading the CoNLL 2007 Dependency Treebanks:
 
     >>> from nltk.corpus import conll2007
-    >>> conll2007.sents('esp.train')[0] # doctest: +SKIP
-    ['El', 'aumento', 'del', 'índice', 'de', 'desempleo', ...]
-    >>> conll2007.parsed_sents('esp.train')[0] # doctest: +SKIP
+    >>> conll2007.sents('esp.train')[0]
+    ['El', 'aumento', 'del', '\xc3\xadndice', 'de', 'desempleo', ...]
+    >>> conll2007.parsed_sents('esp.train')[0]
     <DependencyGraph with 38 nodes>
-    >>> print(conll2007.parsed_sents('esp.train')[0].tree()) # doctest: +SKIP
+    >>> print conll2007.parsed_sents('esp.train')[0].tree()
     (fortaleció
       (aumento El (del (índice (de (desempleo estadounidense)))))
       hoy
@@ -371,6 +381,50 @@ Reading the CoNLL 2007 Dependency Treebanks:
             (a 0,9452_dólares)
             (frente_a , (0,9349_dólares los (de (mañana esta)))))))
       .)
+
+NLTK also provides a corpus reader for the York-Toronto-Helsinki
+Parsed Corpus of Old English Prose (YCOE); but the corpus itself is
+not included in the NLTK data package.  If you install it yourself,
+you can use NLTK to access it:
+
+    >>> from nltk.corpus import ycoe
+    >>> for tree in ycoe.parsed_sents('cocuraC')[:4]:
+    ...     print tree # doctest: +SKIP
+    (CP-THT
+      (C +D+atte)
+      (IP-SUB ...)
+      ...
+      (. .))
+    (IP-MAT
+      (IP-MAT-0
+        (PP (P On) (NP (ADJ o+dre) (N wisan)))...)
+      ...
+      (. .))
+    (IP-MAT
+      (NP-NOM-x-2 *exp*)
+      (NP-DAT-1 (D^D +D+am) (ADJ^D unge+dyldegum))
+      ...
+      (. .))
+    (IP-MAT
+      (ADVP (ADV Sw+a))
+      (NP-NOM-x (PRO^N hit))
+      (ADVP-TMP (ADV^T oft))
+      ...
+      (. .))
+
+If the YCOE corpus is not available, you will get an error message
+when you try to access it:
+
+    >>> from nltk.corpus import ycoe
+    >>> print ycoe # doctest: +SKIP
+    Traceback (most recent call last):
+    LookupError:
+    **********************************************************************
+      Resource 'corpora/ycoe' not found.  For installation
+      instructions, please see <http://nltk.org/index.php/Installation>.
+      Searched in:
+        - ...
+    **********************************************************************
 
 Word Lists and Lexicons
 =======================
@@ -388,7 +442,7 @@ examples illustrate the use of the wordlist corpora:
     >>> stopwords.fileids() # doctest: +ELLIPSIS
     ['danish', 'dutch', 'english', 'finnish', 'french', 'german', 'hungarian', ...]
     >>> stopwords.words('portuguese') # doctest: +ELLIPSIS
-    ['de', 'a', 'o', 'que', 'e', 'do', 'da', 'em', 'um', 'para', ...]
+    ['de', 'a', 'o', 'que', 'e', 'do', 'da', 'em', 'um', 'para', ...] 
     >>> names.fileids()
     ['female.txt', 'male.txt']
     >>> names.words('male.txt') # doctest: +ELLIPSIS
@@ -404,7 +458,7 @@ transcriptions.  Transcriptions are encoded as tuples of phoneme
 strings.
 
     >>> from nltk.corpus import cmudict
-    >>> print(cmudict.entries()[653:659]) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    >>> print cmudict.entries()[653:659] # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     [('acetate', ['AE1', 'S', 'AH0', 'T', 'EY2', 'T']),
     ('acetic', ['AH0', 'S', 'EH1', 'T', 'IH0', 'K']),
     ('acetic', ['AH0', 'S', 'IY1', 'T', 'IH0', 'K']),
@@ -413,32 +467,11 @@ strings.
     ('acetone', ['AE1', 'S', 'AH0', 'T', 'OW2', 'N'])]
     >>> # Load the entire cmudict corpus into a Python dictionary:
     >>> transcr = cmudict.dict()
-    >>> print([transcr[w][0] for w in 'Natural Language Tool Kit'.lower().split()]) # doctest: +NORMALIZE_WHITESPACE
+    >>> print [transcr[w][0] for w in 'Natural Language Tool Kit'.lower().split()] # doctest: +NORMALIZE_WHITESPACE
     [['N', 'AE1', 'CH', 'ER0', 'AH0', 'L'],
      ['L', 'AE1', 'NG', 'G', 'W', 'AH0', 'JH'],
      ['T', 'UW1', 'L'],
      ['K', 'IH1', 'T']]
-
-
-WordNet
-=======
-
-Please see the separate WordNet howto.
-
-FrameNet
-========
-
-Please see the separate FrameNet howto.
-
-PropBank
-========
-
-Please see the separate PropBank howto.
-
-SentiWordNet
-============
-
-Please see the separate SentiWordNet howto.
 
 Categorized Corpora
 ===================
@@ -502,164 +535,187 @@ category assigned to a document is correct as follows:
     >>> classify(doc) in brown.categories(doc)
     True
 
+Propbank Corpus
+===============
+The Propbank corpus provides predicate-argument annotation for the
+entire treebank.  Each verb in the treebank is annotated by a single
+instance in the propbank corpus, containing information about the
+location of the verb, and the location and identity of its arguments:
+
+    >>> from nltk.corpus import propbank
+    >>> pb_instances = propbank.instances()
+    >>> print pb_instances # doctest: +NORMALIZE_WHITESPACE
+    [<PropbankInstance: wsj_0001.mrg, sent 0, word 8>,
+     <PropbankInstance: wsj_0001.mrg, sent 1, word 10>, ...]
+
+Each propbank instance defines the following member variables:
+
+  - Location information: `fileid`, `sentnum`, `wordnum`
+  - Annotator information: `tagger`
+  - Inflection information: `inflection`
+  - Roleset identifier: `roleset`
+  - Verb (aka predicate) location: `predicate`
+  - Argument locations and types: `arguments`
+
+The following examples show the types of these arguments:
+
+    >>> inst = pb_instances[103]
+    >>> (inst.fileid, inst.sentnum, inst.wordnum)
+    ('wsj_0004.mrg', 8, 16)
+    >>> inst.tagger
+    'gold'
+    >>> inst.inflection
+    <PropbankInflection: vp--a>
+    >>> infl = inst.inflection
+    >>> infl.form, infl.tense, infl.aspect, infl.person, infl.voice
+    ('v', 'p', '-', '-', 'a')
+    >>> inst.roleset
+    'rise.01'
+    >>> inst.predicate
+    PropbankTreePointer(16, 0)
+    >>> inst.arguments # doctest: +NORMALIZE_WHITESPACE
+    ((PropbankTreePointer(0, 2), 'ARG1'),
+     (PropbankTreePointer(13, 1), 'ARGM-DIS'),
+     (PropbankTreePointer(17, 1), 'ARG4-to'),
+     (PropbankTreePointer(20, 1), 'ARG3-from'))
+
+The location of the predicate and of the arguments are encoded using
+`PropbankTreePointer` objects, as well as `PropbankChainTreePointer`
+objects and `PropbankSplitTreePointer` objects.  A
+`PropbankTreePointer` consists of a `wordnum` and a `height`:
+
+    >>> print inst.predicate.wordnum, inst.predicate.height
+    16 0
+
+This identifies the tree constituent that is headed by the word that
+is the `wordnum`\ 'th token in the sentence, and whose span is found
+by going `height` nodes up in the tree.  This type of pointer is only
+useful if we also have the corresponding tree structure, since it
+includes empty elements such as traces in the word number count.  The
+trees for 10% of the standard propbank corpus are contained in the
+`treebank` corpus:
+
+    >>> tree = inst.tree
+
+    >>> from nltk.corpus import treebank
+    >>> assert tree == treebank.parsed_sents(inst.fileid)[inst.sentnum]
+
+    >>> inst.predicate.select(tree)
+    Tree('VBD', ['rose'])
+    >>> for (argloc, argid) in inst.arguments:
+    ...     print '%-10s %s' % (argid, argloc.select(tree).pprint(500)[:50])
+    ARG1       (NP-SBJ (NP (DT The) (NN yield)) (PP (IN on) (NP (
+    ARGM-DIS   (PP (IN for) (NP (NN example)))
+    ARG4-to    (PP-DIR (TO to) (NP (CD 8.04) (NN %)))
+    ARG3-from  (PP-DIR (IN from) (NP (CD 7.90) (NN %)))
+
+Propbank tree pointers can be converted to standard tree locations,
+which are usually easier to work with, using the `treepos()` method:
+
+    >>> treepos = inst.predicate.treepos(tree)
+    >>> print treepos, tree[treepos]
+    (4, 0) (VBD rose)
+
+In some cases, argument locations will be encoded using
+`PropbankChainTreePointer`\ s (for trace chains) or
+`PropbankSplitTreePointer`\ s (for discontinuous constituents).  Both
+of these objects contain a single member variable, `pieces`,
+containing a list of the constituent pieces.  They also define the
+method `select()`, which will return a tree containing all the
+elements of the argument.  (A new head node is created, labeled
+"*CHAIN*" or "*SPLIT*", since the argument is not a single constituent
+in the original tree).  Sentence #6 contains an example of an argument
+that is both discontinuous and contains a chain:
+
+    >>> inst = pb_instances[6]
+    >>> inst.roleset
+    'expose.01'
+    >>> argloc, argid = inst.arguments[2]
+    >>> argloc
+    <PropbankChainTreePointer: 22:1,24:0,25:1*27:0>
+    >>> argloc.pieces
+    [<PropbankSplitTreePointer: 22:1,24:0,25:1>, PropbankTreePointer(27, 0)]
+    >>> argloc.pieces[0].pieces
+    ... # doctest: +NORMALIZE_WHITESPACE
+    [PropbankTreePointer(22, 1), PropbankTreePointer(24, 0),
+     PropbankTreePointer(25, 1)]
+    >>> print argloc.select(inst.tree)
+    (*CHAIN*
+      (*SPLIT* (NP (DT a) (NN group)) (IN of) (NP (NNS workers)))
+      (-NONE- *))
+
+The propbank corpus also provides access to the frameset files, which
+define the argument labels used by the annotations, on a per-verb
+basis.  Each frameset file contains one or more predicates, such as
+'turn' or 'turn_on', each of which is divided into coarse-grained word
+senses called rolesets.  For each roleset, the frameset file provides
+descriptions of the argument roles, along with examples.
+
+    >>> expose_01 = propbank.roleset('expose.01')
+    >>> turn_01 = propbank.roleset('turn.01')
+    >>> print turn_01 # doctest: +ELLIPSIS
+    <Element 'roleset' at ...>
+    >>> for role in turn_01.findall("roles/role"):
+    ...     print role.attrib['n'], role.attrib['descr']
+    0 turner
+    1 thing turning
+    m direction, location
+
+    >>> from xml.etree import ElementTree
+    >>> print ElementTree.tostring(turn_01.find('example')).strip()
+    <example name="transitive agentive">
+      <text>
+      John turned the key in the lock.
+      </text>
+      <arg n="0">John</arg>
+      <rel>turned</rel>
+      <arg n="1">the key</arg>
+      <arg f="LOC" n="m">in the lock</arg>
+    </example>
+
+Note that the standard corpus distribution only contains 10% of the
+treebank, so the parse trees are not available for instances starting
+at 9353:
+
+    >>> inst = pb_instances[9352]
+    >>> inst.fileid
+    'wsj_0199.mrg'
+    >>> print inst.tree # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    (S (NP-SBJ (NNP Trinity)) (VP (VBD said) (SBAR (-NONE- 0) ...))
+    >>> print inst.predicate.select(inst.tree)
+    (VB begin)
+
+    >>> inst = pb_instances[9353]
+    >>> inst.fileid
+    'wsj_0200.mrg'
+    >>> print inst.tree
+    None
+    >>> print inst.predicate.select(inst.tree)
+    Traceback (most recent call last):
+      . . .
+    ValueError: Parse tree not avaialable
+
+However, if you supply your own version of the treebank corpus (by
+putting it before the nltk-provided version on `nltk.data.path`, or 
+by creating a `ptb` directory as described above and using the 
+`propbank_ptb` module), then you can access the trees for all 
+instances.
+
+A list of the verb lemmas contained in propbank is returned by the
+`propbank.verbs()` method:
+
+    >>> propbank.verbs()
+    ['abandon', 'abate', 'abdicate', 'abet', 'abide', ...]
 
 Other Corpora
 =============
-
-comparative_sentences
----------------------
-A list of sentences from various sources, especially reviews and articles. Each
-line contains one sentence; sentences were separated by using a sentence tokenizer.
-Comparative sentences have been annotated with their type, entities, features and
-keywords.
-
-    >>> from nltk.corpus import comparative_sentences
-    >>> comparison = comparative_sentences.comparisons()[0]
-    >>> comparison.text
-    ['its', 'fast-forward', 'and', 'rewind', 'work', 'much', 'more', 'smoothly',
-    'and', 'consistently', 'than', 'those', 'of', 'other', 'models', 'i', "'ve",
-    'had', '.']
-    >>> comparison.entity_2
-    'models'
-    >>> (comparison.feature, comparison.keyword)
-    ('rewind', 'more')
-    >>> len(comparative_sentences.comparisons())
-    853
-
-opinion_lexicon
----------------
-A list of positive and negative opinion words or sentiment words for English.
-
-    >>> from nltk.corpus import opinion_lexicon
-    >>> opinion_lexicon.words()[:4]
-        ['2-faced', '2-faces', 'abnormal', 'abolish']
-
-The OpinionLexiconCorpusReader also provides shortcuts to retrieve positive/negative
-words:
-
-    >>> opinion_lexicon.negative()[:4]
-    ['2-faced', '2-faces', 'abnormal', 'abolish']
-
-Note that words from `words()` method in opinion_lexicon are sorted by file id,
-not alphabetically:
-
-    >>> opinion_lexicon.words()[0:10]
-    ['2-faced', '2-faces', 'abnormal', 'abolish', 'abominable', 'abominably',
-    'abominate', 'abomination', 'abort', 'aborted']
-    >>> sorted(opinion_lexicon.words())[0:10]
-    ['2-faced', '2-faces', 'a+', 'abnormal', 'abolish', 'abominable', 'abominably',
-    'abominate', 'abomination', 'abort']
-
-ppattach
---------
-The Prepositional Phrase Attachment corpus is a corpus of
-prepositional phrase attachment decisions.  Each instance in the
-corpus is encoded as a ``PPAttachment`` object:
-
-    >>> from nltk.corpus import ppattach
-    >>> ppattach.attachments('training') # doctest: +NORMALIZE_WHITESPACE
-    [PPAttachment(sent='0', verb='join', noun1='board',
-                  prep='as', noun2='director', attachment='V'),
-     PPAttachment(sent='1', verb='is', noun1='chairman',
-                  prep='of', noun2='N.V.', attachment='N'),
-     ...]
-    >>> inst = ppattach.attachments('training')[0]
-    >>> (inst.sent, inst.verb, inst.noun1, inst.prep, inst.noun2)
-    ('0', 'join', 'board', 'as', 'director')
-    >>> inst.attachment
-    'V'
-
-product_reviews_1 and product_reviews_2
----------------------------------------
-These two datasets respectively contain annotated customer reviews of 5 and 9
-products from amazon.com.
-
-    >>> from nltk.corpus import product_reviews_1
-    >>> camera_reviews = product_reviews_1.reviews('Canon_G3.txt')
-    >>> review = camera_reviews[0]
-    >>> review.sents()[0]
-    ['i', 'recently', 'purchased', 'the', 'canon', 'powershot', 'g3', 'and', 'am',
-    'extremely', 'satisfied', 'with', 'the', 'purchase', '.']
-    >>> review.features()
-    [('canon powershot g3', '+3'), ('use', '+2'), ('picture', '+2'),
-    ('picture quality', '+1'), ('picture quality', '+1'), ('camera', '+2'),
-    ('use', '+2'), ('feature', '+1'), ('picture quality', '+3'), ('use', '+1'),
-    ('option', '+1')]
-
-It is also possible to reach the same information directly from the stream:
-
-    >>> product_reviews_1.features('Canon_G3.txt')
-    [('canon powershot g3', '+3'), ('use', '+2'), ...]
-
-We can compute stats for specific product features:
-
-    >>> n_reviews = len([(feat,score) for (feat,score) in product_reviews_1.features('Canon_G3.txt') if feat=='picture'])
-    >>> tot = sum([int(score) for (feat,score) in product_reviews_1.features('Canon_G3.txt') if feat=='picture'])
-    >>> # We use float for backward compatibility with division in Python2.7
-    >>> mean = tot/float(n_reviews)
-    >>> print(n_reviews, tot, mean)
-    15 24 1.6
-
-pros_cons
----------
-A list of pros/cons sentences for determining context (aspect) dependent
-sentiment words, which are then applied to sentiment analysis of comparative
-sentences.
-
-    >>> from nltk.corpus import pros_cons
-    >>> pros_cons.sents(categories='Cons')
-    [['East', 'batteries', '!', 'On', '-', 'off', 'switch', 'too', 'easy',
-    'to', 'maneuver', '.'], ['Eats', '...', 'no', ',', 'GULPS', 'batteries'],
-    ...]
-    >>> pros_cons.words('IntegratedPros.txt')
-    ['Easy', 'to', 'use', ',', 'economical', '!', ...]
-
-semcor
-------
-The Brown Corpus, annotated with WordNet senses.
-
-    >>> from nltk.corpus import semcor
-    >>> semcor.words('brown2/tagfiles/br-n12.xml')  # doctest: +ELLIPSIS
-    ['When', 'several', 'minutes', 'had', 'passed', ...]
-    >>> sent = semcor.xml('brown2/tagfiles/br-n12.xml').findall('context/p/s')[0]
-    >>> for wordform in sent.getchildren():
-    ...     print(wordform.text, end=' ')
-    ...     for key in sorted(wordform.keys()):
-    ...         print(key + '=' + wordform.get(key), end=' ')
-    ...     print()
-    ...
-    When cmd=ignore pos=WRB
-    several cmd=done lemma=several lexsn=5:00:00:some(a):00 pos=JJ wnsn=1
-    minutes cmd=done lemma=minute lexsn=1:28:00:: pos=NN wnsn=1
-    had cmd=done ot=notag pos=VBD
-    passed cmd=done lemma=pass lexsn=2:38:03:: pos=VB wnsn=4
-    and cmd=ignore pos=CC
-    Curt cmd=done lemma=person lexsn=1:03:00:: pn=person pos=NNP rdf=person wnsn=1
-    had cmd=done ot=notag pos=VBD
-    n't cmd=done lemma=n't lexsn=4:02:00:: pos=RB wnsn=0
-    emerged cmd=done lemma=emerge lexsn=2:30:00:: pos=VB wnsn=1
-    from cmd=ignore pos=IN
-    the cmd=ignore pos=DT
-    livery_stable cmd=done lemma=livery_stable lexsn=1:06:00:: pos=NN wnsn=1
-    ,
-    Brenner cmd=done lemma=person lexsn=1:03:00:: pn=person pos=NNP rdf=person wnsn=1
-    re-entered cmd=done lemma=re-enter lexsn=2:38:00:: pos=VB wnsn=1
-    the cmd=ignore pos=DT
-    hotel cmd=done lemma=hotel lexsn=1:06:00:: pos=NN wnsn=1
-    and cmd=ignore pos=CC
-    faced cmd=done lemma=face lexsn=2:42:02:: pos=VB wnsn=4
-    Summers cmd=done lemma=person lexsn=1:03:00:: pn=person pos=NNP rdf=person wnsn=1
-    across cmd=ignore pos=IN
-    the cmd=ignore pos=DT
-    counter cmd=done lemma=counter lexsn=1:06:00:: pos=NN wnsn=1
-    .
 
 senseval
 --------
 The Senseval 2 corpus is a word sense disambiguation corpus.  Each
 item in the corpus corresponds to a single ambiguous word.  For each
 of these words, the corpus contains a list of instances, corresponding
-to occurrences of that word.  Each instance provides the word; a list
+to occurences of that word.  Each instance provides the word; a list
 of word senses that apply to the word occurrence; and the word's
 context.
 
@@ -686,7 +742,7 @@ displays their local context (2 words on each side) and word sense(s):
     ...     word = ' '.join(w for (w,t) in inst.context[p:p+1])
     ...     right = ' '.join(w for (w,t) in inst.context[p+1:p+3])
     ...     senses = ' '.join(inst.senses)
-    ...     print('%20s |%10s | %-15s -> %s' % (left, word, right, senses))
+    ...     print '%20s |%10s | %-15s -> %s' % (left, word, right, senses)
              declines in |  interest | rates .         -> interest_6
       indicate declining |  interest | rates because   -> interest_6
            in short-term |  interest | rates .         -> interest_6
@@ -698,21 +754,65 @@ displays their local context (2 words on each side) and word sense(s):
            principal and |  interest | is the          -> interest_6
             increase its |  interest | to 70           -> interest_5
 
-sentence_polarity
------------------
-The Sentence Polarity dataset contains 5331 positive and 5331 negative processed
-sentences.
+ppattach
+--------
+The Prepositional Phrase Attachment corpus is a corpus of
+prepositional phrase attachment decisions.  Each instance in the
+corpus is encoded as a ``PPAttachment`` object:
 
-    >>> from nltk.corpus import sentence_polarity
-    >>> sentence_polarity.sents()
-    [['simplistic', ',', 'silly', 'and', 'tedious', '.'], ["it's", 'so', 'laddish',
-    'and', 'juvenile', ',', 'only', 'teenage', 'boys', 'could', 'possibly', 'find',
-    'it', 'funny', '.'], ...]
-    >>> sentence_polarity.categories()
-    ['neg', 'pos']
-    >>> sentence_polarity.sents()[1]
-    ["it's", 'so', 'laddish', 'and', 'juvenile', ',', 'only', 'teenage', 'boys',
-    'could', 'possibly', 'find', 'it', 'funny', '.']
+    >>> from nltk.corpus import ppattach
+    >>> ppattach.attachments('training') # doctest: +NORMALIZE_WHITESPACE
+    [PPAttachment(sent='0', verb='join', noun1='board',
+                  prep='as', noun2='director', attachment='V'),
+     PPAttachment(sent='1', verb='is', noun1='chairman',
+                  prep='of', noun2='N.V.', attachment='N'),
+     ...]
+    >>> inst = ppattach.attachments('training')[0]
+    >>> (inst.sent, inst.verb, inst.noun1, inst.prep, inst.noun2)
+    ('0', 'join', 'board', 'as', 'director')
+    >>> inst.attachment
+    'V'
+
+semcor
+------
+The Brown Corpus, annotated with WordNet senses.
+
+    >>> from nltk.corpus import semcor
+    >>> semcor.words('brown2/tagfiles/br-n12.xml')  # doctest: +ELLIPSIS
+    ['When', 'several', 'minutes', 'had', 'passed', ...]
+    >>> sent = semcor.xml('brown2/tagfiles/br-n12.xml').findall('context/p/s')[0]
+    >>> for wordform in sent.getchildren():
+    ...     print wordform.text,
+    ...     for key in wordform.keys():
+    ...         print key + '=' + wordform.get(key),
+    ...     print
+    ...
+    When cmd=ignore pos=WRB
+    several lemma=several cmd=done wnsn=1 pos=JJ lexsn=5:00:00:some(a):00
+    minutes lemma=minute cmd=done wnsn=1 pos=NN lexsn=1:28:00::
+    had cmd=done pos=VBD ot=notag
+    passed lemma=pass cmd=done wnsn=4 pos=VB lexsn=2:38:03::
+    and cmd=ignore pos=CC
+    Curt pn=person cmd=done lexsn=1:03:00:: pos=NNP lemma=person rdf=person wnsn=1
+    had cmd=done pos=VBD ot=notag
+    n't lemma=n't cmd=done wnsn=0 pos=RB lexsn=4:02:00::
+    emerged lemma=emerge cmd=done wnsn=1 pos=VB lexsn=2:30:00::
+    from cmd=ignore pos=IN
+    the cmd=ignore pos=DT
+    livery_stable lemma=livery_stable cmd=done wnsn=1 pos=NN lexsn=1:06:00::
+    ,
+    Brenner pn=person cmd=done lexsn=1:03:00:: pos=NNP lemma=person rdf=person wnsn=1
+    re-entered lemma=re-enter cmd=done wnsn=1 pos=VB lexsn=2:38:00::
+    the cmd=ignore pos=DT
+    hotel lemma=hotel cmd=done wnsn=1 pos=NN lexsn=1:06:00::
+    and cmd=ignore pos=CC
+    faced lemma=face cmd=done wnsn=4 pos=VB lexsn=2:42:02::
+    Summers pn=person cmd=done lexsn=1:03:00:: pos=NNP lemma=person rdf=person wnsn=1
+    across cmd=ignore pos=IN
+    the cmd=ignore pos=DT
+    counter lemma=counter cmd=done wnsn=1 pos=NN lexsn=1:06:00::
+    .
+
 
 shakespeare
 -----------
@@ -724,36 +824,22 @@ as XML files.  These corpora are returned as ElementTree objects:
     >>> shakespeare.fileids() # doctest: +ELLIPSIS
     ['a_and_c.xml', 'dream.xml', 'hamlet.xml', 'j_caesar.xml', ...]
     >>> play = shakespeare.xml('dream.xml')
-    >>> print(play) # doctest: +ELLIPSIS
+    >>> print play # doctest: +ELLIPSIS
     <Element 'PLAY' at ...>
-    >>> print('%s: %s' % (play[0].tag, play[0].text))
+    >>> print '%s: %s' % (play[0].tag, play[0].text)
     TITLE: A Midsummer Night's Dream
     >>> personae = [persona.text for persona in
     ...             play.findall('PERSONAE/PERSONA')]
-    >>> print(personae) # doctest: +ELLIPSIS
+    >>> print personae # doctest: +ELLIPSIS
     ['THESEUS, Duke of Athens.', 'EGEUS, father to Hermia.', ...]
     >>> # Find and print speakers not listed as personae
     >>> names = [persona.split(',')[0] for persona in personae]
     >>> speakers = set(speaker.text for speaker in
     ...                play.findall('*/*/*/SPEAKER'))
-    >>> print(sorted(speakers.difference(names))) # doctest: +NORMALIZE_WHITESPACE
+    >>> print sorted(speakers.difference(names)) # doctest: +NORMALIZE_WHITESPACE
     ['ALL', 'COBWEB', 'DEMETRIUS', 'Fairy', 'HERNIA', 'LYSANDER',
      'Lion', 'MOTH', 'MUSTARDSEED', 'Moonshine', 'PEASEBLOSSOM',
      'Prologue', 'Pyramus', 'Thisbe', 'Wall']
-
-subjectivity
------------
-The Subjectivity Dataset contains 5000 subjective and 5000 objective processed
-sentences.
-
-    >>> from nltk.corpus import subjectivity
-    >>> subjectivity.categories()
-    ['obj', 'subj']
-    >>> subjectivity.sents()[23]
-    ['television', 'made', 'him', 'famous', ',', 'but', 'his', 'biggest', 'hits',
-    'happened', 'off', 'screen', '.']
-    >>> subjectivity.words(categories='subj')
-    ['smart', 'and', 'alert', ',', 'thirteen', ...]
 
 toolbox
 -------
@@ -776,9 +862,9 @@ distribution of part-of-speech tags for reduplicated words.
     >>> for record in rotokas[1:]:
     ...     lexeme = record.find('lx').text
     ...     if re.match(r'(.*)\1$', lexeme):
-    ...         redup_pos_freqdist[record.find('ps').text] += 1
-    >>> for item, count in redup_pos_freqdist.most_common():
-    ...     print(item, count)
+    ...         redup_pos_freqdist.inc(record.find('ps').text)
+    >>> for item in redup_pos_freqdist.keys():
+    ...     print item, redup_pos_freqdist[item]
     V 41
     N 14
     ??? 4
@@ -791,9 +877,9 @@ This example displays some records from a Rotokas text:
     >>> for record in river.findall('record')[:3]:
     ...     for piece in record:
     ...         if len(piece.text) > 60:
-    ...             print('%-6s %s...' % (piece.tag, piece.text[:57]))
+    ...             print '%-6s %s...' % (piece.tag, piece.text[:57])
     ...         else:
-    ...             print('%-6s %s' % (piece.tag, piece.text))
+    ...             print '%-6s %s' % (piece.tag, piece.text)
     ref    Paragraph 1
     t      ``Viapau oisio              ra   ovaupasi                ...
     m      viapau   oisio              ra   ovau   -pa       -si    ...
@@ -824,18 +910,18 @@ down into small speech samples, each of which is available as a wave
 file, a phonetic transcription, and a tokenized word list.
 
     >>> from nltk.corpus import timit
-    >>> print(timit.utteranceids()) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    >>> print timit.utteranceids() # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     ['dr1-fvmh0/sa1', 'dr1-fvmh0/sa2', 'dr1-fvmh0/si1466',
     'dr1-fvmh0/si2096', 'dr1-fvmh0/si836', 'dr1-fvmh0/sx116',
     'dr1-fvmh0/sx206', 'dr1-fvmh0/sx26', 'dr1-fvmh0/sx296', ...]
 
     >>> item = timit.utteranceids()[5]
-    >>> print(timit.phones(item)) # doctest: +NORMALIZE_WHITESPACE
+    >>> print timit.phones(item) # doctest: +NORMALIZE_WHITESPACE
     ['h#', 'k', 'l', 'ae', 's', 'pcl', 'p', 'dh', 'ax',
      's', 'kcl', 'k', 'r', 'ux', 'ix', 'nx', 'y', 'ax',
      'l', 'eh', 'f', 'tcl', 't', 'hh', 'ae', 'n', 'dcl',
      'd', 'h#']
-    >>> print(timit.words(item))
+    >>> print timit.words(item)
     ['clasp', 'the', 'screw', 'in', 'your', 'left', 'hand']
     >>> timit.play(item) # doctest: +SKIP
 
@@ -843,7 +929,7 @@ The corpus reader can combine the word segmentation information with
 the phonemes to produce a single tree structure:
 
     >>> for tree in timit.phone_trees(item):
-    ...     print(tree)
+    ...     print tree
     (S
       h#
       (clasp k l ae s pcl p)
@@ -858,11 +944,11 @@ the phonemes to produce a single tree structure:
 The start time and stop time of each phoneme, word, and sentence are
 also available:
 
-    >>> print(timit.phone_times(item)) # doctest: +ELLIPSIS
+    >>> print timit.phone_times(item) # doctest: +ELLIPSIS
     [('h#', 0, 2190), ('k', 2190, 3430), ('l', 3430, 4326), ...]
-    >>> print(timit.word_times(item)) # doctest: +ELLIPSIS
+    >>> print timit.word_times(item) # doctest: +ELLIPSIS
     [('clasp', 2190, 8804), ('the', 8804, 9734), ...]
-    >>> print(timit.sent_times(item))
+    >>> print timit.sent_times(item)
     [('Clasp the screw in your left hand.', 0, 32154)]
 
 We can use these times to play selected pieces of a speech sample:
@@ -872,11 +958,11 @@ We can use these times to play selected pieces of a speech sample:
 The corpus reader can also be queried for information about the
 speaker and sentence identifier for a given speech sample:
 
-    >>> print(timit.spkrid(item))
+    >>> print timit.spkrid(item)
     dr1-fvmh0
-    >>> print(timit.sentid(item))
+    >>> print timit.sentid(item)
     sx116
-    >>> print(timit.spkrinfo(timit.spkrid(item))) # doctest: +NORMALIZE_WHITESPACE
+    >>> print timit.spkrinfo(timit.spkrid(item)) # doctest: +NORMALIZE_WHITESPACE
     SpeakerInfo(id='VMH0',
                 sex='F',
                 dr='1',
@@ -892,32 +978,6 @@ speaker and sentence identifier for a given speech sample:
     >>> timit.utteranceids(spkrid=timit.spkrid(item)) # doctest: +ELLIPSIS
     ['dr1-fvmh0/sa1', 'dr1-fvmh0/sa2', 'dr1-fvmh0/si1466', ...]
 
-twitter_samples
----------------
-
-Twitter is well-known microblog service that allows public data to be
-collected via APIs. NLTK's twitter corpus currently contains a sample of 20k Tweets
-retrieved from the Twitter Streaming API.
-
-    >>> from nltk.corpus import twitter_samples
-    >>> twitter_samples.fileids()
-    ['negative_tweets.json', 'positive_tweets.json', 'tweets.20150430-223406.json']
-
-We follow standard practice in storing full Tweets as line-separated
-JSON. These data structures can be accessed via `tweets.docs()`. However, in general it
-is more practical to focus just on the text field of the Tweets, which
-are accessed via the `strings()` method.
-
-    >>> twitter_samples.strings('tweets.20150430-223406.json')
-    ['RT @KirkKus: Indirect cost of the UK being in the EU is estimated to be costing Britain \xa3170 billion per year! #BetterOffOut #UKIP', ...]
-
-The default tokenizer for Tweets is specialised for 'casual' text, and
-the `tokenized()` method returns a list of lists of tokens.
-
-    >>> twitter_samples.tokenized('tweets.20150430-223406.json')
-    [['RT', '@KirkKus', ':', 'Indirect', 'cost', 'of', 'the', 'UK', 'being', 'in', ...],
-     ['VIDEO', ':', 'Sturgeon', 'on', 'post-election', 'deals', 'http://t.co/BTJwrpbmOY'], ...]
-
 rte
 ---
 The RTE (Recognizing Textual Entailment) corpus was derived from the
@@ -925,10 +985,10 @@ RTE1, RTE2 and RTE3 datasets (dev and test data), and consists of a
 list of XML-formatted 'text'/'hypothesis' pairs.
 
     >>> from nltk.corpus import rte
-    >>> print(rte.fileids()) # doctest: +ELLIPSIS
+    >>> print rte.fileids() # doctest: +ELLIPSIS
     ['rte1_dev.xml', 'rte1_test.xml', 'rte2_dev.xml', ..., 'rte3_test.xml']
     >>> rtepairs = rte.pairs(['rte2_test.xml', 'rte3_test.xml'])
-    >>> print(rtepairs)  # doctest: +ELLIPSIS
+    >>> print rtepairs  # doctest: +ELLIPSIS
     [<RTEPair: gid=2-8>, <RTEPair: gid=2-9>, <RTEPair: gid=2-15>, ...]
 
 In the gold standard test sets, each pair is labeled according to
@@ -960,7 +1020,7 @@ The VerbNet corpus is a lexicon that divides verbs into classes, based
 on their syntax-semantics linking behavior.  The basic elements in the
 lexicon are verb lemmas, such as 'abandon' and 'accept', and verb
 classes, which have identifiers such as 'remove-10.1' and
-'admire-31.2-1'.  These class identifiers consist of a representative
+'admire-31.2-1'.  These class identifiers consist of a representitive
 verb selected from the class, followed by a numerical identifier.  The
 list of verb lemmas, and the list of class identifiers, can be
 retrieved with the following methods:
@@ -995,19 +1055,19 @@ list of thematic roles for a given Verbnet class:
 
     >>> vn_31_2 = verbnet.vnclass('admire-31.2')
     >>> for themrole in vn_31_2.findall('THEMROLES/THEMROLE'):
-    ...     print(themrole.attrib['type'], end=' ')
+    ...     print themrole.attrib['type'],
     ...     for selrestr in themrole.findall('SELRESTRS/SELRESTR'):
-    ...         print('[%(Value)s%(type)s]' % selrestr.attrib, end=' ')
-    ...     print()
+    ...         print '[%(Value)s%(type)s]' % selrestr.attrib,
+    ...     print
     Theme
     Experiencer [+animate]
     Predicate
 
 The Verbnet corpus also provides a variety of pretty printing
 functions that can be used to display the xml contents in a more
-concise form.  The simplest such method is `pprint()`:
+consise form.  The simplest such method is `pprint()`:
 
-    >>> print(verbnet.pprint('57'))
+    >>> print verbnet.pprint('57')
     weather-57
       Subclasses: (none)
       Members: blow clear drizzle fog freeze gust hail howl lightning mist
@@ -1029,18 +1089,17 @@ concise form.  The simplest such method is `pprint()`:
           Semantics:
             * weather(during(E), Weather_type, Theme)
 
-
 nps_chat
 --------
 
 The NPS Chat Corpus, Release 1.0 consists of over 10,000 posts in age-specific
 chat rooms, which have been anonymized, POS-tagged and dialogue-act tagged.
 
-    >>> print(nltk.corpus.nps_chat.words())
-    ['now', 'im', 'left', 'with', 'this', 'gay', ...]
-    >>> print(nltk.corpus.nps_chat.tagged_words())
+    >>> print nltk.corpus.nps_chat.words()
+    ['now', 'im', 'left', 'with', 'this', 'gay', 'name', ...]
+    >>> print nltk.corpus.nps_chat.tagged_words()
     [('now', 'RB'), ('im', 'PRP'), ('left', 'VBD'), ...]
-    >>> print(nltk.corpus.nps_chat.tagged_posts()) # doctest: +NORMALIZE_WHITESPACE
+    >>> print nltk.corpus.nps_chat.tagged_posts() # doctest: +NORMALIZE_WHITESPACE
     [[('now', 'RB'), ('im', 'PRP'), ('left', 'VBD'), ('with', 'IN'),
     ('this', 'DT'), ('gay', 'JJ'), ('name', 'NN')], [(':P', 'UH')], ...]
 
@@ -1048,13 +1107,13 @@ We can access the XML elements corresponding to individual posts.  These element
 have ``class`` and ``user`` attributes that we can access using ``p.attrib['class']``
 and ``p.attrib['user']``.  They also have text content, accessed using ``p.text``.
 
-    >>> print(nltk.corpus.nps_chat.xml_posts()) # doctest: +ELLIPSIS
-    [<Element 'Post' at 0...>, <Element 'Post' at 0...>, ...]
+    >>> print nltk.corpus.nps_chat.xml_posts() # doctest: +ELLIPSIS
+    [<Element 'Post' at 0x...>, <Element 'Post' at 0x...>, ...]
     >>> posts = nltk.corpus.nps_chat.xml_posts()
-    >>> sorted(nltk.FreqDist(p.attrib['class'] for p in posts).keys())
-    ['Accept', 'Bye', 'Clarify', 'Continuer', 'Emotion', 'Emphasis',
-    'Greet', 'Other', 'Reject', 'Statement', 'System', 'nAnswer',
-    'whQuestion', 'yAnswer', 'ynQuestion']
+    >>> nltk.FreqDist(p.attrib['class'] for p in posts).keys() # doctest: +NORMALIZE_WHITESPACE
+    ['Statement', 'System', 'Greet', 'Emotion', 'ynQuestion',
+    'whQuestion', 'Accept', 'Bye', 'Emphasis', 'Continuer',
+    'Reject', 'yAnswer', 'nAnswer', 'Clarify', 'Other']
     >>> posts[0].text
     'now im left with this gay name'
 
@@ -1064,24 +1123,6 @@ the XML structure directly, as follows:
     >>> tokens = posts[0].findall('terminals/t')
     >>> [t.attrib['pos'] + "/" + t.attrib['word'] for t in tokens]
     ['RB/now', 'PRP/im', 'VBD/left', 'IN/with', 'DT/this', 'JJ/gay', 'NN/name']
-
-multext_east
-------------
-
-The Multext-East Corpus consists of POS-tagged versions of George Orwell's book
-1984 in 12 languages: English, Czech, Hungarian, Macedonian, Slovenian, Serbian,
-Slovak, Romanian, Estonian, Farsi, Bulgarian and Polish.
-The corpus can be accessed using the usual methods for tagged corpora. The tagset
-can be transformed from the Multext-East specific MSD tags to the Universal tagset
-using the "tagset" parameter of all functions returning tagged parts of the corpus.
-
-    >>> print(nltk.corpus.multext_east.words("oana-en.xml"))
-    ['It', 'was', 'a', 'bright', ...]
-    >>> print(nltk.corpus.multext_east.tagged_words("oana-en.xml"))
-    [('It', '#Pp3ns'), ('was', '#Vmis3s'), ('a', '#Di'), ...]
-    >>> print(nltk.corpus.multext_east.tagged_sents("oana-en.xml", "universal"))
-    [[('It', 'PRON'), ('was', 'VERB'), ('a', 'DET'), ...]
-
 
 
 ---------------------
@@ -1099,7 +1140,7 @@ parenthesis-delineated parse trees.
 Automatically Created Corpus Reader Instances
 =============================================
 
-When the `nltk.corpus` module is imported, it automatically creates a
+When then `nltk.corpus` module is imported, it automatically creates a
 set of corpus reader instances that can be used to access the corpora
 in the NLTK data distribution.  Here is a small sample of those
 corpus reader instances:
@@ -1152,14 +1193,14 @@ we can create a customized corpus reader for the genesis corpus that
 uses a different sentence tokenizer as follows:
 
     >>> # Find the directory where the corpus lives.
-    >>> genesis_dir = nltk.data.find('corpora/genesis')
+    >>> genesis_dir = nltk.data.find('corpora/genesis.zip').join('genesis/')
     >>> # Create our custom sentence tokenizer.
     >>> my_sent_tokenizer = nltk.RegexpTokenizer('[^.!?]+')
     >>> # Create the new corpus reader object.
     >>> my_genesis = nltk.corpus.PlaintextCorpusReader(
     ...     genesis_dir, '.*\.txt', sent_tokenizer=my_sent_tokenizer)
     >>> # Use the new corpus reader object.
-    >>> print(my_genesis.sents('english-kjv.txt')[0]) # doctest: +NORMALIZE_WHITESPACE
+    >>> print my_genesis.sents('english-kjv.txt')[0] # doctest: +NORMALIZE_WHITESPACE
     ['In', 'the', 'beginning', 'God', 'created', 'the', 'heaven',
      'and', 'the', 'earth']
 
@@ -1171,7 +1212,7 @@ reader for it with::
     ...     '/usr/share/some-corpus', '.*\.txt') # doctest: +SKIP
 
 For a complete list of corpus reader subclasses, see the API
-documentation for `nltk.corpus.reader`.
+documentation for `nltk.corpus.CorpusReader`.
 
 Corpus Types
 ============
@@ -1220,18 +1261,17 @@ assumed to consist of one or more files, all located in a common root
 directory (or in subdirectories of that root directory).  The absolute
 path to the root directory is stored in the ``root`` property:
 
-    >>> import os
-    >>> str(nltk.corpus.genesis.root).replace(os.path.sep,'/') # doctest: +ELLIPSIS
-    '.../nltk_data/corpora/genesis'
+    >>> print nltk.corpus.genesis.root # doctest: +ELLIPSIS
+    ...nltk_data/corpora/genesis...
 
 Each file within the corpus is identified by a platform-independent
 identifier, which is basically a path string that uses ``/`` as the
-path separator.  I.e., this identifier can be converted to a relative
+path seperator.  I.e., this identifier can be converted to a relative
 path as follows:
 
     >>> some_corpus_file_id = nltk.corpus.reuters.fileids()[0]
     >>> import os.path
-    >>> os.path.normpath(some_corpus_file_id).replace(os.path.sep,'/')
+    >>> os.path.join(*some_corpus_file_id.split('/'))
     'test/14826'
 
 To get a list of all data files that make up a corpus, use the
@@ -1258,8 +1298,8 @@ which can be used to get a list of the files within a specific category:
 The ``abspath()`` method can be used to find the absolute path to a
 corpus file, given its file identifier:
 
-    >>> str(nltk.corpus.brown.abspath('ce06')).replace(os.path.sep,'/') # doctest: +ELLIPSIS
-    '.../corpora/brown/ce06'
+    >>> print nltk.corpus.brown.abspath('ce06') # doctest: +ELLIPSIS
+    .../corpora/brown/ce06
 
 The ``abspaths()`` method can be used to find the absolute paths for
 one corpus file, a list of corpus files, or (if no fileids are specified),
@@ -1303,9 +1343,9 @@ For example, the `words()` method is supported by many different
 corpora, and returns a flat list of word strings:
 
     >>> nltk.corpus.brown.words()
-    ['The', 'Fulton', 'County', 'Grand', 'Jury', ...]
+    ['The', 'Fulton', 'County', 'Grand', 'Jury', 'said', ...]
     >>> nltk.corpus.treebank.words()
-    ['Pierre', 'Vinken', ',', '61', 'years', 'old', ...]
+    ['Pierre', 'Vinken', ',', '61', 'years', 'old', ',', ...]
     >>> nltk.corpus.conll2002.words()
     [u'Sao', u'Paulo', u'(', u'Brasil', u')', u',', u'23', ...]
     >>> nltk.corpus.genesis.words()
@@ -1317,7 +1357,7 @@ corpora that include part-of-speech annotations:
     >>> nltk.corpus.brown.tagged_words()
     [('The', 'AT'), ('Fulton', 'NP-TL'), ...]
     >>> nltk.corpus.treebank.tagged_words()
-    [('Pierre', 'NNP'), ('Vinken', 'NNP'), ...]
+    [('Pierre', 'NNP'), ('Vinken', 'NNP'), (',', ','), ...]
     >>> nltk.corpus.conll2002.tagged_words()
     [(u'Sao', u'NC'), (u'Paulo', u'VMI'), (u'(', u'Fpa'), ...]
     >>> nltk.corpus.genesis.tagged_words()
@@ -1340,17 +1380,17 @@ identifier will result in an exception:
 
     >>> nltk.corpus.timit.fileids() # doctest: +ELLIPSIS
     ['dr1-fvmh0/sa1.phn', 'dr1-fvmh0/sa1.txt', 'dr1-fvmh0/sa1.wav', ...]
-    >>> nltk.corpus.timit.words('dr1-fvmh0/sa1.txt') # doctest: +SKIP
+    >>> nltk.corpus.timit.words('dr1-fvmh0/sa1.txt') # doctest: +ELLIPSIS
     Traceback (most recent call last):
       ...
-    IOError: No such file or directory: '.../dr1-fvmh0/sa1.txt.wrd'
+    IOError:... No such file or directory: '.../dr1-fvmh0/sa1.txt.wrd'
 
 As another example, the ``propbank`` corpus defines the ``roleset()``
 method, which expects a roleset identifier, not a file identifier:
 
     >>> roleset = nltk.corpus.propbank.roleset('eat.01')
     >>> from xml.etree import ElementTree as ET
-    >>> print(ET.tostring(roleset).decode('utf8')) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    >>> print ET.tostring(roleset) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     <roleset id="eat.01" name="consume" vncls="39.1">
       <roles>
         <role descr="consumer, eater" n="0">...</role>...
@@ -1366,7 +1406,7 @@ list), but does not store the data elements in memory; instead, data
 elements are read from the underlying data files on an as-needed
 basis.
 
-By only loading items from the file on an as-needed basis, corpus
+By only loading items from the file on an as-needesd basis, corpus
 views maintain both memory efficiency and responsiveness.  The memory
 efficiency of corpus readers is important because some corpora contain
 very large amounts of data, and storing the entire data set in memory
@@ -1389,7 +1429,7 @@ Writing New Corpus Readers
 
 In order to add support for new corpus formats, it is necessary to
 define new corpus reader classes.  For many corpus formats, writing
-new corpus readers is relatively straight-forward.  In this section,
+new corpus readers is relatively streight-forward.  In this section,
 we'll describe what's involved in creating a new corpus reader.  If
 you do create a new corpus reader, we encourage you to contribute it
 back to the NLTK project.
@@ -1451,22 +1491,21 @@ then you can often just inherit the base class's constructor.
 
 Data Access Methods
 ~~~~~~~~~~~~~~~~~~~
-
 The most common type of data access method takes an argument
 identifying which files to access, and returns a view covering those
-files.  This argument may be a single file identifier string (to get a
-view for a specific file); a list of file identifier strings (to get a
-view for a specific list of files); or None (to get a view for the
+files.  This argument may be a a single file identifier string (to get
+a view for a specific file); a list of file identifier strings (to get
+a view for a specific list of files); or None (to get a view for the
 entire corpus).  The method's implementation converts this argument to
 a list of path names using the `abspaths()` method, which handles all
 three value types (string, list, and None):
 
-    >>> print(str(nltk.corpus.brown.abspaths()).replace('\\\\','/')) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    >>> nltk.corpus.brown.abspaths() # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     [FileSystemPathPointer('.../corpora/brown/ca01'),
      FileSystemPathPointer('.../corpora/brown/ca02'), ...]
-    >>> print(str(nltk.corpus.brown.abspaths('ce06')).replace('\\\\','/')) # doctest: +ELLIPSIS
+    >>> nltk.corpus.brown.abspaths('ce06') # doctest: +ELLIPSIS
     [FileSystemPathPointer('.../corpora/brown/ce06')]
-    >>> print(str(nltk.corpus.brown.abspaths(['ce06', 'ce07'])).replace('\\\\','/')) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    >>> nltk.corpus.brown.abspaths(['ce06', 'ce07']) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     [FileSystemPathPointer('.../corpora/brown/ce06'),
      FileSystemPathPointer('.../corpora/brown/ce07')]
 
@@ -1522,7 +1561,7 @@ This simple block reader reads a single line at a time, and returns a
 single token (consisting of a string) for each whitespace-separated
 substring on the line.  A `StreamBackedCorpusView` built from this
 block reader will act like a read-only list of all the
-whitespace-separated tokens in an underlying file.
+whitespace-seperated tokens in an underlying file.
 
 When deciding how to define the block reader for a given corpus,
 careful consideration should be given to the size of blocks handled by
@@ -1590,7 +1629,7 @@ Plaintext Corpus Reader
 The plaintext corpus reader is used to access corpora that consist of
 unprocessed plaintext data.  It assumes that paragraph breaks are
 indicated by blank lines.  Sentences and words can be tokenized using
-the default tokenizers, or by custom tokenizers specified as
+the default tokenizers, or by custom tokenizers specificed as
 parameters to the constructor.
 
     >>> root = make_testcorpus(ext='.txt',
@@ -1623,7 +1662,7 @@ The directory containing the corpus is corpus.root:
 We can get a list of words, or the raw string:
 
     >>> corpus.words()
-    ['This', 'is', 'the', 'first', 'sentence', '.', ...]
+    ['This', 'is', 'the', 'first', 'sentence', '.', 'Here', ...]
     >>> corpus.raw()[:40]
     'This is the first sentence.  Here is ano'
 
@@ -1633,7 +1672,7 @@ once works:
     >>> len(corpus.words()), [len(corpus.words(d)) for d in corpus.fileids()]
     (46, [40, 6])
     >>> corpus.words('a.txt')
-    ['This', 'is', 'the', 'first', 'sentence', '.', ...]
+    ['This', 'is', 'the', 'first', 'sentence', '.', 'Here', ...]
     >>> corpus.words('b.txt')
     ['This', 'is', 'the', 'second', 'file', '.']
     >>> corpus.words()[:4], corpus.words()[-4:]
@@ -1646,28 +1685,31 @@ We're done with the test corpus:
 Test the plaintext corpora that come with nltk:
 
     >>> from nltk.corpus import abc, genesis, inaugural
-    >>> from nltk.corpus import state_union, webtext
+    >>> from nltk.corpus import state_union, webtext, udhr
     >>> for corpus in (abc, genesis, inaugural, state_union,
-    ...                webtext):
-    ...     print(str(corpus).replace('\\\\','/'))
-    ...     print('  ', repr(corpus.fileids())[:60])
-    ...     print('  ', repr(corpus.words()[:10])[:60])
-    <PlaintextCorpusReader in '.../nltk_data/corpora/ab...'>
+    ...                webtext, udhr):
+    ...     print corpus
+    ...     print '  ', `corpus.fileids()`[:60]
+    ...     print '  ', `corpus.words()[:10]`[:60]
+    ...     # doctest: +ELLIPSIS
+    <PlaintextCorpusReader in '.../nltk_data/corpora/abc...>
        ['rural.txt', 'science.txt']
-       ['PM', 'denies', 'knowledge', 'of', 'AWB', ...
-    <PlaintextCorpusReader in '.../nltk_data/corpora/genesi...'>
-       ['english-kjv.txt', 'english-web.txt', 'finnish.txt', ...
-       ['In', 'the', 'beginning', 'God', 'created', 'the', ...
-    <PlaintextCorpusReader in '.../nltk_data/corpora/inaugura...'>
-       ['1789-Washington.txt', '1793-Washington.txt', ...
-       ['Fellow', '-', 'Citizens', 'of', 'the', 'Senate', ...
-    <PlaintextCorpusReader in '.../nltk_data/corpora/state_unio...'>
-       ['1945-Truman.txt', '1946-Truman.txt', ...
-       ['PRESIDENT', 'HARRY', 'S', '.', 'TRUMAN', "'", ...
-    <PlaintextCorpusReader in '.../nltk_data/corpora/webtex...'>
-       ['firefox.txt', 'grail.txt', 'overheard.txt', ...
-       ['Cookie', 'Manager', ':', '"', 'Don', "'", 't', ...
-
+       ['PM', 'denies', 'knowledge', 'of', 'AWB', 'kickbacks', 'The
+    <PlaintextCorpusReader in '.../nltk_data/corpora/genesis.zip/genesis/'>
+       ['english-kjv.txt', 'english-web.txt', 'finnish.txt', 'frenc
+       ['In', 'the', 'beginning', 'God', 'created', 'the', 'heaven'
+    <PlaintextCorpusReader in '.../nltk_data/corpora/inaugural'>
+       ['1789-Washington.txt', '1793-Washington.txt', '1797-Adams.t
+       ['Fellow', '-', 'Citizens', 'of', 'the', 'Senate', 'and', 'o
+    <PlaintextCorpusReader in '.../nltk_data/corpora/state_union.zip/state_union/'>
+       ['1945-Truman.txt', '1946-Truman.txt', '1947-Truman.txt', '1
+       ['PRESIDENT', 'HARRY', 'S', '.', 'TRUMAN', "'", 'S', 'ADDRES
+    <PlaintextCorpusReader in '.../nltk_data/corpora/webtext.zip/webtext/'>
+       ['firefox.txt', 'grail.txt', 'overheard.txt', 'pirates.txt',
+       ['Cookie', 'Manager', ':', '"', 'Don', "'", 't', 'allow', 's
+    <PlaintextCorpusReader in '.../nltk_data/corpora/udhr.zip/udhr/'>
+       ['Abkhaz-Cyrillic+Abkh', 'Abkhaz-UTF8', 'Achehnese-Latin1',
+       ['\xc0\xf3\xe0\xfe\xfb\xf2\xfa\xfb\xfe\xf1\xe0', '\xe8\xe7\x
 
 Tagged Corpus Reader
 ====================
@@ -1698,7 +1740,7 @@ By default, they apply to all documents in the corpus.
     >>> str(corpus.root) == str(root)
     True
     >>> corpus.words()
-    ['This', 'is', 'the', 'first', 'sentence', '.', ...]
+    ['This', 'is', 'the', 'first', 'sentence', '.', 'Here', ...]
     >>> corpus.sents() # doctest: +ELLIPSIS
     [['This', 'is', 'the', 'first', ...], ['Here', 'is', 'another'...], ...]
     >>> corpus.paras() # doctest: +ELLIPSIS
@@ -1717,9 +1759,9 @@ By default, they apply to all documents in the corpus.
     (6, [5, 1])
     >>> len(corpus.paras()), [len(corpus.paras(d)) for d in corpus.fileids()]
     (3, [2, 1])
-    >>> print(corpus.words('a'))
-    ['This', 'is', 'the', 'first', 'sentence', '.', ...]
-    >>> print(corpus.words('b'))
+    >>> corpus.words('a')
+    ['This', 'is', 'the', 'first', 'sentence', '.', 'Here', ...]
+    >>> corpus.words('b')
     ['This', 'is', 'the', 'second', 'file', '.']
     >>> del_testcorpus(root)
 
@@ -1731,10 +1773,10 @@ The Brown Corpus uses the tagged corpus reader:
     >>> brown.categories() # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     ['adventure', 'belles_lettres', 'editorial', 'fiction', 'government', 'hobbies', 'humor',
     'learned', 'lore', 'mystery', 'news', 'religion', 'reviews', 'romance', 'science_fiction']
-    >>> print(repr(brown.root).replace('\\\\','/')) # doctest: +ELLIPSIS
+    >>> brown.root # doctest: +ELLIPSIS
     FileSystemPathPointer('.../corpora/brown')
     >>> brown.words()
-    ['The', 'Fulton', 'County', 'Grand', 'Jury', ...]
+    ['The', 'Fulton', 'County', 'Grand', 'Jury', 'said', ...]
     >>> brown.sents() # doctest: +ELLIPSIS
     [['The', 'Fulton', 'County', 'Grand', ...], ...]
     >>> brown.paras() # doctest: +ELLIPSIS
@@ -1823,23 +1865,38 @@ Select some corpus files to play with:
     >>> f3 = nltk.data.find('corpora/inaugural/1909-Taft.txt')
     >>> fileids = [f1, f2, f3]
 
+Check that corpus views produce the correct sequence of values.
+
+    >>> from nltk.corpus.reader.util import *
+    >>> linetok = nltk.LineTokenizer(blanklines='discard-eof')
+    >>> for f in fileids:
+    ...     v = StreamBackedCorpusView(f, read_whitespace_block)
+    ...     assert list(v) == open(f).read().split()
+    ...     v = StreamBackedCorpusView(f, read_line_block)
+    ...     assert list(v) == linetok.tokenize(open(f).read())
+
+Check that the corpus views report the correct lengths:
+
+    >>> for f in fileids:
+    ...     v = StreamBackedCorpusView(f, read_whitespace_block)
+    ...     assert len(v) == len(open(f).read().split())
+    ...     v = StreamBackedCorpusView(f, read_line_block)
+    ...     assert len(v) == len(linetok.tokenize(open(f).read()))
 
 Concatenation
 -------------
 Check that concatenation works as intended.
 
-    >>> from nltk.corpus.reader.util import *
-
-    >>> c1 = StreamBackedCorpusView(f1, read_whitespace_block, encoding='utf-8')
-    >>> c2 = StreamBackedCorpusView(f2, read_whitespace_block, encoding='utf-8')
-    >>> c3 = StreamBackedCorpusView(f3, read_whitespace_block, encoding='utf-8')
+    >>> c1 = StreamBackedCorpusView(f1, read_whitespace_block)
+    >>> c2 = StreamBackedCorpusView(f2, read_whitespace_block)
+    >>> c3 = StreamBackedCorpusView(f3, read_whitespace_block)
     >>> c123 = c1+c2+c3
-    >>> print(c123)
+    >>> print c123
     ['C-Span', 'Inaugural', 'Address', 'Corpus', 'US', ...]
 
-    >>> l1 = f1.open(encoding='utf-8').read().split()
-    >>> l2 = f2.open(encoding='utf-8').read().split()
-    >>> l3 = f3.open(encoding='utf-8').read().split()
+    >>> l1 = open(f1).read().split()
+    >>> l2 = open(f2).read().split()
+    >>> l3 = open(f3).read().split()
     >>> l123 = l1+l2+l3
 
     >>> list(c123) == l123
@@ -1854,9 +1911,9 @@ First, do some tests with fairly small slices.  These will all
 generate tuple values.
 
     >>> from nltk.util import LazySubsequence
-    >>> c1 = StreamBackedCorpusView(f1, read_whitespace_block, encoding='utf-8')
-    >>> l1 = f1.open(encoding='utf-8').read().split()
-    >>> print(len(c1))
+    >>> c1 = StreamBackedCorpusView(f1, read_whitespace_block)
+    >>> l1 = open(f1).read().split()
+    >>> print len(c1)
     21
     >>> len(c1) < LazySubsequence.MIN_SIZE
     True
@@ -1891,9 +1948,9 @@ Test slicing with start=stop=None:
 Next, we'll do some tests with much longer slices.  These will
 generate LazySubsequence objects.
 
-    >>> c3 = StreamBackedCorpusView(f3, read_whitespace_block, encoding='utf-8')
-    >>> l3 = f3.open(encoding='utf-8').read().split()
-    >>> print(len(c3))
+    >>> c3 = StreamBackedCorpusView(f3, read_whitespace_block)
+    >>> l3 = open(f3).read().split()
+    >>> print len(c3)
     5430
     >>> len(c3) > LazySubsequence.MIN_SIZE*2
     True
@@ -1934,23 +1991,23 @@ iteration can be interleaved:
     >>> iterators = [c3.iterate_from(n) for n in [0,15,30,45]]
     >>> for i in range(15):
     ...     for iterator in iterators:
-    ...         print('%-15s' % next(iterator), end=' ')
-    ...     print()
-    My              a               duties          in
-    fellow          heavy           of              a
-    citizens:       weight          the             proper
-    Anyone          of              office          sense
-    who             responsibility. upon            of
-    has             If              which           the
-    taken           not,            he              obligation
-    the             he              is              which
-    oath            has             about           the
-    I               no              to              oath
-    have            conception      enter,          imposes.
-    just            of              or              The
-    taken           the             he              office
-    must            powers          is              of
-    feel            and             lacking         an
+    ...         print '%-15s' % iterator.next(),
+    ...     print
+    My              a               duties          in             
+    fellow          heavy           of              a              
+    citizens:       weight          the             proper         
+    Anyone          of              office          sense          
+    who             responsibility. upon            of             
+    has             If              which           the            
+    taken           not,            he              obligation     
+    the             he              is              which          
+    oath            has             about           the            
+    I               no              to              oath           
+    have            conception      enter,          imposes.       
+    just            of              or              The            
+    taken           the             he              office         
+    must            powers          is              of             
+    feel            and             lacking         an             
 
 SeekableUnicodeStreamReader
 ===========================
@@ -1972,12 +2029,12 @@ files containing encoded unicode data.  This class is loosely based on
 the ``codecs.StreamReader`` class.  To construct a new reader, we call
 the constructor with an underlying stream and an encoding name:
 
-    >>> from io import StringIO, BytesIO
+    >>> from cStringIO import StringIO
     >>> from nltk.data import SeekableUnicodeStreamReader
-    >>> stream = BytesIO(b"""\
+    >>> stream = StringIO(u"""\
     ... This is a test file.
     ... It is encoded in ascii.
-    ... """.decode('ascii').encode('ascii'))
+    ... """.encode('ascii'))
     >>> reader = SeekableUnicodeStreamReader(stream, 'ascii')
 
 `SeekableUnicodeStreamReader`\ s support all of the normal operations
@@ -1993,7 +2050,7 @@ return ``unicode`` objects (not ``str`` objects).
     u'is a test file.\n'
     >>> reader.seek(0)        # rewind to the start.
     >>> for line in reader:
-    ...     print(repr(line))      # iterate over lines
+    ...     print `line`      # iterate over lines
     u'This is a test file.\n'
     u'It is encoded in ascii.\n'
     >>> reader.seek(0)        # rewind to the start.
@@ -2008,10 +2065,10 @@ The ``size`` argument to ``read()`` specifies the maximum number of
 encodings that use multiple bytes per character, it may return fewer
 characters than the ``size`` argument:
 
-    >>> stream = BytesIO(b"""\
+    >>> stream = StringIO(u"""\
     ... This is a test file.
     ... It is encoded in utf-16.
-    ... """.decode('ascii').encode('utf-16'))
+    ... """.encode('utf-16'))
     >>> reader = SeekableUnicodeStreamReader(stream, 'utf-16')
     >>> reader.read(10)
     u'This '
@@ -2028,7 +2085,7 @@ string, which could be mistaken for indicating the end of the file.
     >>> reader.seek(0)            # rewind to the start.
     >>> reader.read(1)            # we actually need to read 4 bytes
     u'T'
-    >>> int(reader.tell())
+    >>> reader.tell()
     4
 
 The ``readline()`` method may read more than a single line of text, in
@@ -2041,11 +2098,11 @@ bytes from the stream:
     >>> reader.seek(0)            # rewind to the start.
     >>> reader.readline()         # stores extra text in a buffer
     u'This is a test file.\n'
-    >>> print(reader.linebuffer)   # examine the buffer contents
+    >>> print reader.linebuffer   # examine the buffer contents
     [u'It is encoded i']
     >>> reader.read(0)            # returns the contents of the buffer
     u'It is encoded i'
-    >>> print(reader.linebuffer)   # examine the buffer contents
+    >>> print reader.linebuffer   # examine the buffer contents
     None
 
 Seek and Tell
@@ -2057,14 +2114,14 @@ using these operations.  In particular, the only file offsets that
 should be passed to ``seek()`` are ``0`` and any offset that has been
 returned by ``tell``.
 
-    >>> stream = BytesIO(b"""\
+    >>> stream = StringIO(u"""\
     ... This is a test file.
     ... It is encoded in utf-16.
-    ... """.decode('ascii').encode('utf-16'))
+    ... """.encode('utf-16'))
     >>> reader = SeekableUnicodeStreamReader(stream, 'utf-16')
     >>> reader.read(20)
     u'This is a '
-    >>> pos = reader.tell(); print(pos)
+    >>> pos = reader.tell(); print pos
     22
     >>> reader.read(20)
     u'test file.'
@@ -2075,14 +2132,14 @@ returned by ``tell``.
 The ``seek()`` and ``tell()`` methods work property even when
 ``readline()`` is used.
 
-    >>> stream = BytesIO(b"""\
+    >>> stream = StringIO(u"""\
     ... This is a test file.
     ... It is encoded in utf-16.
-    ... """.decode('ascii').encode('utf-16'))
+    ... """.encode('utf-16'))
     >>> reader = SeekableUnicodeStreamReader(stream, 'utf-16')
     >>> reader.readline()
     u'This is a test file.\n'
-    >>> pos = reader.tell(); print(pos)
+    >>> pos = reader.tell(); print pos
     44
     >>> reader.readline()
     u'It is encoded in utf-16.\n'
@@ -2090,6 +2147,133 @@ The ``seek()`` and ``tell()`` methods work property even when
     >>> reader.readline()
     u'It is encoded in utf-16.\n'
 
+The following test performs a random series of reads, seeks, and
+tells, and checks that the results are consistent:
+
+    >>> import random
+    >>> def reader_test(unicode_string, encoding, n=1000):
+    ...     try: bytestr = unicode_string.encode(encoding)
+    ...     except UnicodeEncodeError:
+    ...         return 'codec can not encode string'
+    ...     strlen = len(unicode_string)
+    ...     stream = StringIO(bytestr)
+    ...     reader = SeekableUnicodeStreamReader(stream, encoding)
+    ...     # Find all character positions
+    ...     chars = []
+    ...     while True:
+    ...         pos = reader.tell()
+    ...         chars.append( (pos, reader.read(1)) )
+    ...         if chars[-1][1] == '': break
+    ...     # Find all strings
+    ...     strings = dict( (pos,'') for (pos,c) in chars )
+    ...     for pos1, char in chars:
+    ...         for pos2, _ in chars:
+    ...             if pos2 <= pos1:
+    ...                 strings[pos2] += char
+    ...     while True:
+    ...         op = random.choice('tsrr')
+    ...         # Check our position?
+    ...         if op == 't': # tell
+    ...             reader.tell()
+    ...         # Perform a seek?
+    ...         if op == 's': # seek
+    ...             new_pos = random.choice([p for (p,c) in chars])
+    ...             reader.seek(new_pos)
+    ...         # Perform a read?
+    ...         if op == 'r': # read
+    ...             if random.random() < .3: pos = reader.tell()
+    ...             else: pos = None
+    ...             if random.random() < .2: size = None
+    ...             elif random.random() < .8:
+    ...                 size = random.randint(0, int(strlen/6))
+    ...             else: size = random.randint(0, strlen+20)
+    ...             if random.random() < .8:
+    ...                 s = reader.read(size)
+    ...             else:
+    ...                 s = reader.readline(size)
+    ...             # check that everything's consistent
+    ...             if pos is not None:
+    ...                 assert pos in strings
+    ...                 assert strings[pos].startswith(s)
+    ...                 n -= 1
+    ...                 if n == 0:
+    ...                     return 'passed'
+
+Call the randomized test function `reader_test()` with a variety of
+input strings and encodings.
+
+    >>> encodings = ['ascii', 'latin1', 'greek', 'hebrew',
+    ...              'utf-16', 'utf-7', 'utf-8']
+
+    >>> strings = [
+    ...     u"""\
+    ... This is a test file.
+    ... It is fairly short.""",
+    ...     u"""\
+    ... This file can be encoded with latin1. \x83""",
+    ...     u"""\
+    ... This is a test file.
+    ... Here's a blank line:
+    ...
+    ... And here's some unicode: \xee \u0123 \uffe3
+    ... """,
+    ...     u"""\
+    ... This is a test file.
+    ... Unicode characters: \xf3 \u2222 \u3333\u4444 \u5555
+    ... """,
+    ...     u"""\
+    ... This is a larger file.  It has some lines that are longer \
+    ... than 72 characters.  It's got lots of repetition.  Here's \
+    ... some unicode chars: \xee \u0123 \uffe3 \ueeee \u2345
+    ...
+    ... How fun!  Let's repeat it twenty times.
+    ... """*20]
+
+    >>> for i, string in enumerate(strings):
+    ...     print 'String %d: %s' % (i, `string[:45]`[:-1]+'...')
+    ...     for encoding in encodings:
+    ...         print ('  - test for %-10s [%s]' %
+    ...                (encoding, reader_test(string, encoding)))
+    String 0: u'This is a test file.\nIt is fairly short....
+      - test for ascii      [passed]
+      - test for latin1     [passed]
+      - test for greek      [passed]
+      - test for hebrew     [passed]
+      - test for utf-16     [passed]
+      - test for utf-7      [passed]
+      - test for utf-8      [passed]
+    String 1: u'This file can be encoded with latin1. \x83...
+      - test for ascii      [codec can not encode string]
+      - test for latin1     [passed]
+      - test for greek      [passed]
+      - test for hebrew     [passed]
+      - test for utf-16     [passed]
+      - test for utf-7      [passed]
+      - test for utf-8      [passed]
+    String 2: u"This is a test file.\nHere's a blank line:\n\nAn...
+      - test for ascii      [codec can not encode string]
+      - test for latin1     [codec can not encode string]
+      - test for greek      [codec can not encode string]
+      - test for hebrew     [codec can not encode string]
+      - test for utf-16     [passed]
+      - test for utf-7      [passed]
+      - test for utf-8      [passed]
+    String 3: u'This is a test file.\nUnicode characters: \xf3 \u2222 ...
+      - test for ascii      [codec can not encode string]
+      - test for latin1     [codec can not encode string]
+      - test for greek      [codec can not encode string]
+      - test for hebrew     [codec can not encode string]
+      - test for utf-16     [passed]
+      - test for utf-7      [passed]
+      - test for utf-8      [passed]
+    String 4: u'This is a larger file.  It has some lines tha...
+      - test for ascii      [codec can not encode string]
+      - test for latin1     [codec can not encode string]
+      - test for greek      [codec can not encode string]
+      - test for hebrew     [codec can not encode string]
+      - test for utf-16     [passed]
+      - test for utf-7      [passed]
+      - test for utf-8      [passed]
 
 Squashed Bugs
 =============
@@ -2097,15 +2281,15 @@ Squashed Bugs
 svn 5276 fixed a bug in the comment-stripping behavior of
 parse_sexpr_block.
 
-    >>> from io import StringIO
+    >>> from cStringIO import StringIO
     >>> from nltk.corpus.reader.util import read_sexpr_block
-    >>> f = StringIO(b"""
+    >>> f = StringIO("""
     ... (a b c)
     ... # This line is a comment.
-    ... (d e f\ng h)""".decode('ascii'))
-    >>> print(read_sexpr_block(f, block_size=38, comment_char='#'))
+    ... (d e f\ng h)""")
+    >>> print read_sexpr_block(f, block_size=38, comment_char='#')
     ['(a b c)']
-    >>> print(read_sexpr_block(f, block_size=38, comment_char='#'))
+    >>> print read_sexpr_block(f, block_size=38, comment_char='#')
     ['(d e f\ng h)']
 
 svn 5277 fixed a bug in parse_sexpr_block, which would cause it to
@@ -2114,23 +2298,23 @@ token that was not followed by whitespace.  A related bug caused
 an infinite loop if the corpus ended in an unmatched close paren --
 this was fixed in svn 5279
 
-    >>> f = StringIO(b"""
+    >>> f = StringIO("""
     ... This file ends mid-sexpr
-    ... (hello (world""".decode('ascii'))
-    >>> for i in range(3): print(read_sexpr_block(f))
+    ... (hello (world""")
+    >>> for i in range(3): print read_sexpr_block(f)
     ['This', 'file', 'ends', 'mid-sexpr']
     ['(hello (world']
     []
 
-    >>> f = StringIO(b"This file has no trailing whitespace.".decode('ascii'))
-    >>> for i in range(3): print(read_sexpr_block(f))
+    >>> f = StringIO("""This file has no trailing whitespace.""")
+    >>> for i in range(3): print read_sexpr_block(f)
     ['This', 'file', 'has', 'no', 'trailing']
     ['whitespace.']
     []
 
     >>> # Bug fixed in 5279:
-    >>> f = StringIO(b"a b c)".decode('ascii'))
-    >>> for i in range(3): print(read_sexpr_block(f))
+    >>> f = StringIO("""a b c)""")
+    >>> for i in range(3): print read_sexpr_block(f)
     ['a', 'b']
     ['c)']
     []
@@ -2142,17 +2326,17 @@ the first file.
 
     >>> import nltk
     >>> sents = nltk.corpus.brown.sents()
-    >>> print(sents[6000])
+    >>> print sents[6000]
     ['Cholesterol', 'and', 'thyroid']
-    >>> print(sents[6000])
+    >>> print sents[6000]
     ['Cholesterol', 'and', 'thyroid']
 
 svn 5728 fixed a bug in Categorized*CorpusReader, which caused them
 to return words from *all* files when just one file was specified.
 
     >>> from nltk.corpus import reuters
-    >>> reuters.words('training/13085')
-    ['SNYDER', '&', 'lt', ';', 'SOI', '>', 'MAKES', ...]
+    >>> reuters.words('training/13080')
+    ['U', '.', 'S', '.', 'SCIENTISTS', 'SAY', 'TROPICAL', ...]
     >>> reuters.words('training/5082')
     ['SHEPPARD', 'RESOURCES', 'TO', 'MERGE', 'WITH', ...]
 
@@ -2162,6 +2346,5 @@ access to its tuples() method
     >>> from nltk.corpus import qc
     >>> qc.tuples('test.txt')
     [('NUM:dist', 'How far is it from Denver to Aspen ?'), ('LOC:city', 'What county is Modesto , California in ?'), ...]
-
 
 

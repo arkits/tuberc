@@ -1,8 +1,8 @@
 # Natural Language Toolkit: Sinica Treebank Reader
 #
-# Copyright (C) 2001-2017 NLTK Project
-# Author: Steven Bird <stevenbird1@gmail.com>
-# URL: <http://nltk.org/>
+# Copyright (C) 2001-2012 NLTK Project
+# Author: Steven Bird <sb@ldc.upenn.edu>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
 """
@@ -41,11 +41,10 @@ Extraction, Proceedings of IJCNLP-04, pp560-565.
 import os
 import re
 
-from nltk.tree import sinica_parse
-from nltk.tag import map_tag
+import nltk
 
-from nltk.corpus.reader.util import *
-from nltk.corpus.reader.api import *
+from util import *
+from api import *
 
 IDENTIFIER = re.compile(r'^#\S+\s')
 APPENDIX = re.compile(r'(?<=\))#.*$')
@@ -63,12 +62,13 @@ class SinicaTreebankCorpusReader(SyntaxCorpusReader):
         return [sent]
 
     def _parse(self, sent):
-        return sinica_parse(sent)
+        return nltk.tree.sinica_parse(sent)
 
-    def _tag(self, sent, tagset=None):
+    def _tag(self, sent, simplify_tags=None):
         tagged_sent = [(w,t) for (t,w) in TAGWORD.findall(sent)]
-        if tagset and tagset != self._tagset:
-            tagged_sent = [(w, map_tag(self._tagset, tagset, t)) for (w,t) in tagged_sent]
+        if simplify_tags:
+            tagged_sent = [(w, self._tag_mapping_function(t))
+                           for (w,t) in tagged_sent]
         return tagged_sent
 
     def _word(self, sent):

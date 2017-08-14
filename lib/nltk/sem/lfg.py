@@ -2,18 +2,16 @@
 #
 # Author: Dan Garrette <dhgarrette@gmail.com>
 #
-# Copyright (C) 2001-2017 NLTK Project
-# URL: <http://nltk.org/>
+# Copyright (C) 2001-2012 NLTK Project
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
-from __future__ import print_function, division, unicode_literals
 
-from itertools import chain
+from __future__ import print_function
+from collections import defaultdict
 
 from nltk.internals import Counter
-from nltk.compat import python_2_unicode_compatible
 
 
-@python_2_unicode_compatible
 class FStructure(dict):
     def safeappend(self, key, item):
         """
@@ -40,54 +38,45 @@ class FStructure(dict):
     def to_depgraph(self, rel=None):
         from nltk.parse.dependencygraph import DependencyGraph
         depgraph = DependencyGraph()
-        nodes = depgraph.nodes
+        nodelist = depgraph.nodelist
 
-        self._to_depgraph(nodes, 0, 'ROOT')
+        self._to_depgraph(nodelist, 0, 'ROOT')
 
-        # Add all the dependencies for all the nodes
-        for address, node in nodes.items():
-            for n2 in (n for n in nodes.values() if n['rel'] != 'TOP'):
-                if n2['head'] == address:
-                    relation = n2['rel']
-                    node['deps'].setdefault(relation,[])
-                    node['deps'][relation].append(n2['address'])
+        #Add all the dependencies for all the nodes
+        for node_addr, node in enumerate(nodelist):
+            for n2 in nodelist[1:]:
+                if n2['head'] == node_addr:
+                    node['deps'].append(n2['address'])
 
-        depgraph.root = nodes[1]
+        depgraph.root = nodelist[1]
 
         return depgraph
 
-    def _to_depgraph(self, nodes, head, rel):
-        index = len(nodes)
+    def _to_depgraph(self, nodelist, head, rel):
+        index = len(nodelist)
 
-        nodes[index].update(
-            {
-                'address': index,
-                'word': self.pred[0],
-                'tag': self.pred[1],
-                'head': head,
-                'rel': rel,
-            }
-        )
+        nodelist.append({'address': index,
+                         'word': self.pred[0],
+                         'tag': self.pred[1],
+                         'head': head,
+                         'rel': rel,
+                         'deps': []})
 
-        for feature in sorted(self):
-            for item in sorted(self[feature]):
+        for feature in self:
+            for item in self[feature]:
                 if isinstance(item, FStructure):
-                    item._to_depgraph(nodes, index, feature)
+                    item._to_depgraph(nodelist, index, feature)
                 elif isinstance(item, tuple):
-                    new_index = len(nodes)
-                    nodes[new_index].update(
-                        {
-                            'address': new_index,
-                            'word': item[0],
-                            'tag': item[1],
-                            'head': index,
-                            'rel': feature,
-                        }
-                    )
+                    nodelist.append({'address': len(nodelist),
+                                     'word': item[0],
+                                     'tag': item[1],
+                                     'head': index,
+                                     'rel': feature,
+                                     'deps': []})
                 elif isinstance(item, list):
                     for n in item:
-                        n._to_depgraph(nodes, index, feature)
-                else:
+                        n._to_depgraph(nodelist, index, feature)
+                else: # ERROR
                     raise Exception('feature %s is not an FStruct, a list, or a tuple' % feature)
 
     @staticmethod
@@ -119,7 +108,7 @@ class FStructure(dict):
             if not fstruct.pred:
                 fstruct.pred = (word, tag)
 
-            children = [depgraph.nodes[idx] for idx in chain(*node['deps'].values())]
+            children = [depgraph.nodelist[idx] for idx in node['deps']]
             for child in children:
                 fstruct.safeappend(child['rel'], FStructure._read_depgraph(child, depgraph, label_counter, fstruct))
 
@@ -135,19 +124,16 @@ class FStructure(dict):
         """
         letter = ['f','g','h','i','j','k','l','m','n','o','p','q','r','s',
                   't','u','v','w','x','y','z','a','b','c','d','e'][value-1]
-        num = int(value) // 26
+        num = int(value) / 26
         if num > 0:
             return letter + str(num)
         else:
             return letter
 
     def __repr__(self):
-        return self.__unicode__().replace('\n', '')
+        return str(self).replace('\n', '')
 
-    def __str__(self):
-        return self.pretty_format()
-
-    def pretty_format(self, indent=3):
+    def __str__(self, indent=3):
         try:
             accum = '%s:[' % self.label
         except NameError:
@@ -157,11 +143,11 @@ class FStructure(dict):
         except NameError:
             pass
 
-        for feature in sorted(self):
+        for feature in self:
             for item in self[feature]:
                 if isinstance(item, FStructure):
                     next_indent = indent+len(feature)+3+len(self.label)
-                    accum += '\n%s%s %s' % (' '*(indent), feature, item.pretty_format(next_indent))
+                    accum += '\n%s%s %s' % (' '*(indent), feature, item.__str__(next_indent))
                 elif isinstance(item, tuple):
                     accum += '\n%s%s \'%s\'' % (' '*(indent), feature, item[0])
                 elif isinstance(item, list):
@@ -208,3 +194,4 @@ dog     NN      3       OBJ
 
 if __name__ == '__main__':
     demo_read_depgraph()
+

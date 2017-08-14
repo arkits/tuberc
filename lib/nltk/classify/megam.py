@@ -1,8 +1,8 @@
 # Natural Language Toolkit: Interface to Megam Classifier
 #
-# Copyright (C) 2001-2017 NLTK Project
-# Author: Edward Loper <edloper@gmail.com>
-# URL: <http://nltk.org/>
+# Copyright (C) 2001-2012 NLTK Project
+# Author: Edward Loper <edloper@gradient.cis.upenn.edu>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
 """
@@ -11,8 +11,11 @@ optimization package. Before megam can be used, you should tell NLTK where it
 can find the megam binary, using the ``config_megam()`` function. Typical
 usage:
 
+.. doctest::
+    :options: +SKIP
+
     >>> from nltk.classify import megam
-    >>> megam.config_megam() # pass path to megam if not found in PATH # doctest: +SKIP
+    >>> megam.config_megam() # pass path to megam if not found in PATH
     [Found megam: ...]
 
 Use with MaxentClassifier. Example below, see MaxentClassifier documentation
@@ -20,15 +23,14 @@ for details.
 
     nltk.classify.MaxentClassifier.train(corpus, 'megam')
 
-.. _megam: http://www.umiacs.umd.edu/~hal/megam/index.html
+.. _megam: http://www.cs.utah.edu/~hal/megam/
 """
-from __future__ import print_function
 
+from __future__ import print_function
+import os
+import os.path
 import subprocess
 
-from six import string_types
-
-from nltk import compat
 from nltk.internals import find_binary
 try:
     import numpy
@@ -53,9 +55,9 @@ def config_megam(bin=None):
     global _megam_bin
     _megam_bin = find_binary(
         'megam', bin,
-        env_vars=['MEGAM'],
+        env_vars=['MEGAM',  'MEGAMHOME'],
         binary_names=['megam.opt', 'megam', 'megam_686', 'megam_i686.opt'],
-        url='http://www.umiacs.umd.edu/~hal/megam/index.html')
+        url='http://www.cs.utah.edu/~hal/megam/')
 
 ######################################################################
 #{ Megam Interface Functions
@@ -94,14 +96,13 @@ def write_megam_file(train_toks, encoding, stream,
     """
     # Look up the set of labels.
     labels = encoding.labels()
-    labelnum = dict((label, i) for (i, label) in enumerate(labels))
+    labelnum = dict([(label, i) for (i, label) in enumerate(labels)])
 
     # Write the file, which contains one line per instance.
     for featureset, label in train_toks:
         # First, the instance number (or, in the weighted multiclass case, the cost of each label).
-        if hasattr(encoding, 'cost'):
-            stream.write(':'.join(str(encoding.cost(featureset, label, l))
-                                  for l in labels))
+        if hasattr(encoding,'cost'):
+            stream.write(':'.join(str(encoding.cost(featureset, label, l)) for l in labels))
         else:
             stream.write('%d' % labelnum[label])
 
@@ -157,7 +158,7 @@ def call_megam(args):
     """
     Call the ``megam`` binary with the given arguments.
     """
-    if isinstance(args, string_types):
+    if isinstance(args, basestring):
         raise TypeError('args should be a list of strings')
     if _megam_bin is None:
         config_megam()
@@ -173,7 +174,5 @@ def call_megam(args):
         print(stderr)
         raise OSError('megam command failed!')
 
-    if isinstance(stdout, string_types):
-        return stdout
-    else:
-        return stdout.decode('utf-8')
+    return stdout
+

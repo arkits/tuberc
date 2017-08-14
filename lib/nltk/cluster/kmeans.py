@@ -1,26 +1,18 @@
 # Natural Language Toolkit: K-Means Clusterer
 #
-# Copyright (C) 2001-2017 NLTK Project
+# Copyright (C) 2001-2012 NLTK Project
 # Author: Trevor Cohn <tacohn@cs.mu.oz.au>
-# URL: <http://nltk.org/>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
-from __future__ import print_function, unicode_literals, division
 
+from __future__ import print_function
 import copy
+import numpy
 import random
 import sys
 
-try:
-    import numpy
-except ImportError:
-    pass
-
-
 from nltk.cluster.util import VectorSpaceClusterer
-from nltk.compat import python_2_unicode_compatible
 
-
-@python_2_unicode_compatible
 class KMeansClusterer(VectorSpaceClusterer):
     """
     The K-means clusterer starts with k arbitrary chosen means then allocates
@@ -81,7 +73,7 @@ class KMeansClusterer(VectorSpaceClusterer):
         for trial in range(self._repeats):
             if trace: print('k-means trial', trial)
             if not self._means or trial > 1:
-                self._means = self._rng.sample(list(vectors), self._num_means)
+                self._means = self._rng.sample(vectors, self._num_means)
             self._cluster_vectorspace(vectors, trace)
             meanss.append(self._means)
 
@@ -89,7 +81,7 @@ class KMeansClusterer(VectorSpaceClusterer):
             # sort the means first (so that different cluster numbering won't
             # effect the distance comparison)
             for means in meanss:
-                means.sort(key=sum)
+                means.sort(cmp = _vector_compare)
 
             # find the set of means that's minimally different from the others
             min_difference = min_means = None
@@ -121,7 +113,7 @@ class KMeansClusterer(VectorSpaceClusterer):
                     #print '  mean', i, 'allocated', len(clusters[i]), 'vectors'
 
                 # recalculate cluster means by computing the centroid of each cluster
-                new_means = list(map(self._centroid, clusters, self._means))
+                new_means = map(self._centroid, clusters, self._means)
 
                 # measure the degree of change from the previous step for convergence
                 difference = self._sum_distances(self._means, new_means)
@@ -165,7 +157,7 @@ class KMeansClusterer(VectorSpaceClusterer):
             centroid = copy.copy(mean)
             for vector in cluster:
                 centroid += vector
-            return centroid / (1+len(cluster))
+            return centroid / (1+float(len(cluster)))
         else:
             if not len(cluster):
                 sys.stderr.write('Error: no centroid defined for empty cluster.\n')
@@ -174,11 +166,17 @@ class KMeansClusterer(VectorSpaceClusterer):
             centroid = copy.copy(cluster[0])
             for vector in cluster[1:]:
                 centroid += vector
-            return centroid / len(cluster)
+            return centroid / float(len(cluster))
 
     def __repr__(self):
         return '<KMeansClusterer means=%s repeats=%d>' % \
                     (self._means, self._repeats)
+
+def _vector_compare(x, y):
+    xs, ys = sum(x), sum(y)
+    if xs < ys:     return -1
+    elif xs > ys:   return 1
+    else:           return 0
 
 #################################################################################
 

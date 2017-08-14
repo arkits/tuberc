@@ -1,21 +1,19 @@
 # Natural Language Toolkit: Corpus Reader Utilities
 #
-# Copyright (C) 2001-2017 NLTK Project
-# Author: Steven Bird <stevenbird1@gmail.com>
-#         Edward Loper <edloper@gmail.com>
-# URL: <http://nltk.org/>
+# Copyright (C) 2001-2012 NLTK Project
+# Author: Steven Bird <sb@ldc.upenn.edu>
+#         Edward Loper <edloper@gradient.cis.upenn.edu>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
 import os
+import sys
 import bisect
 import re
 import tempfile
-from six import string_types, text_type
-from functools import reduce
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
+try: import cPickle as pickle
+except ImportError: import pickle
+from itertools import islice
 
 # Use the c version of ElementTree, which is faster, if possible:
 try: from xml.etree import cElementTree as ElementTree
@@ -25,6 +23,7 @@ from nltk.tokenize import wordpunct_tokenize
 from nltk.internals import slice_bounds
 from nltk.data import PathPointer, FileSystemPathPointer, ZipFilePathPointer
 from nltk.data import SeekableUnicodeStreamReader
+from nltk.sourcedstring import SourcedStringStream
 from nltk.util import AbstractLazySequence, LazySubsequence, LazyConcatenation, py25
 
 ######################################################################
@@ -124,7 +123,7 @@ class StreamBackedCorpusView(AbstractLazySequence):
        block; and tokens is a list of the tokens in the block.
     """
     def __init__(self, fileid, block_reader=None, startpos=0,
-                 encoding='utf8'):
+                 encoding=None, source=None):
         """
         Create a new corpus view, based on the file ``fileid``, and
         read with ``block_reader``.  See the class documentation
@@ -142,6 +141,11 @@ class StreamBackedCorpusView(AbstractLazySequence):
             read the file's contents.  If no encoding is specified,
             then the file's contents will be read as a non-unicode
             string (i.e., a str).
+
+        :param source: If specified, then use an ``SourcedStringStream``
+            to annotate all strings read from the file with
+            information about their start offset, end ofset,
+            and docid.  The value of ``source`` will be used as the docid.
         """
         if block_reader:
             self.read_block = block_reader
@@ -149,6 +153,7 @@ class StreamBackedCorpusView(AbstractLazySequence):
         self._toknum = [0]
         self._filepos = [startpos]
         self._encoding = encoding
+        self._source = source
         # We don't know our length (number of tokens) yet.
         self._len = None
 
@@ -212,6 +217,8 @@ class StreamBackedCorpusView(AbstractLazySequence):
                 open(self._fileid, 'rb'), self._encoding)
         else:
             self._stream = open(self._fileid, 'rb')
+        if self._source is not None:
+            self._stream = SourcedStringStream(self._stream, self._source)
 
     def close(self):
         """
@@ -252,7 +259,7 @@ class StreamBackedCorpusView(AbstractLazySequence):
                 return self._cache[2][i-offset]
             # Use iterate_from to extract it.
             try:
-                return next(self.iterate_from(i))
+                return self.iterate_from(i).next()
             except StopIteration:
                 raise IndexError('index out of range')
 
@@ -280,11 +287,6 @@ class StreamBackedCorpusView(AbstractLazySequence):
         # Open the stream, if it's not open already.
         if self._stream is None:
             self._open()
-
-        # If the file is empty, the while loop will never run.
-        # This *seems* to be all the state we need to set:
-        if self._eofpos == 0:
-            self._len = 0
 
         # Each iteration through this loop, we read a single block
         # from the stream.
@@ -339,9 +341,6 @@ class StreamBackedCorpusView(AbstractLazySequence):
 
         # If we reach this point, then we should know our length.
         assert self._len is not None
-        # Enforce closing of stream once we reached end of file
-        # We should have reached EOF once we're out of the while loop.
-        self.close()
 
     # Use concat for these, so we can use a ConcatenatedCorpusView
     # when possible.
@@ -421,11 +420,11 @@ def concat(docs):
     if len(docs) == 0:
         raise ValueError('concat() expects at least one object!')
 
-    types = set(d.__class__ for d in docs)
+    types = set([d.__class__ for d in docs])
 
     # If they're all strings, use string concatenation.
-    if all(isinstance(doc, string_types) for doc in docs):
-        return ''.join(docs)
+    if types.issubset([str, unicode, basestring]):
+        return reduce((lambda a,b:a+b), docs, '')
 
     # If they're all corpus views, then use ConcatenatedCorpusView.
     for typ in types:
@@ -474,11 +473,14 @@ class PickleCorpusView(StreamBackedCorpusView):
     don't want to repeat it); but the corpus is too large to store in
     memory.  The following example illustrates this technique:
 
+    .. doctest::
+        :options: +SKIP
+
         >>> from nltk.corpus.reader.util import PickleCorpusView
         >>> from nltk.util import LazyMap
-        >>> feature_corpus = LazyMap(detect_features, corpus) # doctest: +SKIP
-        >>> PickleCorpusView.write(feature_corpus, some_fileid)  # doctest: +SKIP
-        >>> pcv = PickleCorpusView(some_fileid) # doctest: +SKIP
+        >>> feature_corpus = LazyMap(detect_features, corpus)
+        >>> PickleCorpusView.write(feature_corpus, some_fileid)
+        >>> pcv = PickleCorpusView(some_fileid)
     """
     BLOCK_SIZE = 100
     PROTOCOL = -1
@@ -516,7 +518,7 @@ class PickleCorpusView(StreamBackedCorpusView):
 
     @classmethod
     def write(cls, sequence, output_file):
-        if isinstance(output_file, string_types):
+        if isinstance(output_file, basestring):
             output_file = open(output_file, 'wb')
         for item in sequence:
             pickle.dump(item, output_file, cls.PROTOCOL)
@@ -651,7 +653,7 @@ def read_sexpr_block(stream, block_size=16384, comment_char=None):
     start = stream.tell()
     block = stream.read(block_size)
     encoding = getattr(stream, 'encoding', None)
-    assert encoding is not None or isinstance(block, text_type)
+    assert encoding is not None or isinstance(block, str)
     if encoding not in (None, 'utf-8'):
         import warnings
         warnings.warn('Parsing may fail, depending on the properties '
@@ -802,3 +804,4 @@ def tagged_treebank_para_block_reader(stream):
         # Content line:
         else:
             para += line
+

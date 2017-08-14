@@ -1,14 +1,12 @@
 # Natural Language Toolkit: Aligned Corpus Reader
 #
-# Copyright (C) 2001-2017 NLTK Project
-# URL: <http://nltk.org/>
-# Author: Steven Bird <stevenbird1@gmail.com>
+# Copyright (C) 2001-2012 NLTK Project
+# URL: <http://www.nltk.org/>
+# Author: Steven Bird <sb@csse.unimelb.edu.au>
 # For license information, see LICENSE.TXT
 
-from six import string_types
-
 from nltk.tokenize import WhitespaceTokenizer, RegexpTokenizer
-from nltk.translate import AlignedSent, Alignment
+from nltk.align import AlignedSent
 
 from nltk.corpus.reader.api import CorpusReader
 from nltk.corpus.reader.util import StreamBackedCorpusView, concat,\
@@ -23,13 +21,13 @@ class AlignedCorpusReader(CorpusReader):
                  sep='/', word_tokenizer=WhitespaceTokenizer(),
                  sent_tokenizer=RegexpTokenizer('\n', gaps=True),
                  alignedsent_block_reader=read_alignedsent_block,
-                 encoding='latin1'):
+                 encoding=None):
         """
         Construct a new Aligned Corpus reader for a set of documents
         located at the given root directory.  Example usage:
 
             >>> root = '/...path to corpus.../'
-            >>> reader = AlignedCorpusReader(root, '.*', '.txt') # doctest: +SKIP
+            >>> reader = AlignedCorpusReader(root, '.*', '.txt')
 
         :param root: The root directory for this corpus.
         :param fileids: A list or regexp specifying the fileids in this corpus.
@@ -46,7 +44,7 @@ class AlignedCorpusReader(CorpusReader):
         :rtype: str
         """
         if fileids is None: fileids = self._fileids
-        elif isinstance(fileids, string_types): fileids = [fileids]
+        elif isinstance(fileids, basestring): fileids = [fileids]
         return concat([self.open(f).read() for f in fileids])
 
     def words(self, fileids=None):
@@ -105,7 +103,7 @@ class AlignedSentCorpusView(StreamBackedCorpusView):
                  for alignedsent_str in self._alignedsent_block_reader(stream)
                  for sent_str in self._sent_tokenizer.tokenize(alignedsent_str)]
         if self._aligned:
-            block[2] = Alignment.fromstring(" ".join(block[2])) # kludge; we shouldn't have tokenized the alignment string
+            block[2] = " ".join(block[2]) # kludge; we shouldn't have tokenized the alignment string
             block = [AlignedSent(*block)]
         elif self._group_by_sent:
             block = [block[0]]

@@ -1,29 +1,24 @@
 # Natural Language Toolkit: API for Corpus Readers
 #
-# Copyright (C) 2001-2017 NLTK Project
-# Author: Steven Bird <stevenbird1@gmail.com>
-#         Edward Loper <edloper@gmail.com>
-# URL: <http://nltk.org/>
+# Copyright (C) 2001-2012 NLTK Project
+# Author: Steven Bird <sb@ldc.upenn.edu>
+#         Edward Loper <edloper@gradient.cis.upenn.edu>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
 """
 API for corpus readers.
 """
-from __future__ import unicode_literals
 
 import os
 import re
 from collections import defaultdict
-from itertools import chain
 
-from six import string_types
-
-from nltk import compat
 from nltk.data import PathPointer, FileSystemPathPointer, ZipFilePathPointer
+from nltk.sourcedstring import SourcedStringStream
 
-from nltk.corpus.reader.util import *
+from util import *
 
-@compat.python_2_unicode_compatible
 class CorpusReader(object):
     """
     A base class for "corpus reader" classes, each of which can be
@@ -33,7 +28,7 @@ class CorpusReader(object):
     identified by its ``file identifier``, which is the relative path
     to the file from the root directory.
 
-    A separate subclass is defined for each corpus format.  These
+    A separate subclass is be defined for each corpus format.  These
     subclasses define one or more methods that provide 'views' on the
     corpus contents, such as ``words()`` (for a list of words) and
     ``parsed_sents()`` (for a list of parsed sentences).  Called with
@@ -42,8 +37,7 @@ class CorpusReader(object):
     selection arguments, such as ``fileids`` or ``categories``, which can
     be used to select which portion of the corpus should be returned.
     """
-
-    def __init__(self, root, fileids, encoding='utf8', tagset=None):
+    def __init__(self, root, fileids, encoding=None, tag_mapping_function=None):
         """
         :type root: PathPointer or str
         :param root: A path pointer identifying the root directory for
@@ -70,12 +64,12 @@ class CorpusReader(object):
               using non-unicode byte strings.
             - None: the file contents of all files will be
               processed using non-unicode byte strings.
-        :param tagset: The name of the tagset used by this corpus, to be used
-              for normalizing or converting the POS tags returned by the
-              tagged_...() methods.
+        :param tag_mapping_function: A function for normalizing or
+                simplifying the POS tags returned by the tagged_words()
+                or tagged_sents() methods.
         """
         # Convert the root to a path pointer, if necessary.
-        if isinstance(root, string_types) and not isinstance(root, PathPointer):
+        if isinstance(root, basestring):
             m = re.match('(.*\.zip)/?(.*)$|', root)
             zipfile, zipentry = m.groups()
             if zipfile:
@@ -86,7 +80,7 @@ class CorpusReader(object):
             raise TypeError('CorpusReader: expected a string or a PathPointer')
 
         # If `fileids` is a regexp, then expand it.
-        if isinstance(fileids, string_types):
+        if isinstance(fileids, basestring):
             fileids = find_corpus_fileids(root, fileids)
 
         self._fileids = fileids
@@ -111,8 +105,8 @@ class CorpusReader(object):
         self._encoding = encoding
         """The default unicode encoding for the fileids that make up
            this corpus.  If ``encoding`` is None, then the file
-           contents are processed using byte strings."""
-        self._tagset = tagset
+           contents are processed using byte strings (str)."""
+        self._tag_mapping_function = tag_mapping_function
 
     def __repr__(self):
         if isinstance(self._root, ZipFilePathPointer):
@@ -121,32 +115,12 @@ class CorpusReader(object):
             path = '%s' % self._root.path
         return '<%s in %r>' % (self.__class__.__name__, path)
 
-    def ensure_loaded(self):
-        """
-        Load this corpus (if it has not already been loaded).  This is
-        used by LazyCorpusLoader as a simple method that can be used to
-        make sure a corpus is loaded -- e.g., in case a user wants to
-        do help(some_corpus).
-        """
-        pass # no need to actually do anything.
-
     def readme(self):
         """
         Return the contents of the corpus README file, if it exists.
         """
+
         return self.open("README").read()
-
-    def license(self):
-        """
-        Return the contents of the corpus LICENSE file, if it exists.
-        """
-        return self.open("LICENSE").read()
-
-    def citation(self):
-        """
-        Return the contents of the corpus citation.bib file, if it exists.
-        """
-        return self.open("citation.bib").read()
 
     def fileids(self):
         """
@@ -159,8 +133,8 @@ class CorpusReader(object):
         """
         Return the absolute path for the given file.
 
-        :type fileid: str
-        :param fileid: The file identifier for the file whose path
+        :type file: str
+        :param file: The file identifier for the file whose path
             should be returned.
         :rtype: PathPointer
         """
@@ -187,21 +161,21 @@ class CorpusReader(object):
         """
         if fileids is None:
             fileids = self._fileids
-        elif isinstance(fileids, string_types):
+        elif isinstance(fileids, basestring):
             fileids = [fileids]
 
         paths = [self._root.join(f) for f in fileids]
 
         if include_encoding and include_fileid:
-            return list(zip(paths, [self.encoding(f) for f in fileids], fileids))
+            return zip(paths, [self.encoding(f) for f in fileids], fileids)
         elif include_fileid:
-            return list(zip(paths, fileids))
+            return zip(paths, fileids)
         elif include_encoding:
-            return list(zip(paths, [self.encoding(f) for f in fileids]))
+            return zip(paths, [self.encoding(f) for f in fileids])
         else:
             return paths
 
-    def open(self, file):
+    def open(self, file, sourced=False):
         """
         Return an open stream that can be used to read the given file.
         If the file's encoding is not None, then the stream will
@@ -211,6 +185,8 @@ class CorpusReader(object):
         """
         encoding = self.encoding(file)
         stream = self._root.join(file).open(encoding)
+        if sourced:
+            stream = SourcedStringStream(stream, file)
         return stream
 
     def encoding(self, file):
@@ -341,7 +317,7 @@ class CategorizedCorpusReader(object):
             self._init()
         if fileids is None:
             return sorted(self._c2f)
-        if isinstance(fileids, string_types):
+        if isinstance(fileids, basestring):
             fileids = [fileids]
         return sorted(set.union(*[self._f2c[d] for d in fileids]))
 
@@ -352,7 +328,7 @@ class CategorizedCorpusReader(object):
         """
         if categories is None:
             return super(CategorizedCorpusReader, self).fileids()
-        elif isinstance(categories, string_types):
+        elif isinstance(categories, basestring):
             if self._f2c is None:
                 self._init()
             if categories in self._c2f:
@@ -394,7 +370,7 @@ class SyntaxCorpusReader(CorpusReader):
 
     def raw(self, fileids=None):
         if fileids is None: fileids = self._fileids
-        elif isinstance(fileids, string_types): fileids = [fileids]
+        elif isinstance(fileids, basestring): fileids = [fileids]
         return concat([self.open(f).read() for f in fileids])
 
     def parsed_sents(self, fileids=None):
@@ -402,9 +378,9 @@ class SyntaxCorpusReader(CorpusReader):
         return concat([StreamBackedCorpusView(fileid, reader, encoding=enc)
                        for fileid, enc in self.abspaths(fileids, True)])
 
-    def tagged_sents(self, fileids=None, tagset=None):
+    def tagged_sents(self, fileids=None, simplify_tags=False):
         def reader(stream):
-            return self._read_tagged_sent_block(stream, tagset)
+            return self._read_tagged_sent_block(stream, simplify_tags)
         return concat([StreamBackedCorpusView(fileid, reader, encoding=enc)
                        for fileid, enc in self.abspaths(fileids, True)])
 
@@ -413,9 +389,9 @@ class SyntaxCorpusReader(CorpusReader):
         return concat([StreamBackedCorpusView(fileid, reader, encoding=enc)
                        for fileid, enc in self.abspaths(fileids, True)])
 
-    def tagged_words(self, fileids=None, tagset=None):
+    def tagged_words(self, fileids=None, simplify_tags=False):
         def reader(stream):
-            return self._read_tagged_word_block(stream, tagset)
+            return self._read_tagged_word_block(stream, simplify_tags)
         return concat([StreamBackedCorpusView(fileid, reader, encoding=enc)
                        for fileid, enc in self.abspaths(fileids, True)])
 
@@ -429,20 +405,21 @@ class SyntaxCorpusReader(CorpusReader):
     #{ Block Readers
 
     def _read_word_block(self, stream):
-        return list(chain(*self._read_sent_block(stream)))
+        return sum(self._read_sent_block(stream), [])
 
-    def _read_tagged_word_block(self, stream, tagset=None):
-        return list(chain(*self._read_tagged_sent_block(stream, tagset)))
+    def _read_tagged_word_block(self, stream, simplify_tags=False):
+        return sum(self._read_tagged_sent_block(stream, simplify_tags), [])
 
     def _read_sent_block(self, stream):
-        return list(filter(None, [self._word(t) for t in self._read_block(stream)]))
+        return filter(None, [self._word(t) for t in self._read_block(stream)])
 
-    def _read_tagged_sent_block(self, stream, tagset=None):
-        return list(filter(None, [self._tag(t, tagset)
-                             for t in self._read_block(stream)]))
+    def _read_tagged_sent_block(self, stream, simplify_tags=False):
+        return filter(None, [self._tag(t, simplify_tags)
+                             for t in self._read_block(stream)])
 
     def _read_parsed_sent_block(self, stream):
-        return list(filter(None, [self._parse(t) for t in self._read_block(stream)]))
+        return filter(None, [self._parse(t) for t in self._read_block(stream)])
 
     #} End of Block Readers
     #------------------------------------------------------------
+

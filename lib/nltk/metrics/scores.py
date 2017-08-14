@@ -1,18 +1,17 @@
 # Natural Language Toolkit: Evaluation
 #
-# Copyright (C) 2001-2017 NLTK Project
-# Author: Edward Loper <edloper@gmail.com>
-#         Steven Bird <stevenbird1@gmail.com>
-# URL: <http://nltk.org/>
+# Copyright (C) 2001-2012 NLTK Project
+# Author: Edward Loper <edloper@gradient.cis.upenn.edu>
+#         Steven Bird <sb@csse.unimelb.edu.au>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
-from __future__ import print_function, division
 
+
+from __future__ import print_function
+from itertools import izip
 from math import fabs
 import operator
 from random import shuffle
-from functools import reduce
-
-from six.moves import range, zip
 
 try:
     from scipy.stats.stats import betai
@@ -38,7 +37,7 @@ def accuracy(reference, test):
     """
     if len(reference) != len(test):
         raise ValueError("Lists must have the same length.")
-    return sum(x == y for x, y in zip(reference, test)) / len(test)
+    return float(sum(x == y for x, y in izip(reference, test))) / len(test)
 
 def precision(reference, test):
     """
@@ -60,7 +59,7 @@ def precision(reference, test):
     if len(test) == 0:
         return None
     else:
-        return len(reference.intersection(test)) / len(test)
+        return float(len(reference.intersection(test)))/len(test)
 
 def recall(reference, test):
     """
@@ -82,7 +81,7 @@ def recall(reference, test):
     if len(reference) == 0:
         return None
     else:
-        return len(reference.intersection(test)) / len(reference)
+        return float(len(reference.intersection(test)))/len(reference)
 
 def f_measure(reference, test, alpha=0.5):
     """
@@ -114,7 +113,7 @@ def f_measure(reference, test, alpha=0.5):
         return None
     if p == 0 or r == 0:
         return 0
-    return 1.0 / (alpha / p + (1-alpha) / r)
+    return 1.0/(alpha/p + (1-alpha)/r)
 
 def log_likelihood(reference, test):
     """
@@ -133,8 +132,8 @@ def log_likelihood(reference, test):
 
     # Return the average value of dist.logprob(val).
     total_likelihood = sum(dist.logprob(val)
-                            for (val, dist) in zip(reference, test))
-    return total_likelihood / len(reference)
+                            for (val, dist) in izip(reference, test))
+    return total_likelihood/len(reference)
 
 def approxrand(a, b, **kwargs):
     """
@@ -160,8 +159,8 @@ def approxrand(a, b, **kwargs):
     shuffles = kwargs.get('shuffles', 999)
     # there's no point in trying to shuffle beyond all possible permutations
     shuffles = \
-        min(shuffles, reduce(operator.mul, range(1, len(a) + len(b) + 1)))
-    stat = kwargs.get('statistic', lambda lst: sum(lst) / len(lst))
+        min(shuffles, reduce(operator.mul, xrange(1, len(a) + len(b) + 1)))
+    stat = kwargs.get('statistic', lambda lst: float(sum(lst)) / len(lst))
     verbose = kwargs.get('verbose', False)
 
     if verbose:
@@ -175,7 +174,7 @@ def approxrand(a, b, **kwargs):
 
     c = 1e-100
     lst = LazyConcatenation([a, b])
-    indices = list(range(len(a) + len(b)))
+    indices = range(len(a) + len(b))
 
     for i in range(shuffles):
         if verbose and i % 10 == 0:
@@ -192,10 +191,10 @@ def approxrand(a, b, **kwargs):
 
         if verbose and i % 10 == 0:
             print('pseudo-statistic: %f' % pseudo_stat)
-            print('significance: %f' % ((c + 1) / (i + 1)))
+            print('significance: %f' % (float(c + 1) / (i + 1)))
             print('-' * 60)
 
-    significance = (c + 1) / (shuffles + 1)
+    significance = float(c + 1) / (shuffles + 1)
 
     if verbose:
         print('significance: %f' % significance)
@@ -226,3 +225,4 @@ def demo():
 
 if __name__ == '__main__':
     demo()
+

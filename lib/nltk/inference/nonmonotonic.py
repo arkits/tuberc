@@ -2,8 +2,8 @@
 #
 # Author: Daniel H. Garrette <dhgarrette@gmail.com>
 #
-# Copyright (C) 2001-2017 NLTK Project
-# URL: <http://nltk.org>
+# Copyright (C) 2001-2012 NLTK Project
+# URL: <http://www.nltk.org>
 # For license information, see LICENSE.TXT
 
 """
@@ -11,21 +11,19 @@ A module to perform nonmonotonic reasoning.  The ideas and demonstrations in
 this module are based on "Logical Foundations of Artificial Intelligence" by
 Michael R. Genesereth and Nils J. Nilsson.
 """
-from __future__ import print_function, unicode_literals
 
-from nltk.inference.prover9 import Prover9, Prover9Command
+from __future__ import print_function
+from prover9 import Prover9, Prover9Command
 from collections import defaultdict
-from functools import reduce
 
 from nltk.sem.logic import (VariableExpression, EqualityExpression,
-                            ApplicationExpression, Expression,
+                            ApplicationExpression, LogicParser,
                             AbstractVariableExpression, AllExpression,
                             BooleanExpression, NegatedExpression,
                             ExistsExpression, Variable, ImpExpression,
                             AndExpression, unique_variable, operator)
 
 from nltk.inference.api import Prover, ProverCommandDecorator
-from nltk.compat import python_2_unicode_compatible
 
 class ProverParseError(Exception): pass
 
@@ -45,7 +43,7 @@ class ClosedDomainProver(ProverCommandDecorator):
         assumptions = [a for a in self._command.assumptions()]
         goal = self._command.goal()
         domain = get_domain(goal, assumptions)
-        return [self.replace_quants(ex, domain) for ex in assumptions]
+        return list([self.replace_quants(ex, domain) for ex in assumptions])
 
     def goal(self):
         goal = self._command.goal()
@@ -176,8 +174,7 @@ class ClosedWorldProver(ProverCommandDecorator):
         predicates = self._make_predicate_dict(assumptions)
 
         new_assumptions = []
-        for p in predicates:
-            predHolder = predicates[p]
+        for p, predHolder in predicates.iteritems():
             new_sig = self._make_unique_signature(predHolder)
             new_sig_exs = [VariableExpression(v) for v in new_sig]
 
@@ -220,7 +217,8 @@ class ClosedWorldProver(ProverCommandDecorator):
         This method figures out how many arguments the predicate takes and
         returns a tuple containing that number of unique variables.
         """
-        return tuple(unique_variable() for i in range(predHolder.signature_len))
+        return tuple([unique_variable()
+                      for i in range(predHolder.signature_len)])
 
     def _make_antecedent(self, predicate, signature):
         """
@@ -271,7 +269,6 @@ class ClosedWorldProver(ProverCommandDecorator):
                         predDict[func2].append_prop((tuple(sig), term.first))
                         predDict[func1].validate_sig_len(sig)
 
-@python_2_unicode_compatible
 class PredHolder(object):
     """
     This class will be used by a dictionary that will store information
@@ -311,14 +308,14 @@ class PredHolder(object):
                                self.signature_len)
 
     def __repr__(self):
-        return "%s" % self
+        return str(self)
 
 def closed_domain_demo():
-    lexpr = Expression.fromstring
+    lp = LogicParser()
 
-    p1 = lexpr(r'exists x.walk(x)')
-    p2 = lexpr(r'man(Socrates)')
-    c = lexpr(r'walk(Socrates)')
+    p1 = lp.parse(r'exists x.walk(x)')
+    p2 = lp.parse(r'man(Socrates)')
+    c = lp.parse(r'walk(Socrates)')
     prover = Prover9Command(c, [p1,p2])
     print(prover.prove())
     cdp = ClosedDomainProver(prover)
@@ -327,10 +324,10 @@ def closed_domain_demo():
     print('goal:', cdp.goal())
     print(cdp.prove())
 
-    p1 = lexpr(r'exists x.walk(x)')
-    p2 = lexpr(r'man(Socrates)')
-    p3 = lexpr(r'-walk(Bill)')
-    c = lexpr(r'walk(Socrates)')
+    p1 = lp.parse(r'exists x.walk(x)')
+    p2 = lp.parse(r'man(Socrates)')
+    p3 = lp.parse(r'-walk(Bill)')
+    c = lp.parse(r'walk(Socrates)')
     prover = Prover9Command(c, [p1,p2,p3])
     print(prover.prove())
     cdp = ClosedDomainProver(prover)
@@ -339,10 +336,10 @@ def closed_domain_demo():
     print('goal:', cdp.goal())
     print(cdp.prove())
 
-    p1 = lexpr(r'exists x.walk(x)')
-    p2 = lexpr(r'man(Socrates)')
-    p3 = lexpr(r'-walk(Bill)')
-    c = lexpr(r'walk(Socrates)')
+    p1 = lp.parse(r'exists x.walk(x)')
+    p2 = lp.parse(r'man(Socrates)')
+    p3 = lp.parse(r'-walk(Bill)')
+    c = lp.parse(r'walk(Socrates)')
     prover = Prover9Command(c, [p1,p2,p3])
     print(prover.prove())
     cdp = ClosedDomainProver(prover)
@@ -351,9 +348,9 @@ def closed_domain_demo():
     print('goal:', cdp.goal())
     print(cdp.prove())
 
-    p1 = lexpr(r'walk(Socrates)')
-    p2 = lexpr(r'walk(Bill)')
-    c = lexpr(r'all x.walk(x)')
+    p1 = lp.parse(r'walk(Socrates)')
+    p2 = lp.parse(r'walk(Bill)')
+    c = lp.parse(r'all x.walk(x)')
     prover = Prover9Command(c, [p1,p2])
     print(prover.prove())
     cdp = ClosedDomainProver(prover)
@@ -362,12 +359,12 @@ def closed_domain_demo():
     print('goal:', cdp.goal())
     print(cdp.prove())
 
-    p1 = lexpr(r'girl(mary)')
-    p2 = lexpr(r'dog(rover)')
-    p3 = lexpr(r'all x.(girl(x) -> -dog(x))')
-    p4 = lexpr(r'all x.(dog(x) -> -girl(x))')
-    p5 = lexpr(r'chase(mary, rover)')
-    c = lexpr(r'exists y.(dog(y) & all x.(girl(x) -> chase(x,y)))')
+    p1 = lp.parse(r'girl(mary)')
+    p2 = lp.parse(r'dog(rover)')
+    p3 = lp.parse(r'all x.(girl(x) -> -dog(x))')
+    p4 = lp.parse(r'all x.(dog(x) -> -girl(x))')
+    p5 = lp.parse(r'chase(mary, rover)')
+    c = lp.parse(r'exists y.(dog(y) & all x.(girl(x) -> chase(x,y)))')
     prover = Prover9Command(c, [p1,p2,p3,p4,p5])
     print(prover.prove())
     cdp = ClosedDomainProver(prover)
@@ -377,11 +374,11 @@ def closed_domain_demo():
     print(cdp.prove())
 
 def unique_names_demo():
-    lexpr = Expression.fromstring
+    lp = LogicParser()
 
-    p1 = lexpr(r'man(Socrates)')
-    p2 = lexpr(r'man(Bill)')
-    c = lexpr(r'exists x.exists y.(x != y)')
+    p1 = lp.parse(r'man(Socrates)')
+    p2 = lp.parse(r'man(Bill)')
+    c = lp.parse(r'exists x.exists y.(x != y)')
     prover = Prover9Command(c, [p1,p2])
     print(prover.prove())
     unp = UniqueNamesProver(prover)
@@ -390,10 +387,10 @@ def unique_names_demo():
     print('goal:', unp.goal())
     print(unp.prove())
 
-    p1 = lexpr(r'all x.(walk(x) -> (x = Socrates))')
-    p2 = lexpr(r'Bill = William')
-    p3 = lexpr(r'Bill = Billy')
-    c = lexpr(r'-walk(William)')
+    p1 = lp.parse(r'all x.(walk(x) -> (x = Socrates))')
+    p2 = lp.parse(r'Bill = William')
+    p3 = lp.parse(r'Bill = Billy')
+    c = lp.parse(r'-walk(William)')
     prover = Prover9Command(c, [p1,p2,p3])
     print(prover.prove())
     unp = UniqueNamesProver(prover)
@@ -403,11 +400,11 @@ def unique_names_demo():
     print(unp.prove())
 
 def closed_world_demo():
-    lexpr = Expression.fromstring
+    lp = LogicParser()
 
-    p1 = lexpr(r'walk(Socrates)')
-    p2 = lexpr(r'(Socrates != Bill)')
-    c = lexpr(r'-walk(Bill)')
+    p1 = lp.parse(r'walk(Socrates)')
+    p2 = lp.parse(r'(Socrates != Bill)')
+    c = lp.parse(r'-walk(Bill)')
     prover = Prover9Command(c, [p1,p2])
     print(prover.prove())
     cwp = ClosedWorldProver(prover)
@@ -416,11 +413,11 @@ def closed_world_demo():
     print('goal:', cwp.goal())
     print(cwp.prove())
 
-    p1 = lexpr(r'see(Socrates, John)')
-    p2 = lexpr(r'see(John, Mary)')
-    p3 = lexpr(r'(Socrates != John)')
-    p4 = lexpr(r'(John != Mary)')
-    c = lexpr(r'-see(Socrates, Mary)')
+    p1 = lp.parse(r'see(Socrates, John)')
+    p2 = lp.parse(r'see(John, Mary)')
+    p3 = lp.parse(r'(Socrates != John)')
+    p4 = lp.parse(r'(John != Mary)')
+    c = lp.parse(r'-see(Socrates, Mary)')
     prover = Prover9Command(c, [p1,p2,p3,p4])
     print(prover.prove())
     cwp = ClosedWorldProver(prover)
@@ -429,11 +426,11 @@ def closed_world_demo():
     print('goal:', cwp.goal())
     print(cwp.prove())
 
-    p1 = lexpr(r'all x.(ostrich(x) -> bird(x))')
-    p2 = lexpr(r'bird(Tweety)')
-    p3 = lexpr(r'-ostrich(Sam)')
-    p4 = lexpr(r'Sam != Tweety')
-    c = lexpr(r'-bird(Sam)')
+    p1 = lp.parse(r'all x.(ostrich(x) -> bird(x))')
+    p2 = lp.parse(r'bird(Tweety)')
+    p3 = lp.parse(r'-ostrich(Sam)')
+    p4 = lp.parse(r'Sam != Tweety')
+    c = lp.parse(r'-bird(Sam)')
     prover = Prover9Command(c, [p1,p2,p3,p4])
     print(prover.prove())
     cwp = ClosedWorldProver(prover)
@@ -443,11 +440,11 @@ def closed_world_demo():
     print(cwp.prove())
 
 def combination_prover_demo():
-    lexpr = Expression.fromstring
+    lp = LogicParser()
 
-    p1 = lexpr(r'see(Socrates, John)')
-    p2 = lexpr(r'see(John, Mary)')
-    c = lexpr(r'-see(Socrates, Mary)')
+    p1 = lp.parse(r'see(Socrates, John)')
+    p2 = lp.parse(r'see(John, Mary)')
+    c = lp.parse(r'-see(Socrates, Mary)')
     prover = Prover9Command(c, [p1,p2])
     print(prover.prove())
     command = ClosedDomainProver(
@@ -457,31 +454,31 @@ def combination_prover_demo():
     print(command.prove())
 
 def default_reasoning_demo():
-    lexpr = Expression.fromstring
+    lp = LogicParser()
 
     premises = []
 
     #define taxonomy
-    premises.append(lexpr(r'all x.(elephant(x)        -> animal(x))'))
-    premises.append(lexpr(r'all x.(bird(x)            -> animal(x))'))
-    premises.append(lexpr(r'all x.(dove(x)            -> bird(x))'))
-    premises.append(lexpr(r'all x.(ostrich(x)         -> bird(x))'))
-    premises.append(lexpr(r'all x.(flying_ostrich(x)  -> ostrich(x))'))
+    premises.append(lp.parse(r'all x.(elephant(x)        -> animal(x))'))
+    premises.append(lp.parse(r'all x.(bird(x)            -> animal(x))'))
+    premises.append(lp.parse(r'all x.(dove(x)            -> bird(x))'))
+    premises.append(lp.parse(r'all x.(ostrich(x)         -> bird(x))'))
+    premises.append(lp.parse(r'all x.(flying_ostrich(x)  -> ostrich(x))'))
 
     #default properties
-    premises.append(lexpr(r'all x.((animal(x)  & -Ab1(x)) -> -fly(x))')) #normal animals don't fly
-    premises.append(lexpr(r'all x.((bird(x)    & -Ab2(x)) -> fly(x))')) #normal birds fly
-    premises.append(lexpr(r'all x.((ostrich(x) & -Ab3(x)) -> -fly(x))')) #normal ostriches don't fly
+    premises.append(lp.parse(r'all x.((animal(x)  & -Ab1(x)) -> -fly(x))')) #normal animals don't fly
+    premises.append(lp.parse(r'all x.((bird(x)    & -Ab2(x)) -> fly(x))')) #normal birds fly
+    premises.append(lp.parse(r'all x.((ostrich(x) & -Ab3(x)) -> -fly(x))')) #normal ostriches don't fly
 
     #specify abnormal entities
-    premises.append(lexpr(r'all x.(bird(x)           -> Ab1(x))')) #flight
-    premises.append(lexpr(r'all x.(ostrich(x)        -> Ab2(x))')) #non-flying bird
-    premises.append(lexpr(r'all x.(flying_ostrich(x) -> Ab3(x))')) #flying ostrich
+    premises.append(lp.parse(r'all x.(bird(x)           -> Ab1(x))')) #flight
+    premises.append(lp.parse(r'all x.(ostrich(x)        -> Ab2(x))')) #non-flying bird
+    premises.append(lp.parse(r'all x.(flying_ostrich(x) -> Ab3(x))')) #flying ostrich
 
     #define entities
-    premises.append(lexpr(r'elephant(E)'))
-    premises.append(lexpr(r'dove(D)'))
-    premises.append(lexpr(r'ostrich(O)'))
+    premises.append(lp.parse(r'elephant(E)'))
+    premises.append(lp.parse(r'dove(D)'))
+    premises.append(lp.parse(r'ostrich(O)'))
 
     #print the assumptions
     prover = Prover9Command(None, premises)
@@ -493,8 +490,8 @@ def default_reasoning_demo():
     print_proof('-fly(O)', premises)
 
 def print_proof(goal, premises):
-    lexpr = Expression.fromstring
-    prover = Prover9Command(lexpr(goal), premises)
+    lp = LogicParser()
+    prover = Prover9Command(lp.parse(goal), premises)
     command = UniqueNamesProver(ClosedWorldProver(prover))
     print(goal, prover.prove(), command.prove())
 

@@ -1,6 +1,6 @@
 # Natural Language Toolkit: Models for first-order languages with lambda
 #
-# Copyright (C) 2001-2017 NLTK Project
+# Copyright (C) 2001-2012 NLTK Project
 # Author: Ewan Klein <ewan@inf.ed.ac.uk>,
 # URL: <http://nltk.sourceforge.net>
 # For license information, see LICENSE.TXT
@@ -13,24 +13,19 @@
 This module provides data structures for representing first-order
 models.
 """
-from __future__ import print_function, unicode_literals
 
+from __future__ import print_function
 from pprint import pformat
 import inspect
 import textwrap
-import re
-import sys
 
-from six import string_types
+from nltk.decorators import decorator
 
-from nltk.decorators import decorator # this used in code that is commented out
-from nltk.compat import python_2_unicode_compatible
-
-from nltk.sem.logic import (AbstractVariableExpression, AllExpression, Expression,
+from nltk.sem.logic import (AbstractVariableExpression, AllExpression,
                             AndExpression, ApplicationExpression, EqualityExpression,
                             ExistsExpression, IffExpression, ImpExpression,
                             IndividualVariableExpression, LambdaExpression,
-                            NegatedExpression, OrExpression,
+                            LogicParser, NegatedExpression, OrExpression,
                             Variable, is_indvar)
 
 
@@ -39,10 +34,7 @@ class Error(Exception): pass
 class Undefined(Error):  pass
 
 def trace(f, *args, **kw):
-    if sys.version_info[0] >= 3:
-        argspec = inspect.getfullargspec(f)
-    else:
-        argspec = inspect.getargspec(f)
+    argspec = inspect.getargspec(f)
     d = dict(zip(argspec[0], args))
     if d.pop('trace', None):
         print()
@@ -62,7 +54,8 @@ def is_rel(s):
     if len(s) == 0:
         return True
     # all the elements are tuples of the same length
-    elif all(isinstance(el, tuple) for el in s) and len(max(s))==len(min(s)):
+    elif s == set([elem for elem in s if isinstance(elem, tuple)]) and\
+         len(max(s))==len(min(s)):
         return True
     else:
         raise ValueError("Set %r contains sequences of different lengths" % s)
@@ -82,7 +75,7 @@ def set2rel(s):
     """
     new = set()
     for elem in s:
-        if isinstance(elem, string_types):
+        if isinstance(elem, str):
             new.add((elem,))
         elif isinstance(elem, int):
             new.add((str(elem,)))
@@ -101,7 +94,6 @@ def arity(rel):
     return len(list(rel)[0])
 
 
-@python_2_unicode_compatible
 class Valuation(dict):
     """
     A dictionary which represents a model-theoretic Valuation of non-logical constants.
@@ -113,13 +105,13 @@ class Valuation(dict):
     just behave like a standard  dictionary) if indexed with an expression that
     is not in its list of symbols.
     """
-    def __init__(self, xs):
+    def __init__(self, iter):
         """
-        :param xs: a list of (symbol, value) pairs.
+        :param iter: a list of (symbol, value) pairs.
         """
-        super(Valuation, self).__init__()
-        for (sym, val) in xs:
-            if isinstance(val, string_types) or isinstance(val, bool):
+        dict.__init__(self)
+        for (sym, val) in iter:
+            if isinstance(val, str) or isinstance(val, bool):
                 self[sym] = val
             elif isinstance(val, set):
                 self[sym] = set2rel(val)
@@ -143,10 +135,10 @@ class Valuation(dict):
         """Set-theoretic domain of the value-space of a Valuation."""
         dom = []
         for val in self.values():
-            if isinstance(val, string_types):
+            if isinstance(val, str):
                 dom.append(val)
             elif not isinstance(val, bool):
-                dom.extend([elem for tuple_ in val for elem in tuple_ if elem is not None])
+                dom.extend([elem for tuple in val for elem in tuple if elem is not None])
         return set(dom)
 
     @property
@@ -154,79 +146,7 @@ class Valuation(dict):
         """The non-logical constants which the Valuation recognizes."""
         return sorted(self.keys())
 
-    @classmethod
-    def fromstring(cls, s):
-        return read_valuation(s)
 
-
-##########################################
-# REs used by the _read_valuation function
-##########################################
-_VAL_SPLIT_RE = re.compile(r'\s*=+>\s*')
-_ELEMENT_SPLIT_RE = re.compile(r'\s*,\s*')
-_TUPLES_RE = re.compile(r"""\s*
-                                (\([^)]+\))  # tuple-expression
-                                \s*""", re.VERBOSE)
-
-def _read_valuation_line(s):
-    """
-    Read a line in a valuation file.
-
-    Lines are expected to be of the form::
-
-      noosa => n
-      girl => {g1, g2}
-      chase => {(b1, g1), (b2, g1), (g1, d1), (g2, d2)}
-
-    :param s: input line
-    :type s: str
-    :return: a pair (symbol, value)
-    :rtype: tuple
-    """
-    pieces = _VAL_SPLIT_RE.split(s)
-    symbol = pieces[0]
-    value = pieces[1]
-    # check whether the value is meant to be a set
-    if value.startswith('{'):
-        value = value[1:-1]
-        tuple_strings = _TUPLES_RE.findall(value)
-        # are the set elements tuples?
-        if tuple_strings:
-            set_elements = []
-            for ts in tuple_strings:
-                ts = ts[1:-1]
-                element = tuple(_ELEMENT_SPLIT_RE.split(ts))
-                set_elements.append(element)
-        else:
-            set_elements = _ELEMENT_SPLIT_RE.split(value)
-        value = set(set_elements)
-    return symbol, value
-
-def read_valuation(s, encoding=None):
-    """
-    Convert a valuation string into a valuation.
-
-    :param s: a valuation string
-    :type s: str
-    :param encoding: the encoding of the input string, if it is binary
-    :type encoding: str
-    :return: a ``nltk.sem`` valuation
-    :rtype: Valuation
-    """
-    if encoding is not None:
-        s = s.decode(encoding)
-    statements = []
-    for linenum, line in enumerate(s.splitlines()):
-        line = line.strip()
-        if line.startswith('#') or line=='': continue
-        try:
-            statements.append(_read_valuation_line(line))
-        except ValueError:
-            raise ValueError('Unable to parse line %s: %s' % (linenum, line))
-    return Valuation(statements)
-
-
-@python_2_unicode_compatible
 class Assignment(dict):
     """
     A dictionary which represents an assignment of values to variables.
@@ -252,14 +172,14 @@ class Assignment(dict):
         >>> from nltk.sem.evaluate import Assignment
         >>> dom = set(['u1', 'u2', 'u3', 'u4'])
         >>> g3 = Assignment(dom, [('x', 'u1'), ('y', 'u2')])
-        >>> g3 == {'x': 'u1', 'y': 'u2'}
-        True
+        >>> g3
+        {'y': 'u2', 'x': 'u1'}
 
     There is also a ``print`` format for assignments which uses a notation
     closer to that in logic textbooks:
 
-        >>> print(g3)
-        g[u1/x][u2/y]
+        >>> print g3
+        g[u2/y][u1/x]
 
     It is also possible to update an assignment using the ``add`` method:
 
@@ -281,7 +201,7 @@ class Assignment(dict):
     """
 
     def __init__(self, domain, assign=None):
-        super(Assignment, self).__init__()
+        dict.__init__(self)
         self.domain = domain
         if assign:
             for (var, val) in assign:
@@ -290,7 +210,6 @@ class Assignment(dict):
                 assert is_indvar(var),\
                        "Wrong format for an Individual Variable: '%s'" % var
                 self[var] = val
-        self.variant = None
         self._addvariant()
 
     def __getitem__(self, key):
@@ -312,6 +231,7 @@ class Assignment(dict):
         :param var: a Variable acting as a key for the assignment.
         """
         if var:
+            val = self[var]
             del self[var]
         else:
             self.clear()
@@ -323,9 +243,7 @@ class Assignment(dict):
         Pretty printing for assignments. {'x', 'u'} appears as 'g[u/x]'
         """
         gstring = "g"
-        # Deterministic output for unit testing.
-        variant = sorted(self.variant)
-        for (val, var) in variant:
+        for (val, var) in self.variant:
             gstring += "[%s/%s]" % (val, var)
         return gstring
 
@@ -333,11 +251,11 @@ class Assignment(dict):
         """
         Create a more pretty-printable version of the assignment.
         """
-        list_ = []
+        list = []
         for item in self.items():
             pair = (item[1], item[0])
-            list_.append(pair)
-        self.variant = list_
+            list.append(pair)
+        self.variant = list
         return None
 
     def add(self, var, val):
@@ -355,7 +273,6 @@ class Assignment(dict):
         return self
 
 
-@python_2_unicode_compatible
 class Model(object):
     """
     A first order model is a domain *D* of discourse and a valuation *V*.
@@ -390,7 +307,8 @@ class Model(object):
 
     def evaluate(self, expr, g, trace=None):
         """
-        Read input expressions, and provide a handler for ``satisfy``
+        Call the ``LogicParser`` to parse input expressions, and
+        provide a handler for ``satisfy``
         that blocks further propagation of the ``Undefined`` error.
         :param expr: An ``Expression`` of ``logic``.
         :type g: Assignment
@@ -398,7 +316,8 @@ class Model(object):
         :rtype: bool or 'Undefined'
         """
         try:
-            parsed = Expression.fromstring(expr)
+            lp = LogicParser()
+            parsed = lp.parse(expr)
             value = self.satisfy(parsed, g, trace=trace)
             if trace:
                 print()
@@ -432,7 +351,7 @@ class Model(object):
             if isinstance(function, AbstractVariableExpression):
                 #It's a predicate expression ("P(x,y)"), so used uncurried arguments
                 funval = self.satisfy(function, g)
-                argvals = tuple(self.satisfy(arg, g) for arg in arguments)
+                argvals = tuple([self.satisfy(arg, g) for arg in arguments])
                 return argvals in funval
             else:
                 #It must be a lambda expression, so use curried form
@@ -528,7 +447,7 @@ class Model(object):
         indent = spacer + (spacer * nesting)
         candidates = []
 
-        if isinstance(varex, string_types):
+        if isinstance(varex, str):
             var = Variable(varex)
         else:
             var = varex
@@ -540,7 +459,7 @@ class Model(object):
             for u in self.domain:
                 new_g = g.copy()
                 new_g.add(var.name, u)
-                if trace and trace > 1:
+                if trace > 1:
                     lowtrace = trace-1
                 else:
                     lowtrace = 0
@@ -648,7 +567,8 @@ def folmodel(quiet=False, trace=None):
         print("Variable assignment = ", g2)
 
         exprs = ['adam', 'boy', 'love', 'walks', 'x', 'y', 'z']
-        parsed_exprs = [Expression.fromstring(e) for e in exprs]
+        lp = LogicParser()
+        parsed_exprs = [lp.parse(e) for e in exprs]
 
         print()
         for parsed in parsed_exprs:
@@ -662,8 +582,8 @@ def folmodel(quiet=False, trace=None):
 
         for (fun, args) in applications:
             try:
-                funval = m2.i(Expression.fromstring(fun), g2)
-                argsval = tuple(m2.i(Expression.fromstring(arg), g2) for arg in args)
+                funval = m2.i(lp.parse(fun), g2)
+                argsval = tuple(m2.i(lp.parse(arg), g2) for arg in args)
                 print("%s(%s) evaluates to %s" % (fun, args, argsval in funval))
             except Undefined:
                 print("%s(%s) evaluates to Undefined" % (fun, args))
@@ -750,11 +670,12 @@ def satdemo(trace=None):
     if trace:
         print(m2)
 
+    lp = LogicParser()
     for fmla in formulas:
         print(fmla)
-        Expression.fromstring(fmla)
+        lp.parse(fmla)
 
-    parsed = [Expression.fromstring(fmla) for fmla in formulas]
+    parsed = [lp.parse(fmla) for fmla in formulas]
 
     for p in parsed:
         g2.purge()

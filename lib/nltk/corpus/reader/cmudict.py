@@ -1,8 +1,8 @@
-# Natural Language Toolkit: Carnegie Mellon Pronouncing Dictionary Corpus Reader
+# Natural Language Toolkit: Genesis Corpus Reader
 #
-# Copyright (C) 2001-2017 NLTK Project
-# Author: Steven Bird <stevenbird1@gmail.com>
-# URL: <http://nltk.org/>
+# Copyright (C) 2001-2012 NLTK Project
+# Author: Steven Bird <sb@ldc.upenn.edu>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
 """
@@ -47,13 +47,10 @@ ZH      seizure S IY ZH ER
 
 import codecs
 
-from six import string_types
-
-from nltk import compat
 from nltk.util import Index
 
-from nltk.corpus.reader.util import *
-from nltk.corpus.reader.api import *
+from util import *
+from api import *
 
 class CMUDictCorpusReader(CorpusReader):
     def entries(self):
@@ -69,9 +66,8 @@ class CMUDictCorpusReader(CorpusReader):
         """
         :return: the cmudict lexicon as a raw string.
         """
-        fileids = self._fileids
-        if isinstance(fileids, string_types):
-            fileids = [fileids]
+        if fileids is None: fileids = self._fileids
+        elif isinstance(fileids, basestring): fileids = [fileids]
         return concat([self.open(f).read() for f in fileids])
 
     def words(self):

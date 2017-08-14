@@ -14,8 +14,11 @@ from operator import itemgetter
 import json
 from rake_nltk import Rake
 
+
         
 def topics(subs_channel_list):
+    
+ 
     
     
     channel_key_list = []

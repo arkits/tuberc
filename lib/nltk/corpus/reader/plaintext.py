@@ -1,24 +1,23 @@
 # Natural Language Toolkit: Plaintext Corpus Reader
 #
-# Copyright (C) 2001-2017 NLTK Project
-# Author: Steven Bird <stevenbird1@gmail.com>
-#         Edward Loper <edloper@gmail.com>
+# Copyright (C) 2001-2012 NLTK Project
+# Author: Steven Bird <sb@ldc.upenn.edu>
+#         Edward Loper <edloper@gradient.cis.upenn.edu>
 #         Nitin Madnani <nmadnani@umiacs.umd.edu>
-# URL: <http://nltk.org/>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
 """
 A reader for corpora that consist of plaintext documents.
 """
 
-from six import string_types
 import codecs
 
 import nltk.data
 from nltk.tokenize import *
 
-from nltk.corpus.reader.util import *
-from nltk.corpus.reader.api import *
+from util import *
+from api import *
 
 class PlaintextCorpusReader(CorpusReader):
     """
@@ -42,13 +41,13 @@ class PlaintextCorpusReader(CorpusReader):
                  sent_tokenizer=nltk.data.LazyLoader(
                      'tokenizers/punkt/english.pickle'),
                  para_block_reader=read_blankline_block,
-                 encoding='utf8'):
+                 encoding=None):
         """
         Construct a new plaintext corpus reader for a set of documents
         located at the given root directory.  Example usage:
 
             >>> root = '/usr/local/share/nltk_data/corpora/webtext/'
-            >>> reader = PlaintextCorpusReader(root, '.*\.txt') # doctest: +SKIP
+            >>> reader = PlaintextCorpusReader(root, '.*\.txt')
 
         :param root: The root directory for this corpus.
         :param fileids: A list or regexp specifying the fileids in this corpus.
@@ -64,31 +63,35 @@ class PlaintextCorpusReader(CorpusReader):
         self._sent_tokenizer = sent_tokenizer
         self._para_block_reader = para_block_reader
 
-    def raw(self, fileids=None):
+    def raw(self, fileids=None, sourced=False):
         """
         :return: the given file(s) as a single string.
         :rtype: str
         """
         if fileids is None: fileids = self._fileids
-        elif isinstance(fileids, string_types): fileids = [fileids]
-        raw_texts = []
-        for f in fileids:
-            _fin = self.open(f)
-            raw_texts.append(_fin.read())
-            _fin.close()
-        return concat(raw_texts)
+        elif isinstance(fileids, basestring): fileids = [fileids]
+        return concat([self.open(f, sourced).read() for f in fileids])
 
-    def words(self, fileids=None):
+    def words(self, fileids=None, sourced=False):
         """
         :return: the given file(s) as a list of words
             and punctuation symbols.
         :rtype: list(str)
         """
-        return concat([self.CorpusView(path, self._read_word_block, encoding=enc)
-                       for (path, enc, fileid)
-                       in self.abspaths(fileids, True, True)])
+        # Once we require Python 2.5, use source=(fileid if sourced else None)
+        if sourced:
+            return concat([self.CorpusView(path, self._read_word_block,
+                                           encoding=enc, source=fileid)
+                           for (path, enc, fileid)
+                           in self.abspaths(fileids, True, True)])
+        else:
+            return concat([self.CorpusView(path, self._read_word_block,
+                                           encoding=enc)
+                           for (path, enc, fileid)
+                           in self.abspaths(fileids, True, True)])
 
-    def sents(self, fileids=None):
+
+    def sents(self, fileids=None, sourced=False):
         """
         :return: the given file(s) as a list of
             sentences or utterances, each encoded as a list of word
@@ -97,12 +100,19 @@ class PlaintextCorpusReader(CorpusReader):
         """
         if self._sent_tokenizer is None:
             raise ValueError('No sentence tokenizer for this corpus')
+        if sourced:
+            return concat([self.CorpusView(path, self._read_sent_block,
+                                           encoding=enc, source=fileid)
+                           for (path, enc, fileid)
+                           in self.abspaths(fileids, True, True)])
+        else:
+            return concat([self.CorpusView(path, self._read_sent_block,
+                                           encoding=enc)
+                           for (path, enc, fileid)
+                           in self.abspaths(fileids, True, True)])
 
-        return concat([self.CorpusView(path, self._read_sent_block, encoding=enc)
-                       for (path, enc, fileid)
-                       in self.abspaths(fileids, True, True)])
 
-    def paras(self, fileids=None):
+    def paras(self, fileids=None, sourced=False):
         """
         :return: the given file(s) as a list of
             paragraphs, each encoded as a list of sentences, which are
@@ -111,10 +121,16 @@ class PlaintextCorpusReader(CorpusReader):
         """
         if self._sent_tokenizer is None:
             raise ValueError('No sentence tokenizer for this corpus')
-
-        return concat([self.CorpusView(path, self._read_para_block, encoding=enc)
-                       for (path, enc, fileid)
-                       in self.abspaths(fileids, True, True)])
+        if sourced:
+            return concat([self.CorpusView(path, self._read_para_block,
+                                           encoding=enc, source=fileid)
+                           for (path, enc, fileid)
+                           in self.abspaths(fileids, True, True)])
+        else:
+            return concat([self.CorpusView(path, self._read_para_block,
+                                           encoding=enc)
+                           for (path, enc, fileid)
+                           in self.abspaths(fileids, True, True)])
 
     def _read_word_block(self, stream):
         words = []
@@ -230,3 +246,4 @@ class EuroparlCorpusReader(PlaintextCorpusReader):
 
     def paras(self, fileids=None):
         raise NotImplementedError('The Europarl corpus reader does not support paragraphs. Please use chapters() instead.')
+

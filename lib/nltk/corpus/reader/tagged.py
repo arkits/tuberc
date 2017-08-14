@@ -1,10 +1,10 @@
 # Natural Language Toolkit: Tagged Corpus Reader
 #
-# Copyright (C) 2001-2017 NLTK Project
-# Author: Edward Loper <edloper@gmail.com>
-#         Steven Bird <stevenbird1@gmail.com>
+# Copyright (C) 2001-2012 NLTK Project
+# Author: Edward Loper <edloper@gradient.cis.upenn.edu>
+#         Steven Bird <sb@ldc.upenn.edu>
 #         Jacob Perkins <japerk@gmail.com>
-# URL: <http://nltk.org/>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
 """
@@ -13,14 +13,12 @@ A reader for corpora whose documents contain part-of-speech-tagged words.
 
 import os
 
-from six import string_types
-
-from nltk.tag import str2tuple, map_tag
+from nltk.tag import str2tuple
 from nltk.tokenize import *
 
-from nltk.corpus.reader.api import *
-from nltk.corpus.reader.util import *
-from nltk.corpus.reader.timit import read_timit_block
+from api import *
+from util import *
+from timit import read_timit_block
 
 class TaggedCorpusReader(CorpusReader):
     """
@@ -41,14 +39,14 @@ class TaggedCorpusReader(CorpusReader):
                  sep='/', word_tokenizer=WhitespaceTokenizer(),
                  sent_tokenizer=RegexpTokenizer('\n', gaps=True),
                  para_block_reader=read_blankline_block,
-                 encoding='utf8',
-                 tagset=None):
+                 encoding=None,
+                 tag_mapping_function=None):
         """
         Construct a new Tagged Corpus reader for a set of documents
         located at the given root directory.  Example usage:
 
             >>> root = '/...path to corpus.../'
-            >>> reader = TaggedCorpusReader(root, '.*', '.txt') # doctest: +SKIP
+            >>> reader = TaggedCorpusReader(root, '.*', '.txt')
 
         :param root: The root directory for this corpus.
         :param fileids: A list or regexp specifying the fileids in this corpus.
@@ -58,7 +56,7 @@ class TaggedCorpusReader(CorpusReader):
         self._word_tokenizer = word_tokenizer
         self._sent_tokenizer = sent_tokenizer
         self._para_block_reader = para_block_reader
-        self._tagset = tagset
+        self._tag_mapping_function = tag_mapping_function
 
     def raw(self, fileids=None):
         """
@@ -66,7 +64,7 @@ class TaggedCorpusReader(CorpusReader):
         :rtype: str
         """
         if fileids is None: fileids = self._fileids
-        elif isinstance(fileids, string_types): fileids = [fileids]
+        elif isinstance(fileids, basestring): fileids = [fileids]
         return concat([self.open(f).read() for f in fileids])
 
     def words(self, fileids=None):
@@ -113,15 +111,15 @@ class TaggedCorpusReader(CorpusReader):
                                         None)
                        for (fileid, enc) in self.abspaths(fileids, True)])
 
-    def tagged_words(self, fileids=None, tagset=None):
+    def tagged_words(self, fileids=None, simplify_tags=False):
         """
         :return: the given file(s) as a list of tagged
             words and punctuation symbols, encoded as tuples
             ``(word,tag)``.
         :rtype: list(tuple(str,str))
         """
-        if tagset and tagset != self._tagset:
-            tag_mapping_function = lambda t: map_tag(self._tagset, tagset, t)
+        if simplify_tags:
+            tag_mapping_function = self._tag_mapping_function
         else:
             tag_mapping_function = None
         return concat([TaggedCorpusView(fileid, enc,
@@ -132,15 +130,15 @@ class TaggedCorpusReader(CorpusReader):
                                         tag_mapping_function)
                        for (fileid, enc) in self.abspaths(fileids, True)])
 
-    def tagged_sents(self, fileids=None, tagset=None):
+    def tagged_sents(self, fileids=None, simplify_tags=False):
         """
         :return: the given file(s) as a list of
             sentences, each encoded as a list of ``(word,tag)`` tuples.
 
         :rtype: list(list(tuple(str,str)))
         """
-        if tagset and tagset != self._tagset:
-            tag_mapping_function = lambda t: map_tag(self._tagset, tagset, t)
+        if simplify_tags:
+            tag_mapping_function = self._tag_mapping_function
         else:
             tag_mapping_function = None
         return concat([TaggedCorpusView(fileid, enc,
@@ -151,15 +149,15 @@ class TaggedCorpusReader(CorpusReader):
                                         tag_mapping_function)
                        for (fileid, enc) in self.abspaths(fileids, True)])
 
-    def tagged_paras(self, fileids=None, tagset=None):
+    def tagged_paras(self, fileids=None, simplify_tags=False):
         """
         :return: the given file(s) as a list of
             paragraphs, each encoded as a list of sentences, which are
             in turn encoded as lists of ``(word,tag)`` tuples.
         :rtype: list(list(list(tuple(str,str))))
         """
-        if tagset and tagset != self._tagset:
-            tag_mapping_function = lambda t: map_tag(self._tagset, tagset, t)
+        if simplify_tags:
+            tag_mapping_function = self._tag_mapping_function
         else:
             tag_mapping_function = None
         return concat([TaggedCorpusView(fileid, enc,
@@ -205,15 +203,15 @@ class CategorizedTaggedCorpusReader(CategorizedCorpusReader,
     def paras(self, fileids=None, categories=None):
         return TaggedCorpusReader.paras(
             self, self._resolve(fileids, categories))
-    def tagged_words(self, fileids=None, categories=None, tagset=None):
+    def tagged_words(self, fileids=None, categories=None, simplify_tags=False):
         return TaggedCorpusReader.tagged_words(
-            self, self._resolve(fileids, categories), tagset)
-    def tagged_sents(self, fileids=None, categories=None, tagset=None):
+            self, self._resolve(fileids, categories), simplify_tags)
+    def tagged_sents(self, fileids=None, categories=None, simplify_tags=False):
         return TaggedCorpusReader.tagged_sents(
-            self, self._resolve(fileids, categories), tagset)
-    def tagged_paras(self, fileids=None, categories=None, tagset=None):
+            self, self._resolve(fileids, categories), simplify_tags)
+    def tagged_paras(self, fileids=None, categories=None, simplify_tags=False):
         return TaggedCorpusReader.tagged_paras(
-            self, self._resolve(fileids, categories), tagset)
+            self, self._resolve(fileids, categories), simplify_tags)
 
 class TaggedCorpusView(StreamBackedCorpusView):
     """
@@ -268,14 +266,14 @@ class MacMorphoCorpusReader(TaggedCorpusReader):
     ``self.paras()`` and ``self.tagged_paras()`` contains a single
     sentence.
     """
-    def __init__(self, root, fileids, encoding='utf8', tagset=None):
+    def __init__(self, root, fileids, encoding=None, tag_mapping_function=None):
         TaggedCorpusReader.__init__(
             self, root, fileids, sep='_',
             word_tokenizer=LineTokenizer(),
             sent_tokenizer=RegexpTokenizer('.*\n'),
             para_block_reader=self._read_block,
             encoding=encoding,
-            tagset=tagset)
+            tag_mapping_function=tag_mapping_function)
 
     def _read_block(self, stream):
         return read_regexp_block(stream, r'.*', r'.*_\.')

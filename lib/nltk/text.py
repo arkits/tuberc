@@ -1,9 +1,9 @@
 # Natural Language Toolkit: Texts
 #
-# Copyright (C) 2001-2017 NLTK Project
-# Author: Steven Bird <stevenbird1@gmail.com>
-#         Edward Loper <edloper@gmail.com>
-# URL: <http://nltk.org/>
+# Copyright (C) 2001-2012 NLTK Project
+# Author: Steven Bird <sb@csse.unimelb.edu.au>
+#         Edward Loper <edloper@gradient.cis.upenn.edu>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
 """
@@ -13,22 +13,18 @@ Functionality includes: concordancing, collocation discovery,
 regular expression search over tokenized strings, and
 distributional similarity.
 """
-from __future__ import print_function, division, unicode_literals
 
+from __future__ import print_function
 from math import log
-from collections import defaultdict, Counter
-from functools import reduce
-from itertools import islice
+from collections import defaultdict
 import re
-
-from six import text_type
 
 from nltk.probability import FreqDist, LidstoneProbDist
 from nltk.probability import ConditionalFreqDist as CFD
 from nltk.util import tokenwrap, LazyConcatenation
+from nltk.model import NgramModel
 from nltk.metrics import f_measure, BigramAssocMeasures
 from nltk.collocations import BigramCollocationFinder
-from nltk.compat import python_2_unicode_compatible
 
 
 class ContextIndex(object):
@@ -87,8 +83,9 @@ class ContextIndex(object):
         for c in self._word_to_contexts[self._key(word)]:
             for w in self._context_to_words[c]:
                 if w != word:
+                    print(w, c, self._context_to_words[c][word], self._context_to_words[c][w])
                     scores[w] += self._context_to_words[c][word] * self._context_to_words[c][w]
-        return sorted(scores, key=scores.get, reverse=True)[:n]
+        return sorted(scores, key=scores.get)[:n]
 
     def common_contexts(self, words, fail_on_unknown=False):
         """
@@ -117,7 +114,6 @@ class ContextIndex(object):
                           if c in common)
             return fd
 
-@python_2_unicode_compatible
 class ConcordanceIndex(object):
     """
     An index that can be used to look up the offset locations at which
@@ -184,8 +180,8 @@ class ConcordanceIndex(object):
         :param lines: The number of lines to display (default=25)
         :type lines: int
         """
-        half_width = (width - len(word) - 2) // 2
-        context = width // 4 # approx number of words of context
+        half_width = (width - len(word) - 2) / 2
+        context = width/4 # approx number of words of context
 
         offsets = self.offsets(word)
         if offsets:
@@ -211,7 +207,7 @@ class TokenSearcher(object):
     string where tokens are marked with angle brackets -- e.g.,
     ``'<the><window><is><still><open>'``.  The regular expression
     passed to the ``findall()`` method is modified to treat angle
-    brackets as non-capturing parentheses, in addition to matching the
+    brackets as nongrouping parentheses, in addition to matching the
     token boundaries; and to have ``'.'`` not match the angle brackets.
     """
     def __init__(self, tokens):
@@ -224,8 +220,7 @@ class TokenSearcher(object):
         a single token must be surrounded by angle brackets.  E.g.
 
         >>> from nltk.text import TokenSearcher
-        >>> print('hack'); from nltk.book import text1, text5, text9
-        hack...
+        >>> from nltk.book import text1, text5, text9
         >>> text5.findall("<.*><.*><bro>")
         you rule bro; telling you bro; u twizted bro
         >>> text1.findall("<a>(<.*>)<man>")
@@ -259,8 +254,6 @@ class TokenSearcher(object):
         hits = [h[1:-1].split('><') for h in hits]
         return hits
 
-
-@python_2_unicode_compatible
 class Text(object):
     """
     A wrapper around a sequence of simple (string) tokens, which is
@@ -301,9 +294,9 @@ class Text(object):
             self.name = name
         elif ']' in tokens[:20]:
             end = tokens[:20].index(']')
-            self.name = " ".join(text_type(tok) for tok in tokens[1:end])
+            self.name = " ".join(map(str, tokens[1:end]))
         else:
-            self.name = " ".join(text_type(tok) for tok in tokens[:8]) + "..."
+            self.name = " ".join(map(str, tokens[:8])) + "..."
 
     #////////////////////////////////////////////////////////////
     # Support item & slice access
@@ -329,7 +322,7 @@ class Text(object):
         :seealso: ``ConcordanceIndex``
         """
         if '_concordance_index' not in self.__dict__:
-            #print("Building index...")
+            print("Building index...")
             self._concordance_index = ConcordanceIndex(self.tokens,
                                                        key=lambda s:s.lower())
 
@@ -349,7 +342,7 @@ class Text(object):
             self._num = num
             self._window_size = window_size
 
-            #print("Building collocations list")
+            print("Building collocations list")
             from nltk.corpus import stopwords
             ignored_words = stopwords.words('english')
             finder = BigramCollocationFinder.from_words(self.tokens, window_size)
@@ -376,6 +369,21 @@ class Text(object):
         # code from nltk_contrib.readability
         raise NotImplementedError
 
+    def generate(self, length=100):
+        """
+        Print random text, generated using a trigram language model.
+
+        :param length: The length of text to generate (default=100)
+        :type length: int
+        :seealso: NgramModel
+        """
+        if '_trigram_model' not in self.__dict__:
+            print("Building ngram index...")
+            estimator = lambda fdist, bins: LidstoneProbDist(fdist, 0.2)
+            self._trigram_model = NgramModel(3, self, estimator=estimator)
+        text = self._trigram_model.generate(length)
+        print(tokenwrap(text))
+
     def similar(self, word, num=20):
         """
         Distributional similarity: find other words which appear in the
@@ -388,7 +396,7 @@ class Text(object):
         :seealso: ContextIndex.similar_words()
         """
         if '_word_context_index' not in self.__dict__:
-            #print('Building word-context index...')
+            print('Building word-context index...')
             self._word_context_index = ContextIndex(self.tokens,
                                                     filter=lambda x:x.isalpha(),
                                                     key=lambda s:s.lower())
@@ -399,9 +407,9 @@ class Text(object):
         wci = self._word_context_index._word_to_contexts
         if word in wci.conditions():
             contexts = set(wci[word])
-            fd = Counter(w for w in wci.conditions() for c in wci[w]
+            fd = FreqDist(w for w in wci.conditions() for c in wci[w]
                           if c in contexts and not w == word)
-            words = [w for w, _ in fd.most_common(num)]
+            words = fd.keys()[:num]
             print(tokenwrap(words))
         else:
             print("No matches")
@@ -419,7 +427,7 @@ class Text(object):
         :seealso: ContextIndex.common_contexts()
         """
         if '_word_context_index' not in self.__dict__:
-            #print('Building word-context index...')
+            print('Building word-context index...')
             self._word_context_index = ContextIndex(self.tokens,
                                                     key=lambda s:s.lower())
 
@@ -428,7 +436,7 @@ class Text(object):
             if not fd:
                 print("No common contexts were found")
             else:
-                ranked_contexts = [w for w, _ in fd.most_common(num)]
+                ranked_contexts = fd.keys()[:num]
                 print(tokenwrap(w1+"_"+w2 for w1,w2 in ranked_contexts))
 
         except ValueError as e:
@@ -440,18 +448,11 @@ class Text(object):
         Requires pylab to be installed.
 
         :param words: The words to be plotted
-        :type words: list(str)
+        :type word: str
         :seealso: nltk.draw.dispersion_plot()
         """
         from nltk.draw import dispersion_plot
         dispersion_plot(self, words)
-
-    def generate(self, words):
-        """
-        Issues a reminder to users following the book online
-        """
-        import warnings
-        warnings.warn('The generate() method is no longer available.', DeprecationWarning)
 
     def plot(self, *args):
         """
@@ -465,7 +466,7 @@ class Text(object):
         :seealso: nltk.prob.FreqDist
         """
         if "_vocab" not in self.__dict__:
-            #print("Building vocabulary index...")
+            print("Building vocabulary index...")
             self._vocab = FreqDist(self)
         return self._vocab
 
@@ -475,8 +476,7 @@ class Text(object):
         The text is a list of tokens, and a regexp pattern to match
         a single token must be surrounded by angle brackets.  E.g.
 
-        >>> print('hack'); from nltk.book import text1, text5, text9
-        hack...
+        >>> from nltk.book import text1, text5, text9
         >>> text5.findall("<.*><.*><bro>")
         you rule bro; telling you bro; u twizted bro
         >>> text1.findall("<a>(<.*>)<man>")
@@ -529,10 +529,11 @@ class Text(object):
     # String Display
     #////////////////////////////////////////////////////////////
 
-    def __str__(self):
-        return '<Text: %s>' % self.name
-
     def __repr__(self):
+        """
+        :return: A string representation of this FreqDist.
+        :rtype: string
+        """
         return '<Text: %s>' % self.name
 
 
@@ -545,15 +546,14 @@ class TextCollection(Text):
 
     >>> import nltk.corpus
     >>> from nltk.text import TextCollection
-    >>> print('hack'); from nltk.book import text1, text2, text3
-    hack...
+    >>> from nltk.book import text1, text2, text3
     >>> gutenberg = TextCollection(nltk.corpus.gutenberg)
     >>> mytexts = TextCollection([text1, text2, text3])
 
     Iterating over a TextCollection produces all the tokens of all the
     texts in order.
     """
-    def __init__(self, source):
+    def __init__(self, source, name=None):
         if hasattr(source, 'words'): # bridge to the text corpus reader
             source = [source.words(f) for f in source.fileids()]
 
@@ -561,20 +561,20 @@ class TextCollection(Text):
         Text.__init__(self, LazyConcatenation(source))
         self._idf_cache = {}
 
-    def tf(self, term, text):
+    def tf(self, term, text, method=None):
         """ The frequency of the term in text. """
-        return text.count(term) / len(text)
+        return float(text.count(term)) / len(text)
 
-    def idf(self, term):
+    def idf(self, term, method=None):
         """ The number of texts in the corpus divided by the
         number of texts that the term appears in.
         If a term does not appear in the corpus, 0.0 is returned. """
         # idf values are cached for performance.
         idf = self._idf_cache.get(term)
         if idf is None:
-            matches = len([True for text in self._texts if term in text])
+            matches = len(list(True for text in self._texts if term in text))
             # FIXME Should this raise some kind of error instead?
-            idf = (log(len(self._texts) / matches) if matches else 0.0)
+            idf = (log(float(len(self._texts)) / matches) if matches else 0.0)
             self._idf_cache[term] = idf
         return idf
 
@@ -595,9 +595,9 @@ def demo():
     print("Collocations:")
     text.collocations()
     print()
-    #print("Automatically generated text:")
-    #text.generate()
-    #print()
+    print("Automatically generated text:")
+    text.generate()
+    print()
     print("Dispersion plot:")
     text.dispersion_plot(['news', 'report', 'said', 'announced'])
     print()

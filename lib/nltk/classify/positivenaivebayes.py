@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2012 NLTK Project
 # Author: Alessandro Presta <alessandro.presta@gmail.com>
-# URL: <http://nltk.org/>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
 """
@@ -42,7 +42,7 @@ Some sentences about sports:
     ...                      'The other team controlled the ball' ]
 
 Mixed topics, including sports:
-
+    
     >>> various_sentences = [ 'The President did not comment',
     ...                       'I lost the keys',
     ...                       'The team won the game',
@@ -52,26 +52,26 @@ Mixed topics, including sports:
     ...                       'The show is over' ]
 
 The features of a sentence are simply the words it contains:
-
+    
     >>> def features(sentence):
     ...     words = sentence.lower().split()
     ...     return dict(('contains(%s)' % w, True) for w in words)
 
 We use the sports sentences as positive examples, the mixed ones ad unlabeled examples:
-
-    >>> positive_featuresets = list(map(features, sports_sentences))
-    >>> unlabeled_featuresets = list(map(features, various_sentences))
+    
+    >>> positive_featuresets = map(features, sports_sentences)
+    >>> unlabeled_featuresets = map(features, various_sentences)
     >>> classifier = PositiveNaiveBayesClassifier.train(positive_featuresets,
     ...                                                 unlabeled_featuresets)
 
 Is the following sentence about sports?
-
-    >>> classifier.classify(features('The cat is on the table'))
+    
+    >>> print classifier.classify(features('The cat is on the table'))
     False
 
 What about this one?
-
-    >>> classifier.classify(features('My team lost the game'))
+    
+    >>> print classifier.classify(features('My team lost the game'))
     True
 """
 
@@ -79,7 +79,7 @@ from collections import defaultdict
 
 from nltk.probability import FreqDist, DictionaryProbDist, ELEProbDist
 
-from nltk.classify.naivebayes import NaiveBayesClassifier
+from naivebayes import NaiveBayesClassifier
 
 ##//////////////////////////////////////////////////////
 ##  Positive Naive Bayes Classifier
@@ -106,14 +106,14 @@ class PositiveNaiveBayesClassifier(NaiveBayesClassifier):
         # Count up how many times each feature value occurred in positive examples.
         for featureset in positive_featuresets:
             for fname, fval in featureset.items():
-                positive_feature_freqdist[fname][fval] += 1
+                positive_feature_freqdist[fname].inc(fval)
                 feature_values[fname].add(fval)
                 fnames.add(fname)
-
+                
         # Count up how many times each feature value occurred in unlabeled examples.
         for featureset in unlabeled_featuresets:
             for fname, fval in featureset.items():
-                unlabeled_feature_freqdist[fname][fval] += 1
+                unlabeled_feature_freqdist[fname].inc(fval)
                 feature_values[fname].add(fval)
                 fnames.add(fname)
 
@@ -122,13 +122,13 @@ class PositiveNaiveBayesClassifier(NaiveBayesClassifier):
         num_positive_examples = len(positive_featuresets)
         for fname in fnames:
             count = positive_feature_freqdist[fname].N()
-            positive_feature_freqdist[fname][None] += num_positive_examples - count
+            positive_feature_freqdist[fname].inc(None, num_positive_examples-count)
             feature_values[fname].add(None)
 
         num_unlabeled_examples = len(unlabeled_featuresets)
         for fname in fnames:
             count = unlabeled_feature_freqdist[fname].N()
-            unlabeled_feature_freqdist[fname][None] += num_unlabeled_examples - count
+            unlabeled_feature_freqdist[fname].inc(None, num_unlabeled_examples-count)
             feature_values[fname].add(None)
 
         negative_prob_prior = 1.0 - positive_prob_prior
@@ -158,7 +158,7 @@ class PositiveNaiveBayesClassifier(NaiveBayesClassifier):
                                                                 normalize=True)
 
         return PositiveNaiveBayesClassifier(label_probdist, feature_probdist)
-
+                                                 
 ##//////////////////////////////////////////////////////
 ##  Demo
 ##//////////////////////////////////////////////////////
@@ -168,3 +168,10 @@ def demo():
     classifier = partial_names_demo(PositiveNaiveBayesClassifier.train)
     classifier.show_most_informative_features()
 
+##//////////////////////////////////////////////////////
+##  Test
+##//////////////////////////////////////////////////////
+    
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(optionflags=doctest.NORMALIZE_WHITESPACE)

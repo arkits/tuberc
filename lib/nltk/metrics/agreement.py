@@ -1,8 +1,8 @@
 # Natural Language Toolkit: Agreement Metrics
 #
-# Copyright (C) 2001-2017 NLTK Project
+# Copyright (C) 2001-2012 NLTK Project
 # Author: Tom Lippincott <tom@cs.columbia.edu>
-# URL: <http://nltk.org/>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 #
 
@@ -45,16 +45,19 @@ TODO: Describe handling of multiple coders and missing data
 
 Expected results from the Artstein and Poesio survey paper:
 
+.. doctest::
+    :options: +SKIP
+
     >>> from nltk.metrics.agreement import AnnotationTask
     >>> import os.path
     >>> t = AnnotationTask(data=[x.split() for x in open(os.path.join(os.path.dirname(__file__), "artstein_poesio_example.txt"))])
     >>> t.avg_Ao()
     0.88
     >>> t.pi()
-    0.7995322418977615...
+    0.7995322418977615
     >>> t.S()
-    0.8199999999999998...
-
+    0.8199999999999998
+    
     This would have returned a wrong value (0.0) in @785fb79 as coders are in
     the wrong order. Subsequently, all values for pi(), S(), and kappa() would
     have been wrong as they are computed with avg_Ao().
@@ -68,23 +71,19 @@ Expected results from the Artstein and Poesio survey paper:
     1.0
 
 """
-from __future__ import print_function, unicode_literals, division
 
+from __future__ import print_function
 import logging
 from itertools import groupby
 from operator import itemgetter
 
-from six import iteritems
-
 from nltk.probability import FreqDist, ConditionalFreqDist
 from nltk.internals import deprecated
-from nltk.compat import python_2_unicode_compatible
 
 from nltk.metrics.distance import binary_distance
 
 log = logging.getLogger(__file__)
 
-@python_2_unicode_compatible
 class AnnotationTask(object):
     """Represents an annotation task, i.e. people assign labels to items.
 
@@ -99,15 +98,8 @@ class AnnotationTask(object):
     """
 
     def __init__(self, data=None, distance=binary_distance):
-        """Initialize an annotation task.
+        """Initialize an empty annotation task.
 
-        The data argument can be None (to create an empty annotation task) or a sequence of 3-tuples,
-        each representing a coder's labeling of an item:
-            (coder,item,label)
-
-        The distance argument is a function taking two arguments (labels) and producing a numerical distance.
-        The distance from a label to itself should be zero:
-            distance(l,l) = 0
         """
         self.distance = distance
         self.I = set()
@@ -123,9 +115,9 @@ class AnnotationTask(object):
                                 ",".join(x['labels'])), self.data))
 
     def load_array(self, array):
-        """Load an sequence of annotation results, appending to any data already loaded.
+        """Load the results of annotation.
 
-        The argument is a sequence of 3-tuples, each representing a coder's labeling of an item:
+        The argument is a list of 3-tuples, each representing a coder's labeling of an item:
             (coder,item,label)
         """
         for coder, item, labels in array:
@@ -142,12 +134,12 @@ class AnnotationTask(object):
         # cfedermann: we don't know what combination of coder/item will come
         # first in x; to avoid StopIteration problems due to assuming an order
         # cA,cB, we allow either for k1 and then look up the missing as k2.
-        k1 = next((x for x in data if x['coder'] in (cA,cB) and x['item']==i))
+        k1 = (x for x in data if x['coder'] in (cA,cB) and x['item']==i).next()
         if k1['coder'] == cA:
-            k2 = next((x for x in data if x['coder']==cB and x['item']==i))
+            k2 = (x for x in data if x['coder']==cB and x['item']==i).next()
         else:
-            k2 = next((x for x in data if x['coder']==cA and x['item']==i))
-
+            k2 = (x for x in data if x['coder']==cA and x['item']==i).next()
+        
         ret = 1.0 - float(self.distance(k1['labels'], k2['labels']))
         log.debug("Observed agreement between %s and %s on %s: %f",
                       cA, cB, i, ret)
@@ -189,7 +181,7 @@ class AnnotationTask(object):
 
         """
         data = self._grouped_data('item', (x for x in self.data if x['coder'] in (cA, cB)))
-        ret = sum(self.agr(cA, cB, item, item_data) for item, item_data in data) / len(self.I)
+        ret = float(sum(self.agr(cA, cB, item, item_data) for item, item_data in data)) / float(len(self.I))
         log.debug("Observed agreement between %s and %s: %f", cA, cB, ret)
         return ret
 
@@ -226,10 +218,10 @@ class AnnotationTask(object):
         for i, itemdata in self._grouped_data('item'):
             label_freqs = FreqDist(x['labels'] for x in itemdata)
 
-            for j, nj in iteritems(label_freqs):
-                for l, nl in iteritems(label_freqs):
+            for j, nj in label_freqs.iteritems():
+                for l, nl in label_freqs.iteritems():
                     total += float(nj * nl) * self.distance(l, j)
-        ret = (1.0 / (len(self.I) * len(self.C) * (len(self.C) - 1))) * total
+        ret = (1.0 / float((len(self.I) * len(self.C) * (len(self.C) - 1)))) * total
         log.debug("Observed disagreement: %f", ret)
         return ret
 
@@ -241,8 +233,8 @@ class AnnotationTask(object):
         data = (x for x in self.data if x['coder'] in (cA, cB))
         for i, itemdata in self._grouped_data('item', data):
             # we should have two items; distance doesn't care which comes first
-            total += self.distance(next(itemdata)['labels'],
-                                   next(itemdata)['labels'])
+            total += self.distance(itemdata.next()['labels'],
+                    itemdata.next()['labels'])
 
         ret = total / (len(self.I) * max_distance)
         log.debug("Observed disagreement between %s and %s: %f", cA, cB, ret)
@@ -261,7 +253,7 @@ class AnnotationTask(object):
         """Bennett, Albert and Goldstein 1954
 
         """
-        Ae = 1.0 / len(self.K)
+        Ae = 1.0 / float(len(self.K))
         ret = (self.avg_Ao() - Ae) / (1.0 - Ae)
         return ret
 
@@ -272,9 +264,9 @@ class AnnotationTask(object):
         """
         total = 0.0
         label_freqs = FreqDist(x['labels'] for x in self.data)
-        for k, f in iteritems(label_freqs):
+        for k, f in label_freqs.iteritems():
             total += f ** 2
-        Ae = total / ((len(self.I) * len(self.C)) ** 2)
+        Ae = total / float((len(self.I) * len(self.C)) ** 2)
         return (self.avg_Ao() - Ae) / (1 - Ae)
 
     def Ae_kappa(self, cA, cB):
@@ -313,15 +305,6 @@ class AnnotationTask(object):
         """Krippendorff 1980
 
         """
-        # check for degenerate cases
-        if len(self.K)==0:
-            raise ValueError("Cannot calculate alpha, no data present!")
-        if len(self.K) == 1:
-            log.debug("Only one annotation value, allpha returning 1.")
-            return 1
-        if len(self.C)==1 and len(self.I) == 1:
-            raise ValueError("Cannot calculate alpha, only one coder and item present!")
-
         De = 0.0
 
         label_freqs = FreqDist(x['labels'] for x in self.data)
@@ -329,12 +312,9 @@ class AnnotationTask(object):
             nj = label_freqs[j]
             for l in self.K:
                 De += float(nj * label_freqs[l]) * self.distance(j, l)
-        try:
-            De = (1.0 / (len(self.I) * len(self.C) * (len(self.I) * len(self.C) - 1))) * De
-            log.debug("Expected disagreement: %f", De)
-            ret = 1.0 - (self.Do_alpha() / De)
-        except ZeroDivisionError:
-            raise ValueError("Cannot calculate alpha, expected disagreement zero, check the distance function!")
+        De = (1.0 / (len(self.I) * len(self.C) * (len(self.I) * len(self.C) - 1))) * De
+        log.debug("Expected disagreement: %f", De)
+        ret = 1.0 - (self.Do_alpha() / De)
         return ret
 
     def weighted_kappa_pairwise(self, cA, cB, max_distance=1.0):
@@ -365,7 +345,7 @@ if __name__ == '__main__':
 
     import re
     import optparse
-    from nltk.metrics import distance
+    import distance
 
     # process command-line arguments
     parser = optparse.OptionParser()
@@ -399,14 +379,13 @@ if __name__ == '__main__':
 
     # read in data from the specified file
     data = []
-    with open(options.file, 'r') as infile:
-        for l in infile:
-            toks = l.split(options.columnsep)
-            coder, object_, labels = toks[0], str(toks[1:-1]), frozenset(toks[-1].strip().split(options.labelsep))
-            if ((options.include == options.exclude) or
-                (len(options.include) > 0 and coder in options.include) or
-                (len(options.exclude) > 0 and coder not in options.exclude)):
-                data.append((coder, object_, labels))
+    for l in open(options.file):
+        toks = l.split(options.columnsep)
+        coder, object, labels = toks[0], str(toks[1:-1]), frozenset(toks[-1].strip().split(options.labelsep))
+        if ((options.include == options.exclude) or
+            (len(options.include) > 0 and coder in options.include) or
+            (len(options.exclude) > 0 and coder not in options.exclude)):
+            data.append((coder, object, labels))
 
     if options.presence:
         task = AnnotationTask(data, getattr(distance, options.distance)(options.presence))
@@ -419,3 +398,4 @@ if __name__ == '__main__':
         print(getattr(task, options.agreement)())
 
     logging.shutdown()
+

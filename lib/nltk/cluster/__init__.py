@@ -1,8 +1,8 @@
 # Natural Language Toolkit: Clusterers
 #
-# Copyright (C) 2001-2017 NLTK Project
+# Copyright (C) 2001-2012 NLTK Project
 # Author: Trevor Cohn <tacohn@cs.mu.oz.au>
-# URL: <http://nltk.org/>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
 """
@@ -72,7 +72,7 @@ Usage example (see also demo())::
     clusterer.cluster(vectors, True)
 
     # classify a new vector
-    print(clusterer.classify(array([3, 3])))
+    print clusterer.classify(array([3, 3]))
 
 Note that the vectors must use numpy array-like
 objects. nltk_contrib.unimelb.tacohn.SparseArrays may be used for

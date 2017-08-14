@@ -1,18 +1,16 @@
 # Natural Language Toolkit: Stemmers
 #
-# Copyright (C) 2001-2017 NLTK Project
+# Copyright (C) 2001-2012 NLTK Project
 # Author: Trevor Cohn <tacohn@cs.mu.oz.au>
-#         Edward Loper <edloper@gmail.com>
-#         Steven Bird <stevenbird1@gmail.com>
-# URL: <http://nltk.org/>
+#         Edward Loper <edloper@gradient.cis.upenn.edu>
+#         Steven Bird <sb@csse.unimelb.edu.au>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
-from __future__ import unicode_literals
+
 import re
 
-from nltk.stem.api import StemmerI
-from nltk.compat import python_2_unicode_compatible
+from api import StemmerI
 
-@python_2_unicode_compatible
 class RegexpStemmer(StemmerI):
     """
     A stemmer that uses regular expressions to identify morphological
@@ -20,7 +18,7 @@ class RegexpStemmer(StemmerI):
     be removed.
 
         >>> from nltk.stem import RegexpStemmer
-        >>> st = RegexpStemmer('ing$|s$|e$|able$', min=4)
+        >>> st = RegexpStemmer('ing$|s$|e$', min=4)
         >>> st.stem('cars')
         'car'
         >>> st.stem('mass')
@@ -31,8 +29,6 @@ class RegexpStemmer(StemmerI):
         'bee'
         >>> st.stem('compute')
         'comput'
-        >>> st.stem('advisable')
-        'advis'
 
     :type regexp: str or regexp
     :param regexp: The regular expression that should be used to
@@ -54,8 +50,11 @@ class RegexpStemmer(StemmerI):
             return self._regexp.sub('', word)
 
     def __repr__(self):
-        return '<RegexpStemmer: {!r}>'.format(self._regexp.pattern)
+        return '<RegexpStemmer: %r>' % self._regexp.pattern
 
 
 
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod(optionflags=doctest.NORMALIZE_WHITESPACE)
 

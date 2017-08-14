@@ -1,8 +1,8 @@
 # Natural Language Toolkit: RTE Corpus Reader
 #
-# Copyright (C) 2001-2017 NLTK Project
+# Copyright (C) 2001-2012 NLTK Project
 # Author:  Ewan Klein <ewan@inf.ed.ac.uk>
-# URL: <http://nltk.org/>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
 """
@@ -32,14 +32,10 @@ In order to provide globally unique IDs for each pair, a new attribute
 file, taking values 1, 2 or 3. The GID is formatted 'm-n', where 'm' is the
 challenge number and 'n' is the pair ID.
 """
-from __future__ import unicode_literals
 
-from six import string_types
-
-from nltk import compat
-from nltk.corpus.reader.util import *
-from nltk.corpus.reader.api import *
-from nltk.corpus.reader.xmldocs import *
+from util import *
+from api import *
+from xmldocs import *
 
 
 def norm(value_string):
@@ -58,8 +54,7 @@ def norm(value_string):
                      "NO": 0}
     return valdict[value_string.upper()]
 
-@compat.python_2_unicode_compatible
-class RTEPair(object):
+class RTEPair:
     """
     Container for RTE text-hypothesis pairs.
 
@@ -140,5 +135,10 @@ class RTECorpusReader(XMLCorpusReader):
         :type: list
         :rtype: list(RTEPair)
         """
-        if isinstance(fileids, string_types): fileids = [fileids]
+        if isinstance(fileids, basestring): fileids = [fileids]
         return concat([self._read_etree(self.xml(fileid)) for fileid in fileids])
+
+
+
+
+

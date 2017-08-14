@@ -1,23 +1,21 @@
 # Natural Language Toolkit: Dependency Corpus Reader
 #
-# Copyright (C) 2001-2017 NLTK Project
+# Copyright (C) 2001-2012 NLTK Project
 # Author: Kepa Sarasola <kepa.sarasola@ehu.es>
 #         Iker Manterola <returntothehangar@hotmail.com>
 #
-# URL: <http://nltk.org/>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
-
-import codecs
 
 from nltk.parse import DependencyGraph
 from nltk.tokenize import *
 
-from nltk.corpus.reader.util import *
-from nltk.corpus.reader.api import *
+from util import *
+from api import *
 
 class DependencyCorpusReader(SyntaxCorpusReader):
 
-    def __init__(self, root, fileids, encoding='utf8',
+    def __init__(self, root, fileids, encoding=None,
                  word_tokenizer=TabTokenizer(),
                  sent_tokenizer=RegexpTokenizer('\n', gaps=True),
                  para_block_reader=read_blankline_block):
@@ -31,34 +29,28 @@ class DependencyCorpusReader(SyntaxCorpusReader):
         :return: the given file(s) as a single string.
         :rtype: str
         """
-        result = []
-        for fileid, encoding in self.abspaths(fileids, include_encoding=True):
-            if isinstance(fileid, PathPointer):
-                result.append(fileid.open(encoding=encoding).read())
-            else:
-                with codecs.open(fileid, "r", encoding) as fp:
-                    result.append(fp.read())
-        return concat(result)
+        return concat([open(fileid).read()
+                      for fileid in self.abspaths(fileids)])
 
     def words(self, fileids=None):
-        return concat([DependencyCorpusView(fileid, False, False, False, encoding=enc)
-                       for fileid, enc in self.abspaths(fileids, include_encoding=True)])
+        return concat([DependencyCorpusView(fileid, False, False, False)
+                       for fileid in self.abspaths(fileids)])
 
     def tagged_words(self, fileids=None):
-        return concat([DependencyCorpusView(fileid, True, False, False, encoding=enc)
-                       for fileid, enc in self.abspaths(fileids, include_encoding=True)])
+        return concat([DependencyCorpusView(fileid, True, False, False)
+                       for fileid in self.abspaths(fileids)])
 
     def sents(self, fileids=None):
-        return concat([DependencyCorpusView(fileid, False, True, False, encoding=enc)
-                       for fileid, enc in self.abspaths(fileids, include_encoding=True)])
+        return concat([DependencyCorpusView(fileid, False, True, False)
+                       for fileid in self.abspaths(fileids)])
 
     def tagged_sents(self, fileids=None):
-            return concat([DependencyCorpusView(fileid, True, True, False, encoding=enc)
-                           for fileid, enc in self.abspaths(fileids, include_encoding=True)])
+            return concat([DependencyCorpusView(fileid, True, True, False)
+                                  for fileid in self.abspaths(fileids)])
 
     def parsed_sents(self, fileids=None):
-        sents=concat([DependencyCorpusView(fileid, False, True, True, encoding=enc)
-                      for fileid, enc in self.abspaths(fileids, include_encoding=True)])
+        sents=concat([DependencyCorpusView(fileid, False, True, True)
+                                  for fileid in self.abspaths(fileids)])
         return [DependencyGraph(sent) for sent in sents]
 
 
@@ -66,12 +58,12 @@ class DependencyCorpusView(StreamBackedCorpusView):
     _DOCSTART = '-DOCSTART- -DOCSTART- O\n' #dokumentu hasiera definitzen da
 
     def __init__(self, corpus_file, tagged, group_by_sent, dependencies,
-                 chunk_types=None, encoding='utf8'):
+                 chunk_types=None):
         self._tagged = tagged
         self._dependencies = dependencies
         self._group_by_sent = group_by_sent
         self._chunk_types = chunk_types
-        StreamBackedCorpusView.__init__(self, corpus_file, encoding=encoding)
+        StreamBackedCorpusView.__init__(self, corpus_file)
 
     def read_block(self, stream):
         # Read the next sentence.

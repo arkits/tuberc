@@ -1,14 +1,15 @@
 # Natural Language Toolkit: Lin's Thesaurus
 #
-# Copyright (C) 2001-2017 NLTK Project
+# Copyright (C) 2001-2012 NLTK Project
 # Author: Dan Blanchard <dblanchard@ets.org>
-# URL: <http://nltk.org/>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.txt
+
+from __future__ import with_statement
 from __future__ import print_function
 
 import re
 from collections import defaultdict
-from functools import reduce
 
 from nltk.corpus.reader import CorpusReader
 
@@ -140,7 +141,7 @@ def demo():
     print(thes.synonyms(word1))
 
     print("Getting scored synonyms for " + word1)
-    print(thes.scored_synonyms(word1))
+    print(thes.synonyms(word1))
 
     print("Getting synonyms from simN.lsp (noun subsection) for " + word1)
     print(thes.synonyms(word1, fileid="simN.lsp"))

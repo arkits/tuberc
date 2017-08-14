@@ -1,9 +1,9 @@
 # Natural Language Toolkit: WordNet Browser Application
 #
-# Copyright (C) 2001-2017 NLTK Project
+# Copyright (C) 2001-2012 NLTK Project
 # Author: Jussi Salmela <jtsalmela@users.sourceforge.net>
 #         Paul Bone <pbone@students.csse.unimelb.edu.au>
-# URL: <http://nltk.org/>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
 """
@@ -40,18 +40,20 @@ Options::
         Do not start a web browser, and do not allow a user to
         shotdown the server through the web interface.
 """
+
 # TODO: throughout this package variable names and docstrings need
 # modifying to be compliant with NLTK's coding standards.  Tests also
 # need to be develop to ensure this continues to work in the face of
 # changes to other NLTK packages.
-from __future__ import print_function
 
+from __future__ import print_function
 # Allow this program to run inside the NLTK source tree.
 from sys import path
 
 import os
-import sys
 from sys import argv
+from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
+from urllib import quote_plus, unquote_plus
 from collections import defaultdict
 import webbrowser
 import datetime
@@ -60,19 +62,12 @@ import threading
 import time
 import getopt
 import base64
-import pickle
+import cPickle
 import copy
 
-from six.moves.urllib.parse import unquote_plus
-
-from nltk import compat
 from nltk.corpus import wordnet as wn
 from nltk.corpus.reader.wordnet import Synset, Lemma
 
-if compat.PY3:
-    from http.server import HTTPServer, BaseHTTPRequestHandler
-else:
-    from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
 
 # now included in local file
 # from util import html_header, html_trailer, \
@@ -105,6 +100,10 @@ class MyServerHandler(BaseHTTPRequestHandler):
                 print('Server shutting down!')
                 os._exit(0)
 
+        elif sp == 'favicon.ico':
+            type = 'image/x-icon'
+            page = favicon_data()
+
         elif sp == '': # First request.
             type = 'text/html'
             if not server_mode and firstClient:
@@ -120,8 +119,7 @@ class MyServerHandler(BaseHTTPRequestHandler):
             if usp == 'NLTK Wordnet Browser Database Info.html':
                 word = '* Database Info *'
                 if os.path.isfile(usp):
-                    with open(usp, 'r') as infile:
-                        page = infile.read()
+                    page = open(usp).read()
                 else:
                     page = (html_header % word) + \
                         '<p>The database info file:'\
@@ -156,7 +154,7 @@ class MyServerHandler(BaseHTTPRequestHandler):
 
         # Send result.
         self.send_head(type)
-        self.wfile.write(page.encode('utf8'))
+        self.wfile.write(page)
 
 
     def send_head(self, type=None):
@@ -173,6 +171,58 @@ class MyServerHandler(BaseHTTPRequestHandler):
                 (self.address_string(),
                  self.log_date_time_string(),
                  format%args))
+
+
+# This data was encoded with the following procedure
+def encode_icon():
+    f = open("favicon.ico", "rb")
+    s = f.read()
+    f.close()
+
+    def split(s):
+        if len(s) <= 72:
+            return [s]
+        else:
+            return [s[0:72]] + split(s[72:])
+
+    print(split(base64.urlsafe_b64encode(s)))
+
+
+FAVICON_BASE64_DATA = \
+['AAABAAEAEBAAAAAAAABoBQAAFgAAACgAAAAQAAAAIAAAAAEACAAAAAAAAAAAAAAAAAAAAAAA',
+ 'AAAAAAAAAAD___8A9___ANb3_wDO9_8AjPf_ALXv_wCc7_8AjO__AHvv_wBz7_8Aa-__AKXn',
+ '_wCc5_8AlOf_AITn_wBz5_8Aa-f_AGPn_wBa5_8Ac97_AGve_wBj3v8AWt7_AFLe_wBK3v8A',
+ 'Qt7_AFrW_wBS1v8AStb_AELW_wA51v8AMdb_ACnO_wAhzv8AGM7_ABjG_wD___cA__f3APf3',
+ '9wB73vcAUtb3AErW9wAhxvcAAMb3AFLO7wAYxu8AEMbvACG95wAYvecA9-fWAHPG1gBKvdYA',
+ 'Ob3WACG91gDv3s4Axt7OACm1zgCMtb0ASq29ACGlvQBStbUAUq21ADGttQA5pbUA3satAEqc',
+ 'rQDWvaUAY62lAOfGnADWvZwAtbWcAJStnADGrZQAzq2MAIycjABznIwAa5yMAN61hADWrXsA',
+ 'zq17AMalewCtpXsAa4x7AMaccwC9nHMAtZRzAISUcwBrjHMAzqVrALWUawCtlGsArYxrAHuE',
+ 'awBre2sAY3trAHuEYwBzhGMAc3tjAGt7YwDGlFoAvYxaAGNzWgBSa1oAxpRSAK2MUgDGjEoA',
+ 'vYxKAL2ESgC1hEoArYRKAIRzSgB7a0oAc2tKAGtrSgBaY0oAtYRCAK17QgCle0IApXM5AJxz',
+ 'OQCcazkAjGMxAIRaMQBzWjEAa1oxAIRaKQB7ShAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+ 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+ 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+ 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+ 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+ 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+ 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+ 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+ 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+ 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+ 'AAAAAAAAAAAAAAAGFh4YLAYAAAAAAAAAAAAHGB4gIBYWBgAAAAAAAAAAFhgzQR45MixGMQAA',
+ 'AAAAABQYTF0WbzplWQAAAABFVEgKFExdFG59eywWCwBAdHRJCgpLXRhxe3IvIiIDT2p0VAdh',
+ 'fn5xbzplciAwFFNqanQ3BwoKChYYGB4gICxYanRqalRPWVRZRhMYHiAYTmlqdnZ2dnh5eX1G',
+ 'FhgeFEVjaT1SVithKzg7WhMYGAsATmM9UjgwXDt2eFsIFgcAAAAAFDRDLUo-bnhZAAAAAAAA',
+ 'AAgwRS1cO3Z2WgAAAAAAAAADUTZHbVJ0d0kAAAAAAAAAADFPY2pqZEgAAAAAAAAA__8AAP__',
+ 'AAD__wAAsaEAAE5eAABOXgAA__4AAPv_AAD__wAA__8AAM3-AADw_wAA__8AAML-AAD__wAA',
+ 'xf4=']
+
+
+def favicon_data():
+    """
+    Return the data for the favicon image.
+    """
+    return base64.urlsafe_b64decode(''.join(FAVICON_BASE64_DATA))
 
 
 def get_unique_counter_from_url(sp):
@@ -232,10 +282,6 @@ def wnb(port=8000, runBrowser=True, logfilename=None):
 
     # Compute URL and start web browser
     url = 'http://localhost:' + str(port)
-
-    server_ready = None
-    browser_thread = None
-
     if runBrowser:
         server_ready = threading.Event()
         browser_thread = startBrowser(url, server_ready)
@@ -255,9 +301,6 @@ def wnb(port=8000, runBrowser=True, logfilename=None):
 
     if runBrowser:
         browser_thread.join()
-
-    if logfile:
-        logfile.close()
 
 
 def startBrowser(url, server_ready):
@@ -366,7 +409,7 @@ def get_relations_data(word, synset):
     Get synset relations data for a synset.  Note that this doesn't
     yet support things such as full hyponym vs direct hyponym.
     """
-    if synset.pos() == wn.NOUN:
+    if synset.pos == wn.NOUN:
         return ((HYPONYM, 'Hyponyms',
                    synset.hyponyms()),
                 (INSTANCE_HYPONYM , 'Instance hyponyms',
@@ -397,7 +440,7 @@ def get_relations_data(word, synset):
                    lemma_property(word, synset, lambda l: l.antonyms())),
                 (DERIVATIONALLY_RELATED_FORM, "Derivationally related form",
                    lemma_property(word, synset, lambda l: l.derivationally_related_forms())))
-    elif synset.pos() == wn.VERB:
+    elif synset.pos == wn.VERB:
         return ((ANTONYM, 'Antonym',
                    lemma_property(word, synset, lambda l: l.antonyms())),
                 (HYPONYM, 'Hyponym',
@@ -416,7 +459,7 @@ def get_relations_data(word, synset):
                    synset.verb_groups()),
                 (DERIVATIONALLY_RELATED_FORM, "Derivationally related form",
                    lemma_property(word, synset, lambda l: l.derivationally_related_forms())))
-    elif synset.pos() == wn.ADJ or synset.pos == wn.ADJ_SAT:
+    elif synset.pos == wn.ADJ or synset.pos == wn.ADJ_SAT:
         return ((ANTONYM, 'Antonym',
                    lemma_property(word, synset, lambda l: l.antonyms())),
                 (SIMILAR, 'Similar to',
@@ -428,14 +471,14 @@ def get_relations_data(word, synset):
                    synset.attributes()),
                 (ALSO_SEE, 'Also see',
                    synset.also_sees()))
-    elif synset.pos() == wn.ADV:
+    elif synset.pos == wn.ADV:
         # This is weird. adverbs such as 'quick' and 'fast' don't seem
         # to have antonyms returned by the corpus.a
         return ((ANTONYM, 'Antonym',
                    lemma_property(word, synset, lambda l: l.antonyms())),)
                 # Derived from adjective - not supported by corpus
     else:
-        raise TypeError("Unhandles synset POS type: " + str(synset.pos()))
+        raise TypeError("Unhandles synset POS type: " + str(synset.pos))
 
 
 html_header = '''
@@ -517,7 +560,7 @@ full_hyponym_cont_text = \
 def _get_synset(synset_key):
     """
     The synset key is the unique name of the synset, this can be
-    retrived via synset.name()
+    retrived via synset.name
     """
     return wn.synset(synset_key)
 
@@ -539,13 +582,13 @@ def _collect_one_synset(word, synset, synset_relations):
         raise NotImplementedError("word not supported by _collect_one_synset")
 
     typ = 'S'
-    pos_tuple = _pos_match((synset.pos(), None, None))
-    assert pos_tuple is not None, "pos_tuple is null: synset.pos(): %s" % synset.pos()
+    pos_tuple = _pos_match((synset.pos, None, None))
+    assert pos_tuple is not None, "pos_tuple is null: synset.pos: %s" % synset.pos
     descr = pos_tuple[2]
     ref = copy.deepcopy(Reference(word, synset_relations))
     ref.toggle_synset(synset)
     synset_label = typ + ";"
-    if synset.name() in synset_relations:
+    if synset.name in synset_relations.keys():
         synset_label = _bold(synset_label)
     s = '<li>%s (%s) ' % (make_lookup_link(ref, synset_label), descr)
     def format_lemma(w):
@@ -556,11 +599,11 @@ def _collect_one_synset(word, synset, synset_relations):
             ref = Reference(w)
             return make_lookup_link(ref, w)
 
-    s += ', '.join(format_lemma(l.name()) for l in synset.lemmas())
+    s += ', '.join([format_lemma(l.name) for l in synset.lemmas])
 
     gl = " (%s) <i>%s</i> " % \
-        (synset.definition(),
-         "; ".join("\"%s\"" % e for e in synset.examples()))
+        (synset.definition,
+         "; ".join(["\"%s\"" % e for e in synset.examples]))
     return s + gl + _synset_relations(word, synset, synset_relations) + '</li>\n'
 
 def _collect_all_synsets(word, pos, synset_relations=dict()):
@@ -587,16 +630,16 @@ def _synset_relations(word, synset, synset_relations):
     :rtype: str
     '''
 
-    if not synset.name() in synset_relations:
+    if not synset.name in synset_relations.keys():
         return ""
     ref = Reference(word, synset_relations)
 
     def relation_html(r):
-        if isinstance(r, Synset):
-            return make_lookup_link(Reference(r.lemma_names()[0]), r.lemma_names()[0])
-        elif isinstance(r, Lemma):
-            return relation_html(r.synset())
-        elif isinstance(r, tuple):
+        if type(r) == Synset:
+            return make_lookup_link(Reference(r.lemma_names[0]), r.lemma_names[0])
+        elif type(r) == Lemma:
+            return relation_html(r.synset)
+        elif type(r) == tuple:
             # It's probably a tuple containing a Synset and a list of
             # similar tuples.  This forms a tree of synsets.
             return "%s\n<ul>%s</ul>\n" % \
@@ -605,22 +648,22 @@ def _synset_relations(word, synset, synset_relations):
         else:
             raise TypeError("r must be a synset, lemma or list, it was: type(r) = %s, r = %s" % (type(r), r))
 
-    def make_synset_html(db_name, disp_name, rels):
+    def make_synset_html((db_name, disp_name, rels)):
         synset_html = '<i>%s</i>\n' % \
             make_lookup_link(
                 copy.deepcopy(ref).toggle_synset_relation(synset, db_name).encode(),
                 disp_name)
 
-        if db_name in ref.synset_relations[synset.name()]:
+        if db_name in ref.synset_relations[synset.name]:
              synset_html += '<ul>%s</ul>\n' % \
                 ''.join("<li>%s</li>\n" % relation_html(r) for r in rels)
 
         return synset_html
 
     html = '<ul>' + \
-        '\n'.join(("<li>%s</li>" % make_synset_html(*rel_data) for rel_data
+        '\n'.join(("<li>%s</li>" % make_synset_html(x) for x
                    in get_relations_data(word, synset)
-                   if rel_data[2] != [])) + \
+                   if x[2] != [])) + \
         '</ul>'
 
     return html
@@ -652,17 +695,8 @@ class Reference(object):
         # This uses a tuple rather than an object since the python
         # pickle representation is much smaller and there is no need
         # to represent the complete object.
-        string = pickle.dumps((self.word, self.synset_relations), -1)
-        return base64.urlsafe_b64encode(string).decode()
-
-    @staticmethod
-    def decode(string):
-        """
-        Decode a reference encoded with Reference.encode
-        """
-        string = base64.urlsafe_b64decode(string.encode())
-        word, synset_relations = pickle.loads(string)
-        return Reference(word, synset_relations)
+        string = cPickle.dumps((self.word, self.synset_relations), -1)
+        return base64.urlsafe_b64encode(string)
 
     def toggle_synset_relation(self, synset, relation):
         """
@@ -672,10 +706,10 @@ class Reference(object):
         This function will throw a KeyError if the synset is currently
         not being displayed.
         """
-        if relation in self.synset_relations[synset.name()]:
-            self.synset_relations[synset.name()].remove(relation)
+        if relation in self.synset_relations[synset.name]:
+            self.synset_relations[synset.name].remove(relation)
         else:
-            self.synset_relations[synset.name()].add(relation)
+            self.synset_relations[synset.name].add(relation)
 
         return self
 
@@ -683,13 +717,21 @@ class Reference(object):
         """
         Toggle displaying of the relation types for the given synset
         """
-        if synset.name() in self.synset_relations:
-            del self.synset_relations[synset.name()]
+        if synset.name in self.synset_relations.keys():
+            del self.synset_relations[synset.name]
         else:
-            self.synset_relations[synset.name()] = set()
+            self.synset_relations[synset.name] = set()
 
         return self
 
+
+def decode_reference(string):
+    """
+    Decode a reference encoded with Reference.encode
+    """
+    string = base64.urlsafe_b64decode(string)
+    word, synset_relations = cPickle.loads(string)
+    return Reference(word, synset_relations)
 
 def make_lookup_link(ref, label):
     return '<a href="lookup_%s">%s</a>' % (ref.encode(), label)
@@ -719,7 +761,7 @@ def page_from_href(href):
              word is the new current word
     :rtype: A tuple (str,str)
     '''
-    return page_from_reference(Reference.decode(href))
+    return page_from_reference(decode_reference(href))
 
 def page_from_reference(href):
     '''
@@ -744,11 +786,10 @@ def page_from_reference(href):
 
     # This looks up multiple words at once.  This is probably not
     # necessary and may lead to problems.
-    for w in words:
-        for pos in [wn.NOUN, wn.VERB, wn.ADJ, wn.ADV]:
-            form = wn.morphy(w, pos)
-            if form and form not in pos_forms[pos]:
-                pos_forms[pos].append(form)
+    for pos in [wn.NOUN, wn.VERB, wn.ADJ, wn.ADV]:
+        form = wn.morphy(w, pos)
+        if form and form not in pos_forms[pos]:
+            pos_forms[pos].append(form)
     body = ''
     for pos,pos_str,name in _pos_tuples():
         if pos in pos_forms:
@@ -791,6 +832,11 @@ def get_static_page_by_path(path):
     else:
         return "Internal error: Path for static page '%s' is unknown" % path
 
+    f = open(path)
+    page = f.read()
+    f.close()
+    return page
+
 
 def get_static_web_help_page():
     """
@@ -801,9 +847,9 @@ def get_static_web_help_page():
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
      <!-- Natural Language Toolkit: Wordnet Interface: Graphical Wordnet Browser
-            Copyright (C) 2001-2017 NLTK Project
+            Copyright (C) 2001-2012 NLTK Project
             Author: Jussi Salmela <jtsalmela@users.sourceforge.net>
-            URL: <http://nltk.org/>
+            URL: <http://www.nltk.org/>
             For license information, see LICENSE.TXT -->
      <head>
           <meta http-equiv='Content-Type' content='text/html; charset=us-ascii'>
@@ -872,9 +918,9 @@ def get_static_index_page(with_shutdown):
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN"  "http://www.w3.org/TR/html4/frameset.dtd">
 <HTML>
      <!-- Natural Language Toolkit: Wordnet Interface: Graphical Wordnet Browser
-            Copyright (C) 2001-2017 NLTK Project
+            Copyright (C) 2001-2012 NLTK Project
             Author: Jussi Salmela <jtsalmela@users.sourceforge.net>
-            URL: <http://nltk.org/>
+            URL: <http://www.nltk.org/>
             For license information, see LICENSE.TXT -->
      <HEAD>
          <TITLE>NLTK Wordnet Browser</TITLE>
@@ -906,9 +952,9 @@ def get_static_upper_page(with_shutdown):
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
     <!-- Natural Language Toolkit: Wordnet Interface: Graphical Wordnet Browser
-        Copyright (C) 2001-2017 NLTK Project
+        Copyright (C) 2001-2012 NLTK Project
         Author: Jussi Salmela <jtsalmela@users.sourceforge.net>
-        URL: <http://nltk.org/>
+        URL: <http://www.nltk.org/>
         For license information, see LICENSE.TXT -->
     <head>
                 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />

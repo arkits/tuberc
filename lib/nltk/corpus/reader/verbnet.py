@@ -1,39 +1,19 @@
 # Natural Language Toolkit: Verbnet Corpus Reader
 #
-# Copyright (C) 2001-2017 NLTK Project
-# Author: Edward Loper <edloper@gmail.com>
-# URL: <http://nltk.org/>
+# Copyright (C) 2001-2012 NLTK Project
+# Author: Edward Loper <edloper@gradient.cis.upenn.edu>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
-
-"""
-An NLTK interface to the VerbNet verb lexicon
-
-For details about VerbNet see:
-http://verbs.colorado.edu/~mpalmer/projects/verbnet.html
-"""
-from __future__ import unicode_literals
 
 import re
 import textwrap
 from collections import defaultdict
 
-from six import string_types
-
-from nltk.corpus.reader.xmldocs import XMLCorpusReader
+from util import *
+from api import *
+from xmldocs import *
 
 class VerbnetCorpusReader(XMLCorpusReader):
-    """
-    An NLTK interface to the VerbNet verb lexicon.
-
-    From the VerbNet site: "VerbNet (VN) (Kipper-Schuler 2006) is the largest
-    on-line verb lexicon currently available for English. It is a hierarchical
-    domain-independent, broad-coverage verb lexicon with mappings to other
-    lexical resources such as WordNet (Miller, 1990; Fellbaum, 1998), Xtag
-    (XTAG Research Group, 2001), and FrameNet (Baker et al., 1998)."
-
-    For details about VerbNet see:
-    http://verbs.colorado.edu/~mpalmer/projects/verbnet.html
-    """
 
     # No unicode encoding param, since the data files are all XML.
     def __init__(self, root, fileids, wrap_etree=False):
@@ -166,7 +146,7 @@ class VerbnetCorpusReader(XMLCorpusReader):
         """
         if vnclass_ids is None:
             return self._fileids
-        elif isinstance(vnclass_ids, string_types):
+        elif isinstance(vnclass_ids, basestring):
             return [self._class_to_fileid[self.longid(vnclass_ids)]]
         else:
             return [self._class_to_fileid[self.longid(vnclass_id)]
@@ -270,7 +250,7 @@ class VerbnetCorpusReader(XMLCorpusReader):
         :param vnclass: A verbnet class identifier; or an ElementTree
         containing the xml contents of a verbnet class.
         """
-        if isinstance(vnclass, string_types):
+        if isinstance(vnclass, basestring):
             vnclass = self.vnclass(vnclass)
 
         s = vnclass.get('ID') + '\n'
@@ -291,7 +271,7 @@ class VerbnetCorpusReader(XMLCorpusReader):
         :param vnclass: A verbnet class identifier; or an ElementTree
             containing the xml contents of a verbnet class.
         """
-        if isinstance(vnclass, string_types):
+        if isinstance(vnclass, basestring):
             vnclass = self.vnclass(vnclass)
 
         subclasses = [subclass.get('ID') for subclass in
@@ -309,7 +289,7 @@ class VerbnetCorpusReader(XMLCorpusReader):
         :param vnclass: A verbnet class identifier; or an ElementTree
             containing the xml contents of a verbnet class.
         """
-        if isinstance(vnclass, string_types):
+        if isinstance(vnclass, basestring):
             vnclass = self.vnclass(vnclass)
 
         members = [member.get('name') for member in
@@ -327,7 +307,7 @@ class VerbnetCorpusReader(XMLCorpusReader):
         :param vnclass: A verbnet class identifier; or an ElementTree
             containing the xml contents of a verbnet class.
         """
-        if isinstance(vnclass, string_types):
+        if isinstance(vnclass, basestring):
             vnclass = self.vnclass(vnclass)
 
         pieces = []
@@ -404,4 +384,6 @@ class VerbnetCorpusReader(XMLCorpusReader):
         for pred in vnframe.findall('SEMANTICS/PRED'):
             args = [arg.get('value') for arg in pred.findall('ARGS/ARG')]
             pieces.append('%s(%s)' % (pred.get('value'), ', '.join(args)))
-        return '\n'.join('%s* %s' % (indent, piece) for piece in pieces)
+        return '\n'.join(['%s* %s' % (indent, piece) for piece in pieces])
+
+

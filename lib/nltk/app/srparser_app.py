@@ -1,8 +1,8 @@
 # Natural Language Toolkit: Shift-Reduce Parser Application
 #
-# Copyright (C) 2001-2017 NLTK Project
-# Author: Edward Loper <edloper@gmail.com>
-# URL: <http://nltk.org/>
+# Copyright (C) 2001-2012 NLTK Project
+# Author: Edward Loper <edloper@gradient.cis.upenn.edu>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
 """
@@ -59,18 +59,7 @@ Keyboard Shortcuts::
       [h]\t Help
       [Ctrl-p]\t Print
       [q]\t Quit
-
 """
-
-from six.moves.tkinter_font import Font
-from six.moves.tkinter import (IntVar, Listbox, Button, Frame, Label, Menu,
-                               Scrollbar, Tk)
-
-from nltk.tree import Tree
-from nltk.parse import SteppingShiftReduceParser
-from nltk.util import in_idle
-from nltk.draw.util import CanvasFrame, EntryDialog, ShowText, TextWidget
-from nltk.draw import CFGEditor, TreeSegmentWidget, tree_to_treesegment
 
 """
 Possible future improvements:
@@ -83,6 +72,17 @@ Possible future improvements:
     the later, then I'd want to define nltk.draw.cfg, which would be
     responsible for that.
 """
+
+import string
+import tkFont
+from Tkinter import (IntVar, Listbox, Button, Frame, Label, Menu,
+                     Scrollbar, Tk)
+
+from nltk.tree import Tree
+from nltk.parse import SteppingShiftReduceParser
+from nltk.util import in_idle
+from nltk.draw.util import CanvasFrame, EntryDialog, ShowText, TextWidget
+from nltk.draw import CFGEditor, TreeSegmentWidget, tree_to_treesegment
 
 class ShiftReduceApp(object):
     """
@@ -138,16 +138,16 @@ class ShiftReduceApp(object):
 
     def _init_fonts(self, root):
         # See: <http://www.astro.washington.edu/owen/ROTKFolklore.html>
-        self._sysfont = Font(font=Button()["font"])
+        self._sysfont = tkFont.Font(font=Button()["font"])
         root.option_add("*Font", self._sysfont)
 
         # TWhat's our font size (default=same as sysfont)
         self._size = IntVar(root)
         self._size.set(self._sysfont.cget('size'))
 
-        self._boldfont = Font(family='helvetica', weight='bold',
+        self._boldfont = tkFont.Font(family='helvetica', weight='bold',
                                     size=self._size.get())
-        self._font = Font(family='helvetica',
+        self._font = tkFont.Font(family='helvetica',
                                     size=self._size.get())
 
     def _init_grammar(self, parent):
@@ -389,7 +389,7 @@ class ShiftReduceApp(object):
                            'leaf_color': '#006060', 'leaf_font':self._font}
                 widget = tree_to_treesegment(self._canvas, tok,
                                              **attribs)
-                widget.label()['color'] = '#000000'
+                widget.node()['color'] = '#000000'
             else:
                 widget = TextWidget(self._canvas, tok,
                                     color='#000000', font=self._font)
@@ -465,10 +465,10 @@ class ShiftReduceApp(object):
         self._redraw()
 
     def step(self, *e):
-        if self.reduce(): return True
-        elif self.shift(): return True
+        if self.reduce(): return 1
+        elif self.shift(): return 1
         else:
-            if list(self._parser.parses()):
+            if len(self._parser.parses()) > 0:
                 self._lastoper1['text'] = 'Finished:'
                 self._lastoper2['text'] = 'Success'
             else:
@@ -485,8 +485,8 @@ class ShiftReduceApp(object):
                 self._animate_shift()
             else:
                 self._redraw()
-            return True
-        return False
+            return 1
+        return 0
 
     def reduce(self, *e):
         if self._animating_lock: return
@@ -542,17 +542,17 @@ class ShiftReduceApp(object):
         # The default font's not very legible; try using 'fixed' instead.
         try:
             ShowText(self._top, 'Help: Shift-Reduce Parser Application',
-                     (__doc__ or '').strip(), width=75, font='fixed')
+                     (__doc__).strip(), width=75, font='fixed')
         except:
             ShowText(self._top, 'Help: Shift-Reduce Parser Application',
-                     (__doc__ or '').strip(), width=75)
+                     (__doc__).strip(), width=75)
 
     def about(self, *e):
         ABOUT = ("NLTK Shift-Reduce Parser Application\n"+
                  "Written by Edward Loper")
         TITLE = 'About: Shift-Reduce Parser Application'
         try:
-            from six.moves.tkinter_messagebox import Message
+            from tkMessageBox import Message
             Message(message=ABOUT, title=TITLE).show()
         except:
             ShowText(self._top, TITLE, ABOUT)
@@ -568,7 +568,7 @@ class ShiftReduceApp(object):
             self._prodlist.insert('end', (' %s' % production))
 
     def edit_sentence(self, *e):
-        sentence = " ".join(self._sent)
+        sentence = string.join(self._sent)
         title = 'Edit Text'
         instr = 'Enter a new sentence to parse.'
         EntryDialog(self._top, sentence, instr, self.set_sentence, title)
@@ -665,7 +665,7 @@ class ShiftReduceApp(object):
 
         # How far are we moving?
         if isinstance(widgets[0], TreeSegmentWidget):
-            ydist = 15 + widgets[0].label().height()
+            ydist = 15 + widgets[0].node().height()
         else:
             ydist = 15 + widgets[0].height()
 
@@ -686,7 +686,7 @@ class ShiftReduceApp(object):
                 self._cframe.remove_widget(widget)
             tok = self._parser.stack()[-1]
             if not isinstance(tok, Tree): raise ValueError()
-            label = TextWidget(self._canvas, str(tok.label()), color='#006060',
+            label = TextWidget(self._canvas, str(tok.node), color='#006060',
                                font=self._boldfont)
             widget = TreeSegmentWidget(self._canvas, label, widgets,
                                        width=2)
@@ -748,7 +748,7 @@ class ShiftReduceApp(object):
             rhslen = len(self._productions[index].rhs())
             for stackwidget in self._stackwidgets[-rhslen:]:
                 if isinstance(stackwidget, TreeSegmentWidget):
-                    stackwidget.label()['color'] = '#00a000'
+                    stackwidget.node()['color'] = '#00a000'
                 else:
                     stackwidget['color'] = '#00a000'
 
@@ -761,7 +761,7 @@ class ShiftReduceApp(object):
         self._hover = -1
         for stackwidget in self._stackwidgets:
             if isinstance(stackwidget, TreeSegmentWidget):
-                stackwidget.label()['color'] = 'black'
+                stackwidget.node()['color'] = 'black'
             else:
                 stackwidget['color'] = 'black'
 
@@ -772,7 +772,7 @@ def app():
     text.
     """
 
-    from nltk.grammar import Nonterminal, Production, CFG
+    from nltk.grammar import Nonterminal, Production, ContextFreeGrammar
     nonterminals = 'S VP NP PP P N Name V Det'
     (S, VP, NP, PP, P, N, Name, V, Det) = [Nonterminal(s)
                                            for s in nonterminals.split()]
@@ -796,7 +796,7 @@ def app():
         Production(Det, ['my']),
         )
 
-    grammar = CFG(S, productions)
+    grammar = ContextFreeGrammar(S, productions)
 
     # tokenize the sentence
     sent = 'my dog saw a man in the park with a statue'.split()

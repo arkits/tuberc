@@ -1,9 +1,9 @@
 # Natural Language Toolkit: Indian Language POS-Tagged Corpus Reader
 #
-# Copyright (C) 2001-2017 NLTK Project
-# Author: Steven Bird <stevenbird1@gmail.com>
-#         Edward Loper <edloper@gmail.com>
-# URL: <http://nltk.org/>
+# Copyright (C) 2001-2012 NLTK Project
+# Author: Steven Bird <sb@ldc.upenn.edu>
+#         Edward Loper <edloper@gradient.cis.upenn.edu>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
 """
@@ -18,12 +18,12 @@ Contents:
   - Telugu: IIIT Hyderabad
 """
 
-from six import string_types
+import codecs
 
-from nltk.tag import str2tuple, map_tag
+from nltk.tag.util import str2tuple
 
-from nltk.corpus.reader.util import *
-from nltk.corpus.reader.api import *
+from util import *
+from api import *
 
 class IndianCorpusReader(CorpusReader):
     """
@@ -34,9 +34,9 @@ class IndianCorpusReader(CorpusReader):
                                         False, False)
                        for (fileid, enc) in self.abspaths(fileids, True)])
 
-    def tagged_words(self, fileids=None, tagset=None):
-        if tagset and tagset != self._tagset:
-            tag_mapping_function = lambda t: map_tag(self._tagset, tagset, t)
+    def tagged_words(self, fileids=None, simplify_tags=False):
+        if simplify_tags:
+            tag_mapping_function = self._tag_mapping_function
         else:
             tag_mapping_function = None
         return concat([IndianCorpusView(fileid, enc,
@@ -48,9 +48,9 @@ class IndianCorpusReader(CorpusReader):
                                         False, True)
                        for (fileid, enc) in self.abspaths(fileids, True)])
 
-    def tagged_sents(self, fileids=None, tagset=None):
-        if tagset and tagset != self._tagset:
-            tag_mapping_function = lambda t: map_tag(self._tagset, tagset, t)
+    def tagged_sents(self, fileids=None, simplify_tags=False):
+        if simplify_tags:
+            tag_mapping_function = self._tag_mapping_function
         else:
             tag_mapping_function = None
         return concat([IndianCorpusView(fileid, enc,
@@ -59,7 +59,7 @@ class IndianCorpusReader(CorpusReader):
 
     def raw(self, fileids=None):
         if fileids is None: fileids = self._fileids
-        elif isinstance(fileids, string_types): fileids = [fileids]
+        elif isinstance(fileids, basestring): fileids = [fileids]
         return concat([self.open(f).read() for f in fileids])
 
 
@@ -83,3 +83,5 @@ class IndianCorpusView(StreamBackedCorpusView):
             return [sent]
         else:
             return sent
+
+

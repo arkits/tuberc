@@ -1,13 +1,13 @@
 # Natural Language Toolkit: Europarl Corpus Readers
 #
-# Copyright (C) 2001-2017 NLTK Project
+# Copyright (C) 2001-2012 NLTK Project
 # Author:  Nitin Madnani <nmadnani@umiacs.umd.edu>
-# URL: <http://nltk.org/>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
 import re
-from nltk.corpus.util import LazyCorpusLoader
-from nltk.corpus.reader import *
+from util import LazyCorpusLoader
+from reader import *
 
 # Create a new corpus reader instance for each European language
 danish = LazyCorpusLoader(

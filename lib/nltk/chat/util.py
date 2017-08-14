@@ -1,37 +1,33 @@
 # Natural Language Toolkit: Chatbot Utilities
 #
-# Copyright (C) 2001-2017 NLTK Project
-# Authors: Steven Bird <stevenbird1@gmail.com>
-# URL: <http://nltk.org/>
+# Copyright (C) 2001-2012 NLTK Project
+# Authors: Steven Bird <sb@csse.unimelb.edu.au>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
 # Based on an Eliza implementation by Joe Strout <joe@strout.net>,
 # Jeff Epler <jepler@inetnebr.com> and Jez Higgins <jez@jezuk.co.uk>.
-from __future__ import print_function
 
+from __future__ import print_function
+import string
 import re
 import random
 
-from six.moves import input
-
-
 reflections = {
-  "i am"       : "you are",
-  "i was"      : "you were",
-  "i"          : "you",
-  "i'm"        : "you are",
-  "i'd"        : "you would",
-  "i've"       : "you have",
-  "i'll"       : "you will",
-  "my"         : "your",
-  "you are"    : "I am",
-  "you were"   : "I was",
-  "you've"     : "I have",
-  "you'll"     : "I will",
-  "your"       : "my",
-  "yours"      : "mine",
-  "you"        : "me",
-  "me"         : "you"
+  "am"     : "are",
+  "was"    : "were",
+  "i"      : "you",
+  "i'd"    : "you would",
+  "i've"   : "you have",
+  "i'll"   : "you will",
+  "my"     : "your",
+  "are"    : "am",
+  "you've" : "I have",
+  "you'll" : "I will",
+  "your"   : "my",
+  "yours"  : "mine",
+  "you"    : "me",
+  "me"     : "you"
 }
 
 class Chat(object):
@@ -53,15 +49,8 @@ class Chat(object):
 
         self._pairs = [(re.compile(x, re.IGNORECASE),y) for (x,y) in pairs]
         self._reflections = reflections
-        self._regex = self._compile_reflections()
 
-
-    def _compile_reflections(self):
-        sorted_refl = sorted(self._reflections.keys(), key=len,
-                reverse=True)
-        return  re.compile(r"\b({0})\b".format("|".join(map(re.escape,
-            sorted_refl))), re.IGNORECASE)
-
+    # bug: only permits single word expressions to be mapped
     def _substitute(self, str):
         """
         Substitute words in the string, according to the specified reflections,
@@ -72,18 +61,21 @@ class Chat(object):
         :rtype: str
         """
 
-        return self._regex.sub(lambda mo:
-                self._reflections[mo.string[mo.start():mo.end()]],
-                    str.lower())
+        words = ""
+        for word in string.split(string.lower(str)):
+            if word in self._reflections:
+                word = self._reflections[word]
+            words += ' ' + word
+        return words
 
     def _wildcards(self, response, match):
-        pos = response.find('%')
+        pos = string.find(response,'%')
         while pos >= 0:
-            num = int(response[pos+1:pos+2])
+            num = string.atoi(response[pos+1:pos+2])
             response = response[:pos] + \
                 self._substitute(match.group(num)) + \
                 response[pos+2:]
-            pos = response.find('%')
+            pos = string.find(response,'%')
         return response
 
     def respond(self, str):
@@ -111,12 +103,12 @@ class Chat(object):
 
     # Hold a conversation with a chatbot
     def converse(self, quit="quit"):
-        user_input = ""
-        while user_input != quit:
-            user_input = quit
-            try: user_input = input(">")
+        input = ""
+        while input != quit:
+            input = quit
+            try: input = raw_input(">")
             except EOFError:
-                print(user_input)
-            if user_input:
-                while user_input[-1] in "!.": user_input = user_input[:-1]
-                print(self.respond(user_input))
+                print(input)
+            if input:
+                while input[-1] in "!.": input = input[:-1]
+                print(self.respond(input))

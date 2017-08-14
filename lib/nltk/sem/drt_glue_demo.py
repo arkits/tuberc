@@ -3,26 +3,22 @@
 #
 # Author: Dan Garrette <dhgarrette@gmail.com>
 #
-# Copyright (C) 2001-2017 NLTK Project
-# URL: <http://nltk.org/>
+# Copyright (C) 2001-2012 NLTK Project
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
-try:
-    from six.moves.tkinter import (Button, Frame, IntVar, Label, Listbox, Menu,
-                                   Scrollbar, Tk)
-    from six.moves.tkinter_font import Font
-    from nltk.draw.util import CanvasFrame, ShowText
+from tkFont import Font
 
-except ImportError:
-    """Ignore ImportError because tkinter might not be available."""
+from Tkinter import (Button, Frame, IntVar, Label,
+                     Listbox, Menu, Scrollbar, Tk)
 
+from nltk.draw.util import CanvasFrame, ShowText
 from nltk.util import in_idle
 from nltk.tag import RegexpTagger
 from nltk.parse import MaltParser
 from nltk.sem.logic import Variable
 from nltk.sem.drt import DrsDrawer, DrtVariableExpression
 from nltk.sem.glue import DrtGlue
-
 
 class DrtGlueDemo(object):
     def __init__(self, examples):
@@ -342,7 +338,7 @@ class DrtGlueDemo(object):
                  "Written by Daniel H. Garrette")
         TITLE = 'About: NLTK DRT Glue Demo'
         try:
-            from six.moves.tkinter_messagebox import Message
+            from tkMessageBox import Message
             Message(message=ABOUT, title=TITLE).show()
         except:
             ShowText(self._top, TITLE, ABOUT)
@@ -452,7 +448,7 @@ class DrsWidget(object):
         self.bbox = (0, 0, 0, 0)
 
     def draw(self):
-        (right, bottom) = DrsDrawer(self._drs, canvas=self._canvas).draw()
+        (right, bottom) = DrsDrawer(self._drs, canvas=self._canvas).draw();
         self.bbox = (0, 0, right+1, bottom+1)
 
     def clear(self):

@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2005-2007 Oregon Graduate Institute
 # Author: Nathan Bodenstab <bodenstab@cslu.ogi.edu>
-# URL: <http://nltk.org/>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
 """
@@ -106,11 +106,11 @@ The following is a short tutorial on the available transformations.
      C   D      C   D
 
 """
-from __future__ import print_function
 
+from __future__ import print_function
 from nltk.tree import Tree
 
-def chomsky_normal_form(tree, factor="right", horzMarkov=None, vertMarkov=0, childChar="|", parentChar="^"):
+def chomsky_normal_form(tree, factor = "right", horzMarkov = None, vertMarkov = 0, childChar = "|", parentChar = "^"):
     # assume all subtrees have homogeneous children
     # assume all terminals have no siblings
 
@@ -124,17 +124,17 @@ def chomsky_normal_form(tree, factor="right", horzMarkov=None, vertMarkov=0, chi
     # over them) and node access time is proportional to the height of the node.
     # This method is 7x faster which helps when parsing 40,000 sentences.
 
-    nodeList = [(tree, [tree.label()])]
+    nodeList = [(tree, [tree.node])]
     while nodeList != []:
         node, parent = nodeList.pop()
         if isinstance(node,Tree):
 
             # parent annotation
             parentString = ""
-            originalNode = node.label()
+            originalNode = node.node
             if vertMarkov != 0 and node != tree and isinstance(node[0],Tree):
                 parentString = "%s<%s>" % (parentChar, "-".join(parent))
-                node.set_label(node.label() + parentString)
+                node.node += parentString
                 parent = [originalNode] + parent[:vertMarkov - 1]
 
             # add children to the agenda before we mess with them
@@ -143,7 +143,7 @@ def chomsky_normal_form(tree, factor="right", horzMarkov=None, vertMarkov=0, chi
 
             # chomsky normal form factorization
             if len(node) > 2:
-                childNodes = [child.label() for child in node]
+                childNodes = [child.node for child in node]
                 nodeCopy = node.copy()
                 node[0:] = [] # delete the children
 
@@ -173,7 +173,7 @@ def un_chomsky_normal_form(tree, expandUnary = True, childChar = "|", parentChar
             # if the node contains the 'childChar' character it means that
             # it is an artificial node and can be removed, although we still need
             # to move its children to its parent
-            childIndex = node.label().find(childChar)
+            childIndex = node.node.find(childChar)
             if childIndex != -1:
                 nodeIndex = parent.index(node)
                 parent.remove(parent[nodeIndex])
@@ -189,17 +189,17 @@ def un_chomsky_normal_form(tree, expandUnary = True, childChar = "|", parentChar
                 # parent is now the current node so the children of parent will be added to the agenda
                 node = parent
             else:
-                parentIndex = node.label().find(parentChar)
+                parentIndex = node.node.find(parentChar)
                 if parentIndex != -1:
                     # strip the node name of the parent annotation
-                    node.set_label(node.label()[:parentIndex])
+                    node.node = node.node[:parentIndex]
 
                 # expand collapsed unary productions
                 if expandUnary == True:
-                    unaryIndex = node.label().find(unaryChar)
+                    unaryIndex = node.node.find(unaryChar)
                     if unaryIndex != -1:
-                        newNode = Tree(node.label()[unaryIndex + 1:], [i for i in node])
-                        node.set_label(node.label()[:unaryIndex])
+                        newNode = Tree(node.node[unaryIndex + 1:], [i for i in node])
+                        node.node = node.node[:unaryIndex]
                         node[0:] = [newNode]
 
             for child in node:
@@ -238,7 +238,7 @@ def collapse_unary(tree, collapsePOS = False, collapseRoot = False, joinChar = "
         node = nodeList.pop()
         if isinstance(node,Tree):
             if len(node) == 1 and isinstance(node[0], Tree) and (collapsePOS == True or isinstance(node[0,0], Tree)):
-                node.set_label(node.label() + joinChar + node[0].label())
+                node.node += joinChar + node[0].node
                 node[0:] = [child for child in node[0]]
                 # since we assigned the child's children to the current node,
                 # evaluate the current node again
@@ -277,7 +277,7 @@ def demo():
     (NP (DT the) (NN yuppie) (NNS dealers))
     (VP (AUX do) (NP (NP (RB little)) (ADJP (RB right))))
     (. .)))"""
-    t = tree.Tree.fromstring(sentence, remove_empty_top_bracketing=True)
+    t = tree.Tree.parse(sentence, remove_empty_top_bracketing=True)
 
     # collapse subtrees with only one child
     collapsedTree = deepcopy(t)

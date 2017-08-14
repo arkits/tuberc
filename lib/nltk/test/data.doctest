@@ -1,4 +1,4 @@
-.. Copyright (C) 2001-2017 NLTK Project
+.. Copyright (C) 2001-2012 NLTK Project
 .. For license information, see LICENSE.TXT
 
 =========================================
@@ -20,7 +20,6 @@ takes as its first argument a URL specifying what file should be
 loaded.  The ``nltk:`` protocol loads files from the NLTK data
 distribution:
 
-    >>> from __future__ import print_function
     >>> tokenizer = nltk.data.load('nltk:tokenizers/punkt/english.pickle')
     >>> tokenizer.tokenize('Hello.  This is a test.  It works!')
     ['Hello.', 'This is a test.', 'It works!']
@@ -41,7 +40,7 @@ and ``file:`` URLs, e.g. ``cfg = nltk.data.load('http://example.com/path/to/toy.
     >>> url = 'file:%s' % nltk.data.find('grammars/sample_grammars/toy.cfg')
     >>> url.replace('\\', '/') # doctest: +ELLIPSIS
     'file:...toy.cfg'
-    >>> print(nltk.data.load(url)) # doctest: +ELLIPSIS
+    >>> print nltk.data.load(url) # doctest: +ELLIPSIS
     Grammar with 14 productions (start state = S)
         S -> NP VP
         PP -> P NP
@@ -56,22 +55,15 @@ currently supported by the data module are described by the dictionary
 `nltk.data.FORMATS`:
 
     >>> for format, descr in sorted(nltk.data.FORMATS.items()):
-    ...     print('{0:<7} {1:}'.format(format, descr)) # doctest: +NORMALIZE_WHITESPACE
-    cfg     A context free grammar.
-    fcfg    A feature CFG.
-    fol     A list of first order logic expressions, parsed with
-    nltk.sem.logic.Expression.fromstring.
-    json    A serialized python object, stored using the json module.
-    logic   A list of first order logic expressions, parsed with
-    nltk.sem.logic.LogicParser.  Requires an additional logic_parser
-    parameter
-    pcfg    A probabilistic CFG.
-    pickle  A serialized python object, stored using the pickle
-    module.
+    ...     print '%-7s %s' % (format, descr) # doctest: +NORMALIZE_WHITESPACE
+    cfg     A context free grammar, parsed by nltk.parse_cfg().
+    fcfg    A feature CFG, parsed by nltk.parse_fcfg().
+    fol     A list of first order logic expressions, parsed by nltk.sem.parse_fol() using nltk.sem.logic.LogicParser.
+    logic   A list of first order logic expressions, parsed by nltk.sem.parse_logic().  Requires an additional logic_parser parameter
+    pcfg    A probabilistic CFG, parsed by nltk.parse_pcfg().
+    pickle  A serialized python object, stored using the pickle module.
     raw     The raw (byte string) contents of a file.
-    text    The raw (unicode string) contents of a file. 
-    val     A semantic valuation, parsed by
-    nltk.sem.Valuation.fromstring.
+    val     A semantic valuation, parsed by nltk.sem.parse_valuation().
     yaml    A serialized python object, stored using the yaml module.
 
 `nltk.data.load()` will raise a ValueError if a bad format name is
@@ -87,16 +79,13 @@ based on the filename's extension.  The mapping from file extensions
 to format names is specified by `nltk.data.AUTO_FORMATS`:
 
     >>> for ext, format in sorted(nltk.data.AUTO_FORMATS.items()):
-    ...     print('.%-7s -> %s' % (ext, format))
+    ...     print '.%-7s -> %s' % (ext, format)
     .cfg     -> cfg
     .fcfg    -> fcfg
     .fol     -> fol
-    .json    -> json
     .logic   -> logic
     .pcfg    -> pcfg
     .pickle  -> pickle
-    .text    -> text
-    .txt     -> text
     .val     -> val
     .yaml    -> yaml
 
@@ -113,13 +102,8 @@ Note that by explicitly specifying the ``format`` argument, you can
 override the load method's default processing behavior.  For example,
 to get the raw contents of any file, simply use ``format="raw"``:
 
-    >>> s = nltk.data.load('grammars/sample_grammars/toy.cfg', 'text') 
-    >>> print(s) # doctest: +ELLIPSIS
-    S -> NP VP
-    PP -> P NP
-    NP -> Det N | NP PP
-    VP -> V NP | VP PP
-    ...
+    >>> nltk.data.load('grammars/sample_grammars/toy.cfg', 'raw') # doctest: +ELLIPSIS
+    "S -> NP VP\nPP -> P NP\nNP -> Det N | NP PP\nVP -> V NP | VP PP\n..."
 
 Making Local Copies
 ~~~~~~~~~~~~~~~~~~~
@@ -129,23 +113,21 @@ Making Local Copies
     >>> tempdir = tempfile.mkdtemp()
     >>> old_dir = os.path.abspath('.')
     >>> os.chdir(tempdir)
-
+    
 The function `nltk.data.retrieve()` copies a given resource to a local
 file.  This can be useful, for example, if you want to edit one of the
 sample grammars.
 
     >>> nltk.data.retrieve('grammars/sample_grammars/toy.cfg')
-    Retrieving 'nltk:grammars/sample_grammars/toy.cfg', saving to 'toy.cfg'
-
+    Retrieving 'grammars/sample_grammars/toy.cfg', saving to 'toy.cfg'
+    
     >>> # Simulate editing the grammar.
-    >>> with open('toy.cfg') as inp:
-    ...     s = inp.read().replace('NP', 'DP')
-    >>> with open('toy.cfg', 'w') as out:
-    ...     _bytes_written = out.write(s)
+    >>> s = open('toy.cfg').read().replace('NP', 'DP')
+    >>> out = open('toy.cfg', 'w'); out.write(s); out.close()
 
     >>> # Load the edited grammar, & display it.
-    >>> cfg = nltk.data.load('file:///' + os.path.abspath('toy.cfg'))
-    >>> print(cfg) # doctest: +ELLIPSIS
+    >>> cfg = nltk.data.load('file:toy.cfg')
+    >>> print cfg # doctest: +ELLIPSIS
     Grammar with 14 productions (start state = S)
         S -> DP VP
         PP -> P DP
@@ -158,11 +140,11 @@ for the new copy of the file.  By default, the source file's filename
 is used.
 
     >>> nltk.data.retrieve('grammars/sample_grammars/toy.cfg', 'mytoy.cfg')
-    Retrieving 'nltk:grammars/sample_grammars/toy.cfg', saving to 'mytoy.cfg'
+    Retrieving 'grammars/sample_grammars/toy.cfg', saving to 'mytoy.cfg'
     >>> os.path.isfile('./mytoy.cfg')
     True
     >>> nltk.data.retrieve('grammars/sample_grammars/np.fcfg')
-    Retrieving 'nltk:grammars/sample_grammars/np.fcfg', saving to 'np.fcfg'
+    Retrieving 'grammars/sample_grammars/np.fcfg', saving to 'np.fcfg'
     >>> os.path.isfile('./np.fcfg')
     True
 
@@ -196,24 +178,14 @@ contents of the file.
     >>> path = nltk.data.find('corpora/abc/rural.txt')
     >>> str(path) # doctest: +ELLIPSIS
     '...rural.txt'
-    >>> print(path.open().read(60).decode())
-    PM denies knowledge of AWB kickbacks
-    The Prime Minister has 
+    >>> path.open().read(60)
+    'PM denies knowledge of AWB kickbacks\nThe Prime Minister has '
 
 Alternatively, the `nltk.data.load()` function can be used with the
 keyword argument ``format="raw"``:
 
-    >>> s = nltk.data.load('corpora/abc/rural.txt', format='raw')[:60]
-    >>> print(s.decode())
-    PM denies knowledge of AWB kickbacks
-    The Prime Minister has 
-
-Alternatively, you can use the keyword argument ``format="text"``:
-
-    >>> s = nltk.data.load('corpora/abc/rural.txt', format='text')[:60]
-    >>> print(s)
-    PM denies knowledge of AWB kickbacks
-    The Prime Minister has 
+    >>> nltk.data.load('corpora/abc/rural.txt', format='raw')[:60]
+    'PM denies knowledge of AWB kickbacks\nThe Prime Minister has '
 
 Resource Caching
 ~~~~~~~~~~~~~~~~
@@ -224,9 +196,9 @@ the cache, then the cached copy will be returned.  This behavior can
 be seen by the trace output generated when verbose=True:
 
     >>> feat0 = nltk.data.load('grammars/book_grammars/feat0.fcfg', verbose=True)
-    <<Loading nltk:grammars/book_grammars/feat0.fcfg>>
+    <<Loading grammars/book_grammars/feat0.fcfg>>
     >>> feat0 = nltk.data.load('grammars/book_grammars/feat0.fcfg', verbose=True)
-    <<Using cached copy of nltk:grammars/book_grammars/feat0.fcfg>>
+    <<Using cached copy of grammars/book_grammars/feat0.fcfg>>
 
 If you wish to load a resource from its source, bypassing the cache,
 use the ``cache=False`` argument to `nltk.data.load()`.  This can be
@@ -234,7 +206,7 @@ useful, for example, if the resource is loaded from a local file, and
 you are actively editing that file:
 
     >>> feat0 = nltk.data.load('grammars/book_grammars/feat0.fcfg',cache=False,verbose=True)
-    <<Loading nltk:grammars/book_grammars/feat0.fcfg>>
+    <<Loading grammars/book_grammars/feat0.fcfg>>
 
 The cache *no longer* uses weak references.  A resource will not be
 automatically expunged from the cache when no more objects are using
@@ -245,7 +217,7 @@ However, the object remains cached:
     >>> del feat0
     >>> feat0 = nltk.data.load('grammars/book_grammars/feat0.fcfg',
     ...                        verbose=True)
-    <<Using cached copy of nltk:grammars/book_grammars/feat0.fcfg>>
+    <<Using cached copy of grammars/book_grammars/feat0.fcfg>>
 
 You can clear the entire contents of the cache, using
 `nltk.data.clear_cache()`:
@@ -255,7 +227,7 @@ You can clear the entire contents of the cache, using
 Retrieving other Data Sources
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     >>> formulas = nltk.data.load('grammars/book_grammars/background.fol')
-    >>> for f in formulas: print(str(f))
+    >>> for f in formulas: print str(f)
     all x.(boxerdog(x) -> dog(x))
     all x.(boxer(x) -> person(x))
     all x.-(dog(x) & person(x))
@@ -277,16 +249,16 @@ Create a temp dir for tests that write files:
 
 The `retrieve()` function accepts all url types:
 
-    >>> urls = ['https://raw.githubusercontent.com/nltk/nltk/develop/nltk/test/toy.cfg',
+    >>> urls = ['http://nltk.googlecode.com/svn/trunk/nltk/nltk/test/toy.cfg',
     ...         'file:%s' % nltk.data.find('grammars/sample_grammars/toy.cfg'),
     ...         'nltk:grammars/sample_grammars/toy.cfg',
     ...         'grammars/sample_grammars/toy.cfg']
     >>> for i, url in enumerate(urls):
     ...     nltk.data.retrieve(url, 'toy-%d.cfg' % i) # doctest: +ELLIPSIS
-    Retrieving 'https://raw.githubusercontent.com/nltk/nltk/develop/nltk/test/toy.cfg', saving to 'toy-0.cfg'
+    Retrieving 'http://nltk.googlecode.com/svn/trunk/nltk/nltk/test/toy.cfg', saving to 'toy-0.cfg'
     Retrieving 'file:...toy.cfg', saving to 'toy-1.cfg'
     Retrieving 'nltk:grammars/sample_grammars/toy.cfg', saving to 'toy-2.cfg'
-    Retrieving 'nltk:grammars/sample_grammars/toy.cfg', saving to 'toy-3.cfg'
+    Retrieving 'grammars/sample_grammars/toy.cfg', saving to 'toy-3.cfg'
 
 Clean up the temp dir:
 
@@ -294,6 +266,10 @@ Clean up the temp dir:
     >>> for f in os.listdir(tempdir):
     ...     os.remove(os.path.join(tempdir, f))
     >>> os.rmdir(tempdir)
+
+.. note:: load(..., format='yaml') is not currently tested, because we
+    do not have any yaml files in our data distribution yet.  We should
+    probably have a trained brill tagger there.
 
 Lazy Loader
 -----------
@@ -307,14 +283,14 @@ internal use by NLTK's corpus readers.
     >>> # Show that it's not loaded yet:
     >>> object.__repr__(ll) # doctest: +ELLIPSIS
     '<nltk.data.LazyLoader object at ...>'
-
+    
     >>> # printing it is enough to cause it to be loaded:
-    >>> print(ll)
+    >>> print ll
     <Grammar with 14 productions>
 
     >>> # Show that it's now been loaded:
     >>> object.__repr__(ll) # doctest: +ELLIPSIS
-    '<nltk.grammar.CFG object at ...>'
+    '<nltk.grammar.ContextFreeGrammar object at ...>'
 
 
     >>> # Test that accessing an attribute also loads it:
@@ -322,7 +298,7 @@ internal use by NLTK's corpus readers.
     >>> ll.start()
     S
     >>> object.__repr__(ll) # doctest: +ELLIPSIS
-    '<nltk.grammar.CFG object at ...>'
+    '<nltk.grammar.ContextFreeGrammar object at ...>'
 
 Buffered Gzip Reading and Writing
 ---------------------------------
@@ -337,43 +313,20 @@ This is mainly intended for internal use. The test simply tests that reading
 and writing work as intended and does not test how much improvement buffering
 provides.
 
-    >>> from nltk.compat import StringIO
+    >>> try:
+    ...    from cStringIO import StringIO
+    ... except:
+    ...    from StringIO import StringIO
     >>> test = nltk.data.BufferedGzipFile('testbuf.gz', 'wb', size=2**10)
     >>> ans = []
-    >>> for i in range(10000):
-    ...     ans.append(str(i).encode('ascii'))
-    ...     test.write(str(i).encode('ascii'))
+    >>> for i in xrange(10000):
+    ...     ans.append(str(i))
+    ...     test.write(str(i))
     >>> test.close()
     >>> test = nltk.data.BufferedGzipFile('testbuf.gz', 'rb')
-    >>> test.read() == b''.join(ans)
+    >>> test.read() == ''.join(ans)
     True
     >>> test.close()
     >>> import os
     >>> os.unlink('testbuf.gz')
-
-JSON Encoding and Decoding
---------------------------
-JSON serialization is used instead of pickle for some classes.
-
-    >>> from nltk import jsontags
-    >>> from nltk.jsontags import JSONTaggedEncoder, JSONTaggedDecoder, register_tag
-    >>> @jsontags.register_tag
-    ... class JSONSerializable:
-    ...     json_tag = 'JSONSerializable'
-    ...
-    ...     def __init__(self, n):
-    ...         self.n = n
-    ...
-    ...     def encode_json_obj(self):
-    ...         return self.n
-    ...
-    ...     @classmethod
-    ...     def decode_json_obj(cls, obj):
-    ...         n = obj
-    ...         return cls(n)
-    ...
-    >>> JSONTaggedEncoder().encode(JSONSerializable(1))
-    '{"!JSONSerializable": 1}'
-    >>> JSONTaggedDecoder().decode('{"!JSONSerializable": 1}').n
-    1
 

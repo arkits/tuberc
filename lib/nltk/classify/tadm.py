@@ -1,28 +1,26 @@
 # Natural Language Toolkit: Interface to TADM Classifier
 #
-# Copyright (C) 2001-2017 NLTK Project
+# Copyright (C) 2001-2012 NLTK Project
 # Author: Joseph Frazee <jfrazee@mail.utexas.edu>
-# URL: <http://nltk.org/>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
-from __future__ import print_function, unicode_literals
 
+from __future__ import print_function
 import sys
 import subprocess
-
-from six import string_types
 
 from nltk.internals import find_binary
 try:
     import numpy
 except ImportError:
-    pass
+    numpy = None
 
 _tadm_bin = None
 def config_tadm(bin=None):
     global _tadm_bin
     _tadm_bin = find_binary(
         'tadm', bin,
-        env_vars=['TADM'],
+        env_vars=['TADM_DIR'],
         binary_names=['tadm'],
         url='http://tadm.sf.net')
 
@@ -48,16 +46,11 @@ def write_tadm_file(train_toks, encoding, stream):
     # http://sf.net/forum/forum.php?thread_id=1675097&forum_id=473054
     labels = encoding.labels()
     for featureset, label in train_toks:
-        length_line = '%d\n' % len(labels)
-        stream.write(length_line)
+        stream.write('%d\n' % len(labels))
         for known_label in labels:
             v = encoding.encode(featureset, known_label)
-            line = '%d %d %s\n' % (
-                int(label == known_label),
-                len(v),
-                ' '.join('%d %d' % u for u in v)
-            )
-            stream.write(line)
+            stream.write('%d %d %s\n' % (int(label == known_label), len(v),
+                ' '.join('%d %d' % u for u in v)))
 
 def parse_tadm_weights(paramfile):
     """
@@ -74,7 +67,7 @@ def call_tadm(args):
     """
     Call the ``tadm`` binary with the given arguments.
     """
-    if isinstance(args, string_types):
+    if isinstance(args, basestring):
         raise TypeError('args should be a list of strings')
     if _tadm_bin is None:
         config_tadm()
@@ -98,6 +91,7 @@ def names_demo():
 def encoding_demo():
     import sys
     from nltk.classify.maxent import TadmEventMaxentFeatureEncoding
+    from nltk.classify.tadm import write_tadm_file
     tokens = [({'f0':1, 'f1':1, 'f3':1}, 'A'),
               ({'f0':1, 'f2':1, 'f4':1}, 'B'),
               ({'f0':2, 'f2':1, 'f3':1, 'f4':1}, 'A')]

@@ -1,31 +1,27 @@
 # Natural Language Toolkit: Collocations Application
 # Much of the GUI code is imported from concordance.py; We intend to merge these tools together
-# Copyright (C) 2001-2017 NLTK Project
+# Copyright (C) 2001-2012 NLTK Project
 # Author: Sumukh Ghodke <sghodke@csse.unimelb.edu.au>
-# URL: <http://nltk.org/>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 #
 
-
-from __future__ import division
-
+from __future__ import print_function
 import threading
-
-from six.moves import queue as q
-from six.moves.tkinter_font import Font
-from six.moves.tkinter import (Button, END, Frame, IntVar, LEFT, Label, Menu,
-                               OptionMenu, SUNKEN, Scrollbar, StringVar,
-                               Text, Tk)
+import tkFont
+from Tkinter import (Button, END, Frame, IntVar, LEFT, Label, Menu,
+                     OptionMenu, SUNKEN, Scrollbar, StringVar,
+                     Text, Tk)
 
 from nltk.corpus import (cess_cat, brown, nps_chat, treebank, sinica_treebank, alpino,
                          indian, floresta, mac_morpho, machado, cess_esp)
 from nltk.util import in_idle
 from nltk.probability import FreqDist
+from nltk.text import Text as TextDomain
 
 
 CORPUS_LOADED_EVENT = '<<CL_EVENT>>'
 ERROR_LOADING_CORPUS_EVENT = '<<ELC_EVENT>>'
-POLL_INTERVAL = 100
 
 _DEFAULT = 'English: Brown Corpus (Humor)'
 _CORPORA = {
@@ -69,20 +65,19 @@ class CollocationsView:
     _BACKGROUND_COLOUR='#FFF' #white
 
     def __init__(self):
-        self.queue = q.Queue()
-        self.model = CollocationsModel(self.queue)
+        self.model = CollocationsModel()
+        self.model.add_listener(self)
         self.top = Tk()
         self._init_top(self.top)
         self._init_menubar()
         self._init_widgets(self.top)
+        self._bind_event_handlers()
         self.load_corpus(self.model.DEFAULT_CORPUS)
-        self.after = self.top.after(POLL_INTERVAL, self._poll)
 
     def _init_top(self, top):
         top.geometry('550x650+50+50')
         top.title('NLTK Collocations List')
         top.bind('<Control-q>', self.destroy)
-        top.protocol('WM_DELETE_WINDOW', self.destroy)
         top.minsize(550,650)
 
     def _init_widgets(self, parent):
@@ -99,7 +94,7 @@ class CollocationsView:
         self.var.set(self.model.DEFAULT_CORPUS)
         Label(innerframe, justify=LEFT, text=' Corpus: ', background=self._BACKGROUND_COLOUR, padx = 2, pady = 1, border = 0).pack(side='left')
 
-        other_corpora = list(self.model.CORPORA.keys()).remove(self.model.DEFAULT_CORPUS)
+        other_corpora = self.model.CORPORA.keys().remove(self.model.DEFAULT_CORPUS)
         om = OptionMenu(innerframe, self.var, self.model.DEFAULT_CORPUS, command=self.corpus_selected, *self.model.non_default_corpora())
         om['borderwidth'] = 0
         om['highlightthickness'] = 1
@@ -143,7 +138,7 @@ class CollocationsView:
         vscrollbar = Scrollbar(i1, borderwidth=1)
         hscrollbar = Scrollbar(i2, borderwidth=1, orient='horiz')
         self.results_box = Text(i1,
-                    font=Font(family='courier', size='16'),
+                    font=tkFont.Font(family='courier', size='16'),
                     state='disabled', borderwidth=1,
                     yscrollcommand=vscrollbar.set,
                     xscrollcommand=hscrollbar.set, wrap='none', width='40', height = '20', exportselection=1)
@@ -162,7 +157,7 @@ class CollocationsView:
         innerframe = Frame(parent, background=self._BACKGROUND_COLOUR)
         self.prev = prev = Button(innerframe, text='Previous', command=self.previous, width='10', borderwidth=1, highlightthickness=1, state='disabled')
         prev.pack(side='left', anchor='center')
-        self.next = next = Button(innerframe, text='Next', command=self.__next__, width='10', borderwidth=1, highlightthickness=1, state='disabled')
+        self.next = next = Button(innerframe, text='Next', command=self.next, width='10', borderwidth=1, highlightthickness=1, state='disabled')
         next.pack(side='right', anchor='center')
         innerframe.pack(side='top', fill='y')
         self.reset_current_page()
@@ -170,17 +165,9 @@ class CollocationsView:
     def reset_current_page(self):
         self.current_page = -1
 
-    def _poll(self):
-        try:
-            event = self.queue.get(block=False)
-        except q.Empty:
-            pass
-        else:
-            if event == CORPUS_LOADED_EVENT:
-                self.handle_corpus_loaded(event)
-            elif event == ERROR_LOADING_CORPUS_EVENT:
-                self.handle_error_loading_corpus(event)
-        self.after = self.top.after(POLL_INTERVAL, self._poll)
+    def _bind_event_handlers(self):
+        self.top.bind(CORPUS_LOADED_EVENT, self.handle_corpus_loaded)
+        self.top.bind(ERROR_LOADING_CORPUS_EVENT, self.handle_error_loading_corpus)
 
     def handle_error_loading_corpus(self, event):
         self.status['text'] = 'Error in loading ' + self.var.get()
@@ -211,7 +198,7 @@ class CollocationsView:
         self.write_results(collocations)
         self.unfreeze_editable()
 
-    def __next__(self):
+    def next(self):
         self.freeze_editable()
         collocations = self.model.next(self.current_page + 1)
         self.clear_results_box()
@@ -240,7 +227,6 @@ class CollocationsView:
 
     def destroy(self, *e):
         if self.top is None: return
-        self.top.after_cancel(self.after)
         self.top.destroy()
         self.top = None
 
@@ -270,18 +256,25 @@ class CollocationsView:
         self.results_box['state'] = 'disabled'
 
 class CollocationsModel:
-    def __init__(self, queue):
+    def __init__(self):
+        self.listeners = []
         self.result_count = None
         self.selected_corpus = None
         self.collocations = None
         self.CORPORA = _CORPORA
         self.DEFAULT_CORPUS = _DEFAULT
-        self.queue = queue
         self.reset_results()
 
     def reset_results(self):
         self.result_pages = []
         self.results_returned = 0
+
+    def add_listener(self, listener):
+        self.listeners.append(listener)
+
+    def notify_listeners(self, event):
+        for each in self.listeners:
+            each.fire_event(event)
 
     def load_corpus(self, name):
         self.selected_corpus = name
@@ -292,7 +285,7 @@ class CollocationsModel:
 
     def non_default_corpora(self):
         copy = []
-        copy.extend(list(self.CORPORA.keys()))
+        copy.extend(self.CORPORA.keys())
         copy.remove(self.DEFAULT_CORPUS)
         copy.sort()
         return copy
@@ -323,16 +316,16 @@ class CollocationsModel:
             try:
                 words = self.model.CORPORA[self.name]()
                 from operator import itemgetter
-                text = [w for w in words if len(w) > 2]
+                text = filter(lambda w: len(w) > 2, words)
                 fd = FreqDist(tuple(text[i:i+2]) for i in range(len(text)-1))
                 vocab = FreqDist(text)
-                scored = [((w1,w2), fd[(w1,w2)] ** 3 / (vocab[w1] * vocab[w2])) for w1, w2 in fd]
+                scored = [((w1,w2), fd[(w1,w2)] ** 3 / float(vocab[w1] * vocab[w2])) for w1, w2 in fd]
                 scored.sort(key=itemgetter(1), reverse=True)
-                self.model.collocations = list(map(itemgetter(0), scored))
-                self.model.queue.put(CORPUS_LOADED_EVENT)
+                self.model.collocations = map(itemgetter(0), scored)
+                self.model.notify_listeners(CORPUS_LOADED_EVENT)
             except Exception as e:
                 print(e)
-                self.model.queue.put(ERROR_LOADING_CORPUS_EVENT)
+                self.model.notify_listeners(ERROR_LOADING_CORPUS_EVENT)
 
 #def collocations():
 #    colloc_strings = [w1 + ' ' + w2 for w1, w2 in self._collocations[:num]]

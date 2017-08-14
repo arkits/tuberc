@@ -1,9 +1,9 @@
 # Natural Language Toolkit: IEER Corpus Reader
 #
-# Copyright (C) 2001-2017 NLTK Project
-# Author: Steven Bird <stevenbird1@gmail.com>
-#         Edward Loper <edloper@gmail.com>
-# URL: <http://nltk.org/>
+# Copyright (C) 2001-2012 NLTK Project
+# Author: Steven Bird <sb@csse.unimelb.edu.au>
+#         Edward Loper <edloper@gradient.cis.upenn.edu>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
 """
@@ -20,13 +20,13 @@ and filenames were shortened.
 The corpus contains the following files: APW_19980314, APW_19980424,
 APW_19980429, NYT_19980315, NYT_19980403, and NYT_19980407.
 """
-from __future__ import unicode_literals
 
-from six import string_types
+import codecs
 
 import nltk
-from nltk import compat
-from nltk.corpus.reader.api import *
+
+from api import *
+from util import *
 
 #: A dictionary whose keys are the names of documents in this corpus;
 #: and whose values are descriptions of those documents' contents.
@@ -42,8 +42,7 @@ titles = {
 #: A list of all documents in this corpus.
 documents = sorted(titles)
 
-@compat.python_2_unicode_compatible
-class IEERDocument(object):
+class IEERDocument:
     def __init__(self, text, docno=None, doctype=None,
                  date_time=None, headline=''):
         self.text = text
@@ -51,7 +50,6 @@ class IEERDocument(object):
         self.doctype = doctype
         self.date_time = date_time
         self.headline = headline
-
     def __repr__(self):
         if self.headline:
             headline = ' '.join(self.headline.leaves())
@@ -68,7 +66,7 @@ class IEERCorpusReader(CorpusReader):
     """
     def raw(self, fileids=None):
         if fileids is None: fileids = self._fileids
-        elif isinstance(fileids, string_types): fileids = [fileids]
+        elif isinstance(fileids, basestring): fileids = [fileids]
         return concat([self.open(f).read() for f in fileids])
 
     def docs(self, fileids=None):
@@ -88,7 +86,7 @@ class IEERCorpusReader(CorpusReader):
                 if self._parse(doc).docno is not None]
 
     def _parse(self, doc):
-        val = nltk.chunk.ieerstr2tree(doc, root_label="DOCUMENT")
+        val = nltk.chunk.ieerstr2tree(doc, top_node="DOCUMENT")
         if isinstance(val, dict):
             return IEERDocument(**val)
         else:
@@ -110,3 +108,4 @@ class IEERCorpusReader(CorpusReader):
             if line.strip() == '</DOC>': break
         # Return the document
         return ['\n'.join(out)]
+

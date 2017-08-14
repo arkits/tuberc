@@ -1,9 +1,9 @@
 # Natural Language Toolkit: Parsers
 #
-# Copyright (C) 2001-2017 NLTK Project
-# Author: Steven Bird <stevenbird1@gmail.com>
-#         Edward Loper <edloper@gmail.com>
-# URL: <http://nltk.org/>
+# Copyright (C) 2001-2012 NLTK Project
+# Author: Steven Bird <sb@csse.unimelb.edu.au>
+#         Edward Loper <edloper@gradient.cis.upenn.edu>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 #
 
@@ -63,19 +63,14 @@ from nltk.parse.earleychart import (IncrementalChartParser, EarleyChartParser,
 from nltk.parse.pchart import (BottomUpProbabilisticChartParser, InsideChartParser,
                                RandomChartParser, UnsortedChartParser,
                                LongestChartParser)
-from nltk.parse.recursivedescent import (RecursiveDescentParser,
-                                         SteppingRecursiveDescentParser)
-from nltk.parse.shiftreduce import (ShiftReduceParser, SteppingShiftReduceParser)
+from nltk.parse.rd import RecursiveDescentParser, SteppingRecursiveDescentParser
+from nltk.parse.sr import ShiftReduceParser, SteppingShiftReduceParser
 from nltk.parse.util import load_parser, TestGrammar, extract_test_sentences
 from nltk.parse.viterbi import ViterbiParser
-from nltk.parse.dependencygraph import DependencyGraph
+from nltk.parse.dependencygraph import DependencyGraph, nx_graph
 from nltk.parse.projectivedependencyparser import (ProjectiveDependencyParser,
                                                    ProbabilisticProjectiveDependencyParser)
 from nltk.parse.nonprojectivedependencyparser import (NonprojectiveDependencyParser,
                                                       NaiveBayesDependencyScorer,
                                                       ProbabilisticNonprojectiveParser)
-from nltk.parse.malt import MaltParser
-from nltk.parse.evaluate import DependencyEvaluator
-from nltk.parse.transitionparser import TransitionParser
-from nltk.parse.bllip import BllipParser
-from nltk.parse.corenlp import CoreNLPParser, CoreNLPDependencyParser
+from malt import MaltParser

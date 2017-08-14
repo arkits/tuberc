@@ -2,9 +2,9 @@
 
 # Natural Language Toolkit: York-Toronto-Helsinki Parsed Corpus of Old English Prose (YCOE)
 #
-# Copyright (C) 2001-2015 NLTK Project
+# Copyright (C) 2001-2012 NLTK Project
 # Author: Selina Dennis <selina@tranzfusion.net>
-# URL: <http://nltk.org/>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
 """
@@ -22,14 +22,13 @@ to the YCOE standard: http://www-users.york.ac.uk/~lang22/YCOE/YcoeHome.htm
 import os
 import re
 
-from six import string_types
-
 from nltk.tokenize import RegexpTokenizer
 from nltk.corpus.reader.bracket_parse import BracketParseCorpusReader
 from nltk.corpus.reader.tagged import TaggedCorpusReader
+from string import split
 
-from nltk.corpus.reader.util import *
-from nltk.corpus.reader.api import *
+from util import *
+from api import *
 
 class YCOECorpusReader(CorpusReader):
     """
@@ -37,7 +36,7 @@ class YCOECorpusReader(CorpusReader):
     English Prose (YCOE), a 1.5 million word syntactically-annotated
     corpus of Old English prose texts.
     """
-    def __init__(self, root, encoding='utf8'):
+    def __init__(self, root, encoding=None):
         CorpusReader.__init__(self, root, [], encoding)
 
         self._psd_reader = YCOEParseCorpusReader(
@@ -64,7 +63,7 @@ class YCOECorpusReader(CorpusReader):
         """
         if fileids is None:
             return self._documents
-        if isinstance(fileids, string_types):
+        if isinstance(fileids, basestring):
             fileids = [fileids]
         for f in fileids:
             if f not in self._fileids:
@@ -79,7 +78,7 @@ class YCOECorpusReader(CorpusReader):
         """
         if documents is None:
             return self._fileids
-        elif isinstance(documents, string_types):
+        elif isinstance(documents, basestring):
             documents = [documents]
         return sorted(set(['%s.pos' % doc for doc in documents] +
                           ['%s.psd' % doc for doc in documents]))
@@ -92,7 +91,7 @@ class YCOECorpusReader(CorpusReader):
         if documents is None:
             documents = self._documents
         else:
-            if isinstance(documents, string_types):
+            if isinstance(documents, basestring):
                 documents = [documents]
             for document in documents:
                 if document not in self._documents:
@@ -132,7 +131,7 @@ class YCOEParseCorpusReader(BracketParseCorpusReader):
         return BracketParseCorpusReader._parse(self, t)
 
 class YCOETaggedCorpusReader(TaggedCorpusReader):
-    def __init__(self, root, items, encoding='utf8'):
+    def __init__(self, root, items, encoding=None):
         gaps_re = r'(?u)(?<=/\.)\s+|\s*\S*_CODE\s*|\s*\S*_ID\s*'
         sent_tokenizer = RegexpTokenizer(gaps_re, gaps=True)
         TaggedCorpusReader.__init__(self, root, items, sep='_',
@@ -141,8 +140,8 @@ class YCOETaggedCorpusReader(TaggedCorpusReader):
 #: A list of all documents and their titles in ycoe.
 documents = {
     'coadrian.o34': 'Adrian and Ritheus',
-    'coaelhom.o3': 'Ã†lfric, Supplemental Homilies',
-    'coaelive.o3': 'Ã†lfric\'s Lives of Saints',
+    'coaelhom.o3': 'Ælfric, Supplemental Homilies',
+    'coaelive.o3': 'Ælfric\'s Lives of Saints',
     'coalcuin': 'Alcuin De virtutibus et vitiis',
     'coalex.o23': 'Alexander\'s Letter to Aristotle',
     'coapollo.o3': 'Apollonius of Tyre',
@@ -154,8 +153,8 @@ documents = {
     'cobyrhtf.o3': 'Byrhtferth\'s Manual',
     'cocanedgD': 'Canons of Edgar (D)',
     'cocanedgX': 'Canons of Edgar (X)',
-    'cocathom1.o3': 'Ã†lfric\'s Catholic Homilies I',
-    'cocathom2.o3': 'Ã†lfric\'s Catholic Homilies II',
+    'cocathom1.o3': 'Ælfric\'s Catholic Homilies I',
+    'cocathom2.o3': 'Ælfric\'s Catholic Homilies II',
     'cochad.o24': 'Saint Chad',
     'cochdrul': 'Chrodegang of Metz, Rule',
     'cochristoph': 'Saint Christopher',
@@ -174,7 +173,7 @@ documents = {
     'codocu4.o24': 'Documents 4 (O2/O4)',
     'coeluc1': 'Honorius of Autun, Elucidarium 1',
     'coeluc2': 'Honorius of Autun, Elucidarium 1',
-    'coepigen.o3': 'Ã†lfric\'s Epilogue to Genesis',
+    'coepigen.o3': 'Ælfric\'s Epilogue to Genesis',
     'coeuphr': 'Saint Euphrosyne',
     'coeust': 'Saint Eustace and his companions',
     'coexodusP': 'Exodus (P)',
@@ -189,8 +188,8 @@ documents = {
     'colaece.o2': 'Leechdoms',
     'colaw1cn.o3': 'Laws, Cnut I',
     'colaw2cn.o3': 'Laws, Cnut II',
-    'colaw5atr.o3': 'Laws, Ã†thelred V',
-    'colaw6atr.o3': 'Laws, Ã†thelred VI',
+    'colaw5atr.o3': 'Laws, Æthelred V',
+    'colaw6atr.o3': 'Laws, Æthelred VI',
     'colawaf.o2': 'Laws, Alfred',
     'colawafint.o2': 'Alfred\'s Introduction to Laws',
     'colawger.o34': 'Laws, Gerefa',
@@ -198,14 +197,14 @@ documents = {
     'colawnorthu.o3': 'Northumbra Preosta Lagu',
     'colawwllad.o4': 'Laws, William I, Lad',
     'coleofri.o4': 'Leofric',
-    'colsigef.o3': 'Ã†lfric\'s Letter to Sigefyrth',
-    'colsigewB': 'Ã†lfric\'s Letter to Sigeweard (B)',
-    'colsigewZ.o34': 'Ã†lfric\'s Letter to Sigeweard (Z)',
-    'colwgeat': 'Ã†lfric\'s Letter to Wulfgeat',
-    'colwsigeT': 'Ã†lfric\'s Letter to Wulfsige (T)',
-    'colwsigeXa.o34': 'Ã†lfric\'s Letter to Wulfsige (Xa)',
-    'colwstan1.o3': 'Ã†lfric\'s Letter to Wulfstan I',
-    'colwstan2.o3': 'Ã†lfric\'s Letter to Wulfstan II',
+    'colsigef.o3': 'Ælfric\'s Letter to Sigefyrth',
+    'colsigewB': 'Ælfric\'s Letter to Sigeweard (B)',
+    'colsigewZ.o34': 'Ælfric\'s Letter to Sigeweard (Z)',
+    'colwgeat': 'Ælfric\'s Letter to Wulfgeat',
+    'colwsigeT': 'Ælfric\'s Letter to Wulfsige (T)',
+    'colwsigeXa.o34': 'Ælfric\'s Letter to Wulfsige (Xa)',
+    'colwstan1.o3': 'Ælfric\'s Letter to Wulfstan I',
+    'colwstan2.o3': 'Ælfric\'s Letter to Wulfstan II',
     'comargaC.o34': 'Saint Margaret (C)',
     'comargaT': 'Saint Margaret (T)',
     'comart1': 'Martyrology, I',
@@ -220,11 +219,11 @@ documents = {
     'conicodE': 'Gospel of Nicodemus (E)',
     'coorosiu.o2': 'Orosius',
     'cootest.o3': 'Heptateuch',
-    'coprefcath1.o3': 'Ã†lfric\'s Preface to Catholic Homilies I',
-    'coprefcath2.o3': 'Ã†lfric\'s Preface to Catholic Homilies II',
+    'coprefcath1.o3': 'Ælfric\'s Preface to Catholic Homilies I',
+    'coprefcath2.o3': 'Ælfric\'s Preface to Catholic Homilies II',
     'coprefcura.o2': 'Preface to the Cura Pastoralis',
-    'coprefgen.o3': 'Ã†lfric\'s Preface to Genesis',
-    'copreflives.o3': 'Ã†lfric\'s Preface to Lives of Saints',
+    'coprefgen.o3': 'Ælfric\'s Preface to Genesis',
+    'copreflives.o3': 'Ælfric\'s Preface to Lives of Saints',
     'coprefsolilo': 'Preface to Augustine\'s Soliloquies',
     'coquadru.o23': 'Pseudo-Apuleius, Medicina de quadrupedibus',
     'corood': 'History of the Holy Rood-Tree',
@@ -232,7 +231,7 @@ documents = {
     'cosolilo': 'St. Augustine\'s Soliloquies',
     'cosolsat1.o4': 'Solomon and Saturn I',
     'cosolsat2': 'Solomon and Saturn II',
-    'cotempo.o3': 'Ã†lfric\'s De Temporibus Anni',
+    'cotempo.o3': 'Ælfric\'s De Temporibus Anni',
     'coverhom': 'Vercelli Homilies',
     'coverhomE': 'Vercelli Homilies (E)',
     'coverhomL': 'Vercelli Homilies (L)',

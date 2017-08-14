@@ -1,20 +1,17 @@
 # Natural Language Toolkit: Concordance Application
 #
-# Copyright (C) 2001-2017 NLTK Project
+# Copyright (C) 2001-2012 NLTK Project
 # Author: Sumukh Ghodke <sghodke@csse.unimelb.edu.au>
-# URL: <http://nltk.org/>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
-
-import nltk.compat
+from __future__ import print_function
 import re
 import threading
-
-from six.moves import queue as q
-from six.moves.tkinter_font import Font
-from six.moves.tkinter import (Tk, Button, END, Entry, Frame, IntVar, LEFT,
-                               Label, Menu, OptionMenu, SUNKEN, Scrollbar,
-                               StringVar, Text)
+import tkFont
+from Tkinter import (Tk, Button, END, Entry, Frame, IntVar, LEFT,
+                     Label, Menu, OptionMenu, SUNKEN, Scrollbar,
+                     StringVar, Text)
 
 from nltk.corpus import (cess_cat, brown, nps_chat, treebank, sinica_treebank,
                          alpino, indian, floresta, mac_morpho, cess_esp)
@@ -29,61 +26,59 @@ SEARCH_TERMINATED_EVENT = '<<ST_EVENT>>'
 SEARCH_ERROR_EVENT = '<<SE_EVENT>>'
 ERROR_LOADING_CORPUS_EVENT = '<<ELC_EVENT>>'
 
-POLL_INTERVAL = 50
-
 # NB All corpora must be specified in a lambda expression so as not to be
 # loaded when the module is imported.
 
 _DEFAULT = 'English: Brown Corpus (Humor, simplified)'
 _CORPORA = {
             'Catalan: CESS-CAT Corpus (simplified)':
-                lambda: cess_cat.tagged_sents(tagset='universal'),
+                lambda: cess_cat.tagged_sents(simplify_tags=True),
             'English: Brown Corpus':
                 lambda: brown.tagged_sents(),
             'English: Brown Corpus (simplified)':
-                lambda: brown.tagged_sents(tagset='universal'),
+                lambda: brown.tagged_sents(simplify_tags=True),
             'English: Brown Corpus (Press, simplified)':
-                lambda: brown.tagged_sents(categories=['news', 'editorial', 'reviews'], tagset='universal'),
+                lambda: brown.tagged_sents(categories=['news', 'editorial', 'reviews'], simplify_tags=True),
             'English: Brown Corpus (Religion, simplified)':
-                lambda: brown.tagged_sents(categories='religion', tagset='universal'),
+                lambda: brown.tagged_sents(categories='religion', simplify_tags=True),
             'English: Brown Corpus (Learned, simplified)':
-                lambda: brown.tagged_sents(categories='learned', tagset='universal'),
+                lambda: brown.tagged_sents(categories='learned', simplify_tags=True),
             'English: Brown Corpus (Science Fiction, simplified)':
-                lambda: brown.tagged_sents(categories='science_fiction', tagset='universal'),
+                lambda: brown.tagged_sents(categories='science_fiction', simplify_tags=True),
             'English: Brown Corpus (Romance, simplified)':
-                lambda: brown.tagged_sents(categories='romance', tagset='universal'),
+                lambda: brown.tagged_sents(categories='romance', simplify_tags=True),
             'English: Brown Corpus (Humor, simplified)':
-                lambda: brown.tagged_sents(categories='humor', tagset='universal'),
+                lambda: brown.tagged_sents(categories='humor', simplify_tags=True),
             'English: NPS Chat Corpus':
                 lambda: nps_chat.tagged_posts(),
             'English: NPS Chat Corpus (simplified)':
-                lambda: nps_chat.tagged_posts(tagset='universal'),
+                lambda: nps_chat.tagged_posts(simplify_tags=True),
             'English: Wall Street Journal Corpus':
                 lambda: treebank.tagged_sents(),
             'English: Wall Street Journal Corpus (simplified)':
-                lambda: treebank.tagged_sents(tagset='universal'),
+                lambda: treebank.tagged_sents(simplify_tags=True),
             'Chinese: Sinica Corpus':
                 lambda: sinica_treebank.tagged_sents(),
             'Chinese: Sinica Corpus (simplified)':
-                lambda: sinica_treebank.tagged_sents(tagset='universal'),
+                lambda: sinica_treebank.tagged_sents(simplify_tags=True),
             'Dutch: Alpino Corpus':
                 lambda: alpino.tagged_sents(),
             'Dutch: Alpino Corpus (simplified)':
-                lambda: alpino.tagged_sents(tagset='universal'),
+                lambda: alpino.tagged_sents(simplify_tags=True),
             'Hindi: Indian Languages Corpus':
                 lambda: indian.tagged_sents(files='hindi.pos'),
             'Hindi: Indian Languages Corpus (simplified)':
-                lambda: indian.tagged_sents(files='hindi.pos', tagset='universal'),
+                lambda: indian.tagged_sents(files='hindi.pos', simplify_tags=True),
             'Portuguese: Floresta Corpus (Portugal)':
                 lambda: floresta.tagged_sents(),
             'Portuguese: Floresta Corpus (Portugal, simplified)':
-                lambda: floresta.tagged_sents(tagset='universal'),
+                lambda: floresta.tagged_sents(simplify_tags=True),
             'Portuguese: MAC-MORPHO Corpus (Brazil)':
                 lambda: mac_morpho.tagged_sents(),
             'Portuguese: MAC-MORPHO Corpus (Brazil, simplified)':
-                lambda: mac_morpho.tagged_sents(tagset='universal'),
+                lambda: mac_morpho.tagged_sents(simplify_tags=True),
             'Spanish: CESS-ESP Corpus (simplified)':
-                lambda: cess_esp.tagged_sents(tagset='universal'),
+                lambda: cess_esp.tagged_sents(simplify_tags=True),
            }
 
 class ConcordanceSearchView(object):
@@ -101,20 +96,19 @@ class ConcordanceSearchView(object):
     _FRACTION_LEFT_TEXT=0.30
 
     def __init__(self):
-        self.queue = q.Queue()
-        self.model = ConcordanceSearchModel(self.queue)
+        self.model = ConcordanceSearchModel()
+        self.model.add_listener(self)
         self.top = Tk()
         self._init_top(self.top)
         self._init_menubar()
         self._init_widgets(self.top)
+        self._bind_event_handlers()
         self.load_corpus(self.model.DEFAULT_CORPUS)
-        self.after = self.top.after(POLL_INTERVAL, self._poll)
 
     def _init_top(self, top):
         top.geometry('950x680+50+50')
         top.title('NLTK Concordance Search')
         top.bind('<Control-q>', self.destroy)
-        top.protocol('WM_DELETE_WINDOW', self.destroy)
         top.minsize(950,680)
 
     def _init_widgets(self, parent):
@@ -206,7 +200,7 @@ class ConcordanceSearchView(object):
         Label(innerframe, justify=LEFT, text=' Corpus: ',
               background=self._BACKGROUND_COLOUR, padx = 2, pady = 1, border = 0).pack(side='left')
 
-        other_corpora = list(self.model.CORPORA.keys()).remove(self.model.DEFAULT_CORPUS)
+        other_corpora = self.model.CORPORA.keys().remove(self.model.DEFAULT_CORPUS)
         om = OptionMenu(innerframe, self.var, self.model.DEFAULT_CORPUS, command=self.corpus_selected, *self.model.non_default_corpora())
         om['borderwidth'] = 0
         om['highlightthickness'] = 1
@@ -238,7 +232,7 @@ class ConcordanceSearchView(object):
         vscrollbar = Scrollbar(i1, borderwidth=1)
         hscrollbar = Scrollbar(i2, borderwidth=1, orient='horiz')
         self.results_box = Text(i1,
-                                font=Font(family='courier', size='16'),
+                                font=tkFont.Font(family='courier', size='16'),
                                 state='disabled', borderwidth=1,
                                                             yscrollcommand=vscrollbar.set,
                                 xscrollcommand=hscrollbar.set, wrap='none', width='40', height = '20', exportselection=1)
@@ -259,7 +253,7 @@ class ConcordanceSearchView(object):
         innerframe = Frame(parent, background=self._BACKGROUND_COLOUR)
         self.prev = prev = Button(innerframe, text='Previous', command=self.previous, width='10', borderwidth=1, highlightthickness=1, state='disabled')
         prev.pack(side='left', anchor='center')
-        self.next = next = Button(innerframe, text='Next', command=self.__next__, width='10', borderwidth=1, highlightthickness=1, state='disabled')
+        self.next = next = Button(innerframe, text='Next', command=self.next, width='10', borderwidth=1, highlightthickness=1, state='disabled')
         next.pack(side='right', anchor='center')
         innerframe.pack(side='top', fill='y')
         self.current_page = 0
@@ -269,7 +263,7 @@ class ConcordanceSearchView(object):
         self.freeze_editable()
         self.model.prev(self.current_page - 1)
 
-    def __next__(self):
+    def next(self):
         self.clear_results_box()
         self.freeze_editable()
         self.model.next(self.current_page + 1)
@@ -278,7 +272,7 @@ class ConcordanceSearchView(object):
         ABOUT = ("NLTK Concordance Search Demo\n")
         TITLE = 'About: NLTK Concordance Search Demo'
         try:
-            from six.moves.tkinter_messagebox import Message
+            from tkMessageBox import Message
             Message(message=ABOUT, title=TITLE, parent=self.main_frame).show()
         except:
             ShowText(self.top, TITLE, ABOUT)
@@ -288,22 +282,6 @@ class ConcordanceSearchView(object):
         self.top.bind(SEARCH_TERMINATED_EVENT, self.handle_search_terminated)
         self.top.bind(SEARCH_ERROR_EVENT, self.handle_search_error)
         self.top.bind(ERROR_LOADING_CORPUS_EVENT, self.handle_error_loading_corpus)
-
-    def _poll(self):
-        try:
-            event = self.queue.get(block=False)
-        except q.Empty:
-            pass
-        else:
-            if event == CORPUS_LOADED_EVENT:
-                self.handle_corpus_loaded(event)
-            elif event == SEARCH_TERMINATED_EVENT:
-                self.handle_search_terminated(event)
-            elif event == SEARCH_ERROR_EVENT:
-                self.handle_search_error(event)
-            elif event == ERROR_LOADING_CORPUS_EVENT:
-                self.handle_error_loading_corpus(event)
-        self.after = self.top.after(POLL_INTERVAL, self._poll)
 
     def handle_error_loading_corpus(self, event):
         self.status['text'] = 'Error in loading ' + self.var.get()
@@ -328,6 +306,7 @@ class ConcordanceSearchView(object):
                 self.current_page = self.model.last_requested_page
         self.unfreeze_editable()
         self.results_box.xview_moveto(self._FRACTION_LEFT_TEXT)
+
 
     def handle_search_error(self, event):
         self.status['text'] = 'Error in query ' + self.model.query
@@ -398,7 +377,6 @@ class ConcordanceSearchView(object):
 
     def destroy(self, *e):
         if self.top is None: return
-        self.top.after_cancel(self.after)
         self.top.destroy()
         self.top = None
 
@@ -442,8 +420,8 @@ class ConcordanceSearchView(object):
         self.top.mainloop(*args, **kwargs)
 
 class ConcordanceSearchModel(object):
-    def __init__(self, queue):
-        self.queue = queue
+    def __init__(self):
+        self.listeners = []
         self.CORPORA = _CORPORA
         self.DEFAULT_CORPUS = _DEFAULT
         self.selected_corpus = None
@@ -454,7 +432,7 @@ class ConcordanceSearchModel(object):
 
     def non_default_corpora(self):
         copy = []
-        copy.extend(list(self.CORPORA.keys()))
+        copy.extend(self.CORPORA.keys())
         copy.remove(self.DEFAULT_CORPUS)
         copy.sort()
         return copy
@@ -475,11 +453,18 @@ class ConcordanceSearchModel(object):
         if len(self.results) < page:
             self.search(self.query, page)
         else:
-            self.queue.put(SEARCH_TERMINATED_EVENT)
+            self.notify_listeners(SEARCH_TERMINATED_EVENT)
 
     def prev(self, page):
         self.last_requested_page = page
-        self.queue.put(SEARCH_TERMINATED_EVENT)
+        self.notify_listeners(SEARCH_TERMINATED_EVENT)
+
+    def add_listener(self, listener):
+        self.listeners.append(listener)
+
+    def notify_listeners(self, event):
+        for each in self.listeners:
+            each.fire_event(event)
 
     def reset_results(self):
         self.last_sent_searched = 0
@@ -511,10 +496,10 @@ class ConcordanceSearchModel(object):
             try:
                 ts = self.model.CORPORA[self.name]()
                 self.model.tagged_sents = [' '.join(w+'/'+t for (w,t) in sent) for sent in ts]
-                self.model.queue.put(CORPUS_LOADED_EVENT)
+                self.model.notify_listeners(CORPUS_LOADED_EVENT)
             except Exception as e:
                 print(e)
-                self.model.queue.put(ERROR_LOADING_CORPUS_EVENT)
+                self.model.notify_listeners(ERROR_LOADING_CORPUS_EVENT)
 
     class SearchCorpus(threading.Thread):
         def __init__(self, model, page, count):
@@ -529,7 +514,7 @@ class ConcordanceSearchModel(object):
                     m = re.search(q, sent)
                 except re.error:
                     self.model.reset_results()
-                    self.model.queue.put(SEARCH_ERROR_EVENT)
+                    self.model.notify_listeners(SEARCH_ERROR_EVENT)
                     return
                 if m:
                     sent_pos.append((sent, m.start(), m.end()))
@@ -544,7 +529,7 @@ class ConcordanceSearchModel(object):
                 self.model.set_results(self.page, sent_pos)
             else:
                 self.model.set_results(self.page, sent_pos[:-1])
-            self.model.queue.put(SEARCH_TERMINATED_EVENT)
+            self.model.notify_listeners(SEARCH_TERMINATED_EVENT)
 
         def processed_query(self):
             new = []

@@ -1,8 +1,8 @@
 # Natural Language Toolkit: Classifiers
 #
-# Copyright (C) 2001-2017 NLTK Project
-# Author: Edward Loper <edloper@gmail.com>
-# URL: <http://nltk.org/>
+# Copyright (C) 2001-2012 NLTK Project
+# Author: Edward Loper <edloper@gradient.cis.upenn.edu>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
 """
@@ -53,11 +53,14 @@ words included in the document:
 Feature detectors are typically applied to each token before it is fed
 to the classifier:
 
+.. doctest::
+    :options: +SKIP
+
     >>> # Classify each Gutenberg document.
     >>> from nltk.corpus import gutenberg
-    >>> for fileid in gutenberg.fileids(): # doctest: +SKIP
-    ...     doc = gutenberg.words(fileid) # doctest: +SKIP
-    ...     print fileid, classifier.classify(document_features(doc)) # doctest: +SKIP
+    >>> for fileid in gutenberg.fileids():
+    ...     doc = gutenberg.words(fileid)
+    ...     print fileid, classifier.classify(document_features(doc))
 
 The parameters that a feature detector expects will vary, depending on
 the task and the needs of the feature detector.  For example, a
@@ -83,6 +86,7 @@ as lists of ``(featuredict, label)`` tuples.
 """
 
 from nltk.classify.api import ClassifierI, MultiClassifierI
+from nltk.classify.mallet import config_mallet, call_mallet
 from nltk.classify.megam import config_megam, call_megam
 from nltk.classify.weka import WekaClassifier, config_weka
 from nltk.classify.naivebayes import NaiveBayesClassifier
@@ -90,9 +94,20 @@ from nltk.classify.positivenaivebayes import PositiveNaiveBayesClassifier
 from nltk.classify.decisiontree import DecisionTreeClassifier
 from nltk.classify.rte_classify import rte_classifier, rte_features, RTEFeatureExtractor
 from nltk.classify.util import accuracy, apply_features, log_likelihood
-from nltk.classify.scikitlearn import SklearnClassifier
-from nltk.classify.maxent import (MaxentClassifier, BinaryMaxentFeatureEncoding,
-                                  TypedMaxentFeatureEncoding,
-                                  ConditionalExponentialClassifier)
-from nltk.classify.senna import Senna
-from nltk.classify.textcat import TextCat
+
+# Conditional imports
+
+try:
+    from scikitlearn import SklearnClassifier
+except ImportError:
+    pass
+
+try:
+    import numpy
+    from nltk.classify.maxent import (MaxentClassifier, BinaryMaxentFeatureEncoding,
+                                      TypedMaxentFeatureEncoding,
+                                      ConditionalExponentialClassifier)
+    import svmlight
+    from nltk.classify.svm import SvmClassifier
+except ImportError:
+    pass

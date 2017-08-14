@@ -1,17 +1,14 @@
 # Natural Language Toolkit: WordNet stemmer interface
 #
-# Copyright (C) 2001-2017 NLTK Project
-# Author: Steven Bird <stevenbird1@gmail.com>
-#         Edward Loper <edloper@gmail.com>
-# URL: <http://nltk.org/>
+# Copyright (C) 2001-2012 NLTK Project
+# Author: Steven Bird <sb@csse.unimelb.edu.au>
+#         Edward Loper <edloper@gradient.cis.upenn.edu>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
-from __future__ import unicode_literals
 
 from nltk.corpus.reader.wordnet import NOUN
 from nltk.corpus import wordnet
-from nltk.compat import python_2_unicode_compatible
 
-@python_2_unicode_compatible
 class WordNetLemmatizer(object):
     """
     WordNet Lemmatizer
@@ -21,16 +18,16 @@ class WordNetLemmatizer(object):
 
         >>> from nltk.stem import WordNetLemmatizer
         >>> wnl = WordNetLemmatizer()
-        >>> print(wnl.lemmatize('dogs'))
-        dog
-        >>> print(wnl.lemmatize('churches'))
-        church
-        >>> print(wnl.lemmatize('aardwolves'))
-        aardwolf
-        >>> print(wnl.lemmatize('abaci'))
-        abacus
-        >>> print(wnl.lemmatize('hardrock'))
-        hardrock
+        >>> wnl.lemmatize('dogs')
+        'dog'
+        >>> wnl.lemmatize('churches')
+        'church'
+        >>> wnl.lemmatize('aardwolves')
+        'aardwolf'
+        >>> wnl.lemmatize('abaci')
+        'abacus'
+        >>> wnl.lemmatize('hardrock')
+        'hardrock'
     """
 
     def __init__(self):
@@ -44,8 +41,6 @@ class WordNetLemmatizer(object):
         return '<WordNetLemmatizer>'
 
 
-# unload wordnet
-def teardown_module(module=None):
-    from nltk.corpus import wordnet
-    wordnet._unload()
-
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod(optionflags=doctest.NORMALIZE_WHITESPACE)

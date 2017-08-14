@@ -1,15 +1,13 @@
 # Natural Language Toolkit: Viterbi Probabilistic Parser
 #
-# Copyright (C) 2001-2017 NLTK Project
-# Author: Edward Loper <edloper@gmail.com>
-#         Steven Bird <stevenbird1@gmail.com>
-# URL: <http://nltk.org/>
+# Copyright (C) 2001-2012 NLTK Project
+# Author: Edward Loper <edloper@gradient.cis.upenn.edu>
+#         Steven Bird <sb@csse.unimelb.edu.au>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
-from __future__ import print_function, unicode_literals
 
-from functools import reduce
+from __future__ import print_function
 from nltk.tree import Tree, ProbabilisticTree
-from nltk.compat import python_2_unicode_compatible
 
 from nltk.parse.api import ParserI
 
@@ -17,7 +15,6 @@ from nltk.parse.api import ParserI
 ##  Viterbi PCFG Parser
 ##//////////////////////////////////////////////////////
 
-@python_2_unicode_compatible
 class ViterbiParser(ParserI):
     """
     A bottom-up ``PCFG`` parser that uses dynamic programming to find
@@ -58,7 +55,7 @@ class ViterbiParser(ParserI):
     |   For start in 1...len(text)-width:
     |     For prod in grammar.productions:
     |       For each sequence of subtrees [t[1], t[2], ..., t[n]] in MLC,
-    |         where t[i].label()==prod.rhs[i],
+    |         where t[i].node==prod.rhs[i],
     |         and the sequence covers [start:start+width]:
     |           old_p = MLC[start, start+width, prod.lhs]
     |           new_p = P(t[1])P(t[1])...P(t[n])P(prod)
@@ -67,7 +64,7 @@ class ViterbiParser(ParserI):
     |             MLC[start, start+width, prod.lhs] = new_tree
     | Return MLC[0, len(text), start_symbol]
 
-    :type _grammar: PCFG
+    :type _grammar: WeightedGrammar
     :ivar _grammar: The grammar used to parse sentences.
     :type _trace: int
     :ivar _trace: The level of tracing output that should be generated
@@ -78,7 +75,7 @@ class ViterbiParser(ParserI):
         Create a new ``ViterbiParser`` parser, that uses ``grammar`` to
         parse texts.
 
-        :type grammar: PCFG
+        :type grammar: WeightedGrammar
         :param grammar: The grammar used to parse texts.
         :type trace: int
         :param trace: The level of tracing that should be used when
@@ -141,9 +138,7 @@ class ViterbiParser(ParserI):
                                                 tokens)
 
         # Return the tree that spans the entire text & have the right cat
-        tree = constituents.get((0, len(tokens), self._grammar.start()))
-        if tree is not None:
-            yield tree
+        return constituents.get((0, len(tokens), self._grammar.start()))
 
     def _add_constituents_spanning(self, span, constituents, tokens):
         """
@@ -331,13 +326,13 @@ def demo():
     summary of the results are displayed.
     """
     import sys, time
+    import nltk
     from nltk import tokenize
     from nltk.parse import ViterbiParser
-    from nltk.grammar import toy_pcfg1, toy_pcfg2
 
     # Define two demos.  Each demo has a sentence and a grammar.
-    demos = [('I saw the man with my telescope', toy_pcfg1),
-             ('the boy saw Jack with Bob under the table with a telescope', toy_pcfg2)]
+    demos = [('I saw the man with my telescope', nltk.toy_pcfg1),
+             ('the boy saw Jack with Bob under the table with a telescope', nltk.toy_pcfg2)]
 
     # Ask the user which demo they want to use.
     print()
@@ -362,7 +357,7 @@ def demo():
     print('\nsent: %s\nparser: %s\ngrammar: %s' % (sent,parser,grammar))
     parser.trace(3)
     t = time.time()
-    parses = parser.parse_all(tokens)
+    parses = parser.nbest_parse(tokens)
     time = time.time()-t
     average = (reduce(lambda a,b:a+b.prob(), parses, 0)/len(parses)
                if parses else 0)

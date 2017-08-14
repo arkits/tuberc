@@ -1,8 +1,8 @@
 # Natural Language Toolkit: XML Corpus Reader
 #
-# Copyright (C) 2001-2017 NLTK Project
-# Author: Steven Bird <stevenbird1@gmail.com>
-# URL: <http://nltk.org/>
+# Copyright (C) 2001-2012 NLTK Project
+# Author: Steven Bird <sb@csse.unimelb.edu.au>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
 """
@@ -10,15 +10,13 @@ Corpus reader for corpora whose documents are xml files.
 
 (note -- not named 'xml' to avoid conflicting w/ standard xml package)
 """
-from __future__ import print_function, unicode_literals
 
+from __future__ import print_function
 import codecs
 
 # Use the c version of ElementTree, which is faster, if possible:
 try: from xml.etree import cElementTree as ElementTree
 except ImportError: from xml.etree import ElementTree
-
-from six import string_types
 
 from nltk.data import SeekableUnicodeStreamReader
 from nltk.tokenize import WordPunctTokenizer
@@ -43,7 +41,7 @@ class XMLCorpusReader(CorpusReader):
         # Make sure we have exactly one file -- no concatenating XML.
         if fileid is None and len(self._fileids) == 1:
             fileid = self._fileids[0]
-        if not isinstance(fileid, string_types):
+        if not isinstance(fileid, basestring):
             raise TypeError('Expected a single file identifier string')
         # Read the XML in using ElementTree.
         elt = ElementTree.parse(self.abspath(fileid).open()).getroot()
@@ -64,7 +62,6 @@ class XMLCorpusReader(CorpusReader):
         """
 
         elt = self.xml(fileid)
-        encoding = self.encoding(fileid)
         word_tokenizer=WordPunctTokenizer()
         iterator = elt.getiterator()
         out = []
@@ -72,15 +69,13 @@ class XMLCorpusReader(CorpusReader):
         for node in iterator:
             text = node.text
             if text is not None:
-                if isinstance(text, bytes):
-                    text = text.decode(encoding)
                 toks = word_tokenizer.tokenize(text)
                 out.extend(toks)
         return out
 
     def raw(self, fileids=None):
         if fileids is None: fileids = self._fileids
-        elif isinstance(fileids, string_types): fileids = [fileids]
+        elif isinstance(fileids, basestring): fileids = [fileids]
         return concat([self.open(f).read() for f in fileids])
 
 
@@ -157,14 +152,9 @@ class XMLCorpusView(StreamBackedCorpusView):
 
     def _detect_encoding(self, fileid):
         if isinstance(fileid, PathPointer):
-            try:
-                infile = fileid.open()
-                s = infile.readline()
-            finally:
-                infile.close()
+            s = fileid.open().readline()
         else:
-            with open(fileid, 'rb') as infile:
-                s = infile.readline()
+            s = open(fileid, 'rb').readline()
         if s.startswith(codecs.BOM_UTF16_BE):
             return 'utf-16-be'
         if s.startswith(codecs.BOM_UTF16_LE):
@@ -175,12 +165,10 @@ class XMLCorpusView(StreamBackedCorpusView):
             return 'utf-32-le'
         if s.startswith(codecs.BOM_UTF8):
             return 'utf-8'
-        m = re.match(br'\s*<\?xml\b.*\bencoding="([^"]+)"', s)
-        if m:
-            return m.group(1).decode()
-        m = re.match(br"\s*<\?xml\b.*\bencoding='([^']+)'", s)
-        if m:
-            return m.group(1).decode()
+        m = re.match(r'\s*<?xml\b.*\bencoding="([^"]+)"', s)
+        if m: return m.group(1)
+        m = re.match(r"\s*<?xml\b.*\bencoding='([^']+)'", s)
+        if m: return m.group(1)
         # No encoding found -- what should the default be?
         return 'utf-8'
 
@@ -214,7 +202,7 @@ class XMLCorpusView(StreamBackedCorpusView):
           ((<!--.*?-->)                         |  # comment
            (<![CDATA[.*?]])                     |  # raw character data
            (<!DOCTYPE\s+[^\[]*(\[[^\]]*])?\s*>) |  # doctype decl
-           (<[^!>][^>]*>))                         # tag or PI
+           (<[^>]*>))                              # tag or PI
           [^<]*)*
         \Z""",
         re.DOTALL|re.VERBOSE)
@@ -232,7 +220,7 @@ class XMLCorpusView(StreamBackedCorpusView):
         (?P<COMMENT>        <!--.*?-->                          )|
         (?P<CDATA>          <![CDATA[.*?]]>                     )|
         (?P<PI>             <\?.*?\?>                           )|
-        (?P<DOCTYPE>        <!DOCTYPE\s+[^\[^>]*(\[[^\]]*])?\s*>)|
+        (?P<DOCTYPE>        <!DOCTYPE\s+[^\[]*(\[[^\]]*])?\s*>  )|
         # These are the ones we actually care about:
         (?P<EMPTY_ELT_TAG>  <\s*[^>/\?!\s][^>]*/\s*>            )|
         (?P<START_TAG>      <\s*[^>/\?!\s][^>]*>                )|
@@ -250,9 +238,9 @@ class XMLCorpusView(StreamBackedCorpusView):
         """
         fragment = ''
 
-        if isinstance(stream, SeekableUnicodeStreamReader):
-            startpos = stream.tell()
         while True:
+            if isinstance(stream, SeekableUnicodeStreamReader):
+                startpos = stream.tell()
             # Read a block and add it to the fragment.
             xml_block = stream.read(self._BLOCK_SIZE)
             fragment += xml_block
@@ -390,3 +378,4 @@ class XMLCorpusView(StreamBackedCorpusView):
                                   elt.encode('ascii', 'xmlcharrefreplace')),
                             context)
                 for (elt, context) in elts]
+

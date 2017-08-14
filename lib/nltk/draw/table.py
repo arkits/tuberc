@@ -1,20 +1,17 @@
 # Natural Language Toolkit: Table widget
 #
-# Copyright (C) 2001-2017 NLTK Project
-# Author: Edward Loper <edloper@gmail.com>
-# URL: <http://nltk.org/>
+# Copyright (C) 2001-2012 NLTK Project
+# Author: Edward Loper <edloper@gradient.cis.upenn.edu>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
 """
 Tkinter widgets for displaying multi-column listboxes and tables.
 """
 
-from __future__ import division
-
-
 import operator
 
-from six.moves.tkinter import (Frame, Label, Listbox, Scrollbar, Tk)
+from Tkinter import (Frame, Label, Listbox, Scrollbar, Tk)
 
 
 ######################################################################
@@ -64,7 +61,7 @@ class MultiListbox(Frame):
 
         :param master: The widget that should contain the new
             multi-column listbox.
-
+            
         :param columns: Specifies what columns should be included in
             the new multi-column listbox.  If ``columns`` is an integer,
             the it is the number of columns to include.  If it is
@@ -80,11 +77,11 @@ class MultiListbox(Frame):
         """
         # If columns was specified as an int, convert it to a list.
         if isinstance(columns, int):
-            columns = list(range(columns))
+            columns = range(columns)
             include_labels = False
         else:
             include_labels = True
-
+        
         if len(columns) == 0:
             raise ValueError("Expected at least one column")
 
@@ -112,7 +109,7 @@ class MultiListbox(Frame):
                 self._labels.append(l)
                 l.grid(column=i, row=0, sticky='news', padx=0, pady=0)
                 l.column_index = i
-
+            
             # Create a listbox for the column
             lb = Listbox(self, **self.LISTBOX_CONFIG)
             self._listboxes.append(lb)
@@ -138,7 +135,7 @@ class MultiListbox(Frame):
         # Columns can be resized by dragging them.  (This binding is
         # used if they click on the grid between columns:)
         self.bind('<Button-1>', self._resize_column)
-
+            
         # Set up key bindings for the widget:
         self.bind('<Up>', lambda e: self.select(delta=-1))
         self.bind('<Down>', lambda e: self.select(delta=1))
@@ -183,15 +180,15 @@ class MultiListbox(Frame):
             return True
         else:
             return False
-
+            
     def _resize_column_motion_cb(self, event):
         lb = self._listboxes[self._resize_column_index]
-        charwidth = lb.winfo_width() / lb['width']
-
+        charwidth = lb.winfo_width() / float(lb['width'])
+        
         x1 = event.x + event.widget.winfo_x()
         x2 = lb.winfo_x() + lb.winfo_width()
 
-        lb['width'] = max(3, lb['width'] + (x1-x2) // charwidth)
+        lb['width'] = max(3, lb['width'] + int((x1-x2)/charwidth))
 
     def _resize_column_buttonrelease_cb(self, event):
         event.widget.unbind('<ButtonRelease-%d>' % event.num)
@@ -202,7 +199,7 @@ class MultiListbox(Frame):
     #/////////////////////////////////////////////////////////////////
 
     @property
-    def column_names(self):
+    def column_names(self): 
         """
         A tuple containing the names of the columns used by this
         multi-column listbox.
@@ -210,7 +207,7 @@ class MultiListbox(Frame):
         return self._column_names
 
     @property
-    def column_labels(self):
+    def column_labels(self): 
         """
         A tuple containing the ``Tkinter.Label`` widgets used to
         display the label of each column.  If this multi-column
@@ -223,7 +220,7 @@ class MultiListbox(Frame):
         return tuple(self._labels)
 
     @property
-    def listboxes(self):
+    def listboxes(self): 
         """
         A tuple containing the ``Tkinter.Listbox`` widgets used to
         display individual columns.  These widgets will all be
@@ -248,7 +245,7 @@ class MultiListbox(Frame):
         for lb in self._listboxes:
             lb.yview_scroll(delta, 'unit')
         return 'break'
-
+        
     def _pagesize(self):
         """:return: The number of rows that makes up one page"""
         return int(self.index('@0,1000000')) - int(self.index('@0,0'))
@@ -301,8 +298,8 @@ class MultiListbox(Frame):
                 >>> mlb.configure(label_foreground='red')
                 >>> mlb.configure(listbox_foreground='red')
         """
-        cnf = dict(list(cnf.items()) + list(kw.items()))
-        for (key, val) in list(cnf.items()):
+        cnf = dict(cnf.items() + kw.items())
+        for (key, val) in cnf.items():
             if key.startswith('label_') or key.startswith('label-'):
                 for label in self._labels:
                     label.configure({key[6:]: val})
@@ -311,7 +308,7 @@ class MultiListbox(Frame):
                     listbox.configure({key[8:]: val})
             else:
                 Frame.configure(self, {key:val})
-
+                       
     def __setitem__(self, key, val):
         """
         Configure this widget.  This is equivalent to
@@ -326,7 +323,7 @@ class MultiListbox(Frame):
         ``selectbackground``, ``selectforeground``.
         """
         for lb in self._listboxes: lb.itemconfigure(row_index, cnf, **kw)
-
+        
     def columnconfigure(self, col_index, cnf={}, **kw):
         """
         Configure all table cells in the given column.  Valid keyword
@@ -335,8 +332,8 @@ class MultiListbox(Frame):
         """
         lb = self._listboxes[col_index]
 
-        cnf = dict(list(cnf.items()) + list(kw.items()))
-        for (key, val) in list(cnf.items()):
+        cnf = dict(cnf.items() + kw.items())
+        for (key, val) in cnf.items():
             if key in ('background', 'bg', 'foreground', 'fg',
                        'selectbackground', 'selectforeground'):
                 for i in range(lb.size()): lb.itemconfigure(i, {key:val})
@@ -368,9 +365,9 @@ class MultiListbox(Frame):
             if len(elt) != len(self._column_names):
                 raise ValueError('rows should be tuples whose length '
                                  'is equal to the number of columns')
-        for (lb,elts) in zip(self._listboxes, list(zip(*rows))):
+        for (lb,elts) in zip(self._listboxes, zip(*rows)):
             lb.insert(index, *elts)
-
+        
     def get(self, first, last=None):
         """
         Return the value(s) of the specified row(s).  If ``last`` is
@@ -393,7 +390,7 @@ class MultiListbox(Frame):
         dx, dy, _, _ = self.grid_bbox(row=0, column=col)
         x, y, w, h = self._listboxes[col].bbox(row)
         return int(x)+int(dx), int(y)+int(dy), int(w), int(h)
-
+    
     #/////////////////////////////////////////////////////////////////
     # Hide/Show Columns
     #/////////////////////////////////////////////////////////////////
@@ -441,7 +438,7 @@ class MultiListbox(Frame):
         """
         return [label.bind(sequence, func, add)
                 for label in self.column_labels]
-
+    
     def bind_to_listboxes(self, sequence=None, func=None, add=None):
         """
         Add a binding to each ``Tkinter.Listbox`` widget in this
@@ -465,13 +462,13 @@ class MultiListbox(Frame):
             functions (if any), allowing for their deletion (to
             prevent a memory leak).
         """
-        return (self.bind_to_labels(sequence, func, add) +
+        return (self.bind_to_labels(sequence, func, add) + 
                 self.bind_to_listboxes(sequence, func, add))
-
+    
     #/////////////////////////////////////////////////////////////////
     # Simple Delegation
     #/////////////////////////////////////////////////////////////////
-
+    
     # These methods delegate to the first listbox:
     def curselection(self, *args, **kwargs):
         return self._listboxes[0].curselection(*args, **kwargs)
@@ -485,7 +482,7 @@ class MultiListbox(Frame):
         return self._listboxes[0].index(*args, **kwargs)
     def nearest(self, *args, **kwargs):
         return self._listboxes[0].nearest(*args, **kwargs)
-
+    
     # These methods delegate to each listbox (and return None):
     def activate(self, *args, **kwargs):
         for lb in self._listboxes: lb.activate(*args, **kwargs)
@@ -514,7 +511,7 @@ class MultiListbox(Frame):
     #/////////////////////////////////////////////////////////////////
     # Aliases
     #/////////////////////////////////////////////////////////////////
-
+    
     itemconfig = itemconfigure
     rowconfig = rowconfigure
     columnconfig = columnconfigure
@@ -550,7 +547,7 @@ class Table(object):
     column name.  E.g., the following prints the value in the 3rd row
     for the 'First Name' column:
 
-        >>> print(table[3, 'First Name'])
+        >>> print table[3, 'First Name']
         John
 
     You can configure the colors for individual rows, columns, or
@@ -633,7 +630,7 @@ class Table(object):
             #    listbox['yscrollcommand'] = sb.set
             sb.pack(side='right', fill='y')
             self._scrollbar = sb
-
+            
         # Set up sorting
         self._sortkey = None
         if click_to_sort:
@@ -652,16 +649,16 @@ class Table(object):
         """Position this table's main frame widget in its parent
         widget.  See ``Tkinter.Frame.pack()`` for more info."""
         self._frame.pack(*args, **kwargs)
-
+        
     def grid(self, *args, **kwargs):
         """Position this table's main frame widget in its parent
         widget.  See ``Tkinter.Frame.grid()`` for more info."""
         self._frame.grid(*args, **kwargs)
-
+        
     def focus(self):
         """Direct (keyboard) input foxus to this widget."""
         self._mlb.focus()
-
+        
     def bind(self, sequence=None, func=None, add=None):
         """Add a binding to this table's main frame that will call
         ``func`` in response to the event sequence."""
@@ -670,17 +667,17 @@ class Table(object):
     def rowconfigure(self, row_index, cnf={}, **kw):
         """:see: ``MultiListbox.rowconfigure()``"""
         self._mlb.rowconfigure(row_index, cnf, **kw)
-
+        
     def columnconfigure(self, col_index, cnf={}, **kw):
         """:see: ``MultiListbox.columnconfigure()``"""
         col_index = self.column_index(col_index)
         self._mlb.columnconfigure(col_index, cnf, **kw)
-
+        
     def itemconfigure(self, row_index, col_index, cnf=None, **kw):
         """:see: ``MultiListbox.itemconfigure()``"""
         col_index = self.column_index(col_index)
         return self._mlb.itemconfigure(row_index, col_index, cnf, **kw)
-
+    
     def bind_to_labels(self, sequence=None, func=None, add=None):
         """:see: ``MultiListbox.bind_to_labels()``"""
         return self._mlb.bind_to_labels(sequence, func, add)
@@ -808,14 +805,14 @@ class Table(object):
         """
         Delete the ``row_index``th row from this table.
         """
-        if isinstance(row_index, slice):
+        if isinstance(index, slice):
             raise ValueError('Slicing not supported')
         if isinstance(row_index, tuple) and len(row_index)==2:
             raise ValueError('Cannot delete a single cell!')
         del self._rows[row_index]
         self._mlb.delete(row_index)
         if self._DEBUG: self._check_table_vs_mlb()
-
+        
     def __len__(self):
         """
         :return: the number of rows in this table.
@@ -836,7 +833,7 @@ class Table(object):
     #/////////////////////////////////////////////////////////////////
 
     @property
-    def column_names(self):
+    def column_names(self): 
         """A list of the names of the columns in this table."""
         return self._mlb.column_names
 
@@ -891,7 +888,7 @@ class Table(object):
         :param column_index: Specifies which column to sort, using
             either a column index (int) or a column's label name
             (str).
-
+            
         :param order: Specifies whether to sort the values in
             ascending or descending order:
 
@@ -920,12 +917,12 @@ class Table(object):
         self._fill_table()
         self._restore_config_info(config_cookie, index_by_id=True, see=True)
         if self._DEBUG: self._check_table_vs_mlb()
-
+    
     def _sort(self, event):
         """Event handler for clicking on a column label -- sort by
         that column."""
         column_index = event.widget.column_index
-
+        
         # If they click on the far-left of far-right of a column's
         # label, then resize rather than sorting.
         if self._mlb._resize_column(event):
@@ -977,7 +974,7 @@ class Table(object):
         """
         # Default value for row_indices is all rows.
         if row_indices is None:
-            row_indices = list(range(len(self._rows)))
+            row_indices = range(len(self._rows))
 
         # Look up our current selection.
         selection = self.selected_row()
@@ -993,7 +990,7 @@ class Table(object):
             config = dict((r, [self._get_itemconfig(r, c)
                                for c in range(self._num_columns)])
                           for r in row_indices)
-
+        
 
         return selection, config
 
@@ -1022,7 +1019,7 @@ class Table(object):
             for r in config:
                 for c in range(self._num_columns):
                     self._mlb.itemconfigure(r, c, config[r][c])
-
+        
     #/////////////////////////////////////////////////////////////////
     # Debugging (Invariant Checker)
     #/////////////////////////////////////////////////////////////////
@@ -1030,7 +1027,7 @@ class Table(object):
     _DEBUG = False
     """If true, then run ``_check_table_vs_mlb()`` after any operation
        that modifies the table."""
-
+    
     def _check_table_vs_mlb(self):
         """
         Verify that the contents of the table's ``_rows`` variable match
@@ -1060,7 +1057,7 @@ def demo():
     root.bind('<Control-q>', lambda e: root.destroy())
 
     table = Table(root, 'Word Synset Hypernym Hyponym'.split(),
-                  column_weights=[0, 1, 1, 1],
+                  column_weights=[0, 1, 1, 1], 
                   reprfunc=(lambda i,j,s: '  %s' % s))
     table.pack(expand=True, fill='both')
 
@@ -1070,18 +1067,12 @@ def demo():
         if pos[0] != 'N': continue
         word = word.lower()
         for synset in wordnet.synsets(word):
-            try:
-                hyper_def = synset.hypernyms()[0].definition()
-            except:
-                hyper_def = '*none*'
-            try:
-                hypo_def = synset.hypernyms()[0].definition()
-            except:
-                hypo_def = '*none*'
+            hyper = (synset.hypernyms()+[''])[0]
+            hypo = (synset.hyponyms()+[''])[0]
             table.append([word,
-                          synset.definition(),
-                          hyper_def,
-                          hypo_def])
+                          getattr(synset, 'definition', '*none*'),
+                          getattr(hyper, 'definition', '*none*'),
+                          getattr(hypo, 'definition', '*none*')])
 
     table.columnconfig('Word', background='#afa')
     table.columnconfig('Synset', background='#efe')
@@ -1093,6 +1084,6 @@ def demo():
                 table.itemconfig(row, column, foreground='#666',
                                  selectforeground='#666')
     root.mainloop()
-
+                
 if __name__ == '__main__':
     demo()

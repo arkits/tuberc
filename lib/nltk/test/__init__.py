@@ -1,18 +1,21 @@
 # Natural Language Toolkit: Unit Tests
 #
-# Copyright (C) 2001-2017 NLTK Project
-# Author: Edward Loper <edloper@gmail.com>
-# URL: <http://nltk.org/>
+# Copyright (C) 2001-2012 NLTK Project
+# Author: Edward Loper <edloper@gradient.cis.upenn.edu>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
 """
 Unit tests for the NLTK modules.  These tests are intended to ensure
-that source code changes don't accidentally introduce bugs.
-For instructions, please see:
+that changes that we make to NLTK's code don't accidentally introduce
+bugs.
 
-../../web/dev/local_testing.rst
+Use doctest_driver.py to run the tests::
 
-https://github.com/nltk/nltk/blob/develop/web/dev/local_testing.rst
+  doctest_driver.py --help
 
+NB. Popular options for NLTK documentation are::
+
+  --ellipsis --normalize_whitespace
 
 """

@@ -1,15 +1,15 @@
 # Natural Language Toolkit: Dispersion Plots
 #
-# Copyright (C) 2001-2017 NLTK Project
-# Author: Steven Bird <stevenbird1@gmail.com>
-# URL: <http://nltk.org/>
+# Copyright (C) 2001-2012 NLTK Project
+# Author: Steven Bird <sb@csse.unimelb.edu.au>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
 """
 A utility for displaying lexical dispersion.
 """
 
-def dispersion_plot(text, words, ignore_case=False, title="Lexical Dispersion Plot"):
+def dispersion_plot(text, words, ignore_case=False):
     """
     Generate a lexical dispersion plot.
 
@@ -22,17 +22,17 @@ def dispersion_plot(text, words, ignore_case=False, title="Lexical Dispersion Pl
     """
 
     try:
-        from matplotlib import pylab
+        import pylab
     except ImportError:
-        raise ValueError('The plot function requires matplotlib to be installed.'
-                     'See http://matplotlib.org/')
+        raise ValueError('The plot function requires the matplotlib package (aka pylab).'
+                     'See http://matplotlib.sourceforge.net/')
 
     text = list(text)
     words.reverse()
 
     if ignore_case:
-        words_to_comp = list(map(str.lower, words))
-        text_to_comp = list(map(str.lower, text))
+        words_to_comp = map(str.lower, words)
+        text_to_comp = map(str.lower, text)
     else:
         words_to_comp = words
         text_to_comp = text
@@ -41,18 +41,17 @@ def dispersion_plot(text, words, ignore_case=False, title="Lexical Dispersion Pl
                     for y in range(len(words_to_comp))
                     if text_to_comp[x] == words_to_comp[y]]
     if points:
-        x, y = list(zip(*points))
+        x, y = zip(*points)
     else:
         x = y = ()
     pylab.plot(x, y, "b|", scalex=.1)
-    pylab.yticks(list(range(len(words))), words, color="b")
+    pylab.yticks(range(len(words)), words, color="b")
     pylab.ylim(-1, len(words))
-    pylab.title(title)
+    pylab.title("Lexical Dispersion Plot")
     pylab.xlabel("Word Offset")
     pylab.show()
 
 if __name__ == '__main__':
-    import nltk.compat
     from nltk.corpus import gutenberg
     words = ['Elinor', 'Marianne', 'Edward', 'Willoughby']
     dispersion_plot(gutenberg.words('austen-sense.txt'), words)

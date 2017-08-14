@@ -1,34 +1,31 @@
 # Natural Language Toolkit: Clusterer Interfaces
 #
-# Copyright (C) 2001-2017 NLTK Project
+# Copyright (C) 2001-2012 NLTK Project
 # Author: Trevor Cohn <tacohn@cs.mu.oz.au>
-# Porting: Steven Bird <stevenbird1@gmail.com>
-# URL: <http://nltk.org/>
+# Porting: Steven Bird <sb@csse.unimelb.edu.au>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
-
-from abc import ABCMeta, abstractmethod
-from six import add_metaclass
 
 from nltk.probability import DictionaryProbDist
 
-@add_metaclass(ABCMeta)
 class ClusterI(object):
     """
     Interface covering basic clustering functionality.
     """
-    @abstractmethod
+
     def cluster(self, vectors, assign_clusters=False):
         """
         Assigns the vectors to clusters, learning the clustering parameters
         from the data. Returns a cluster identifier for each vector.
         """
+        raise NotImplementedError()
 
-    @abstractmethod
     def classify(self, token):
         """
         Classifies the token into a cluster, setting the token's CLUSTER
         parameter to that cluster identifier.
         """
+        raise NotImplementedError()
 
     def likelihood(self, vector, label):
         """
@@ -54,17 +51,17 @@ class ClusterI(object):
             likelihoods[cluster] /= sum
         return DictionaryProbDist(likelihoods)
 
-    @abstractmethod
     def num_clusters(self):
         """
         Returns the number of clusters.
         """
+        raise NotImplementedError()
 
     def cluster_names(self):
         """
         Returns the names of the clusters.
         """
-        return list(range(self.num_clusters()))
+        return range(self.num_clusters())
 
     def cluster_name(self, index):
         """

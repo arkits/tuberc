@@ -1,9 +1,9 @@
 # Natural Language Toolkit: TnT Tagger
 #
-# Copyright (C) 2001-2017 NLTK Project
+# Copyright (C) 2001-2012 NLTK Project
 # Author: Sam Huston <sjh900@gmail.com>
 #
-# URL: <http://nltk.org/>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
 '''
@@ -12,12 +12,10 @@ by Thorsten Brants
 
 http://acl.ldc.upenn.edu/A/A00/A00-1031.pdf
 '''
-from __future__ import print_function, division
-from math import log
 
-from operator import itemgetter
-
+from __future__ import print_function
 from nltk.probability import FreqDist, ConditionalFreqDist
+
 from nltk.tag.api import TaggerI
 
 class TnT(TaggerI):
@@ -58,12 +56,6 @@ class TnT(TaggerI):
     The set of possible tags for a given word is derived
     from the training data. It is the set of all tags
     that exact word has been assigned.
-
-    To speed up and get more precision, we can use log addition
-    to instead multiplication, specifically:
-
-      argmax [Sigma(log(P(t_i|t_i-1,t_i-2))+log(P(w_i|t_i)))] +
-             log(P(t_T+1|t_T))
 
     The probability of a tag for a given word is the linear
     interpolation of 3 markov models; a zero-order, first-order,
@@ -147,7 +139,7 @@ class TnT(TaggerI):
             self._unk.train(data)
 
         for sent in data:
-            history = [('BOS',False), ('BOS',False)]
+            history = ['BOS', 'BOS']
             for w, t in sent:
 
                 # if capitalization is requested,
@@ -155,10 +147,10 @@ class TnT(TaggerI):
                 # set local flag C to True
                 if self._C and w[0].isupper(): C=True
 
-                self._wd[w][t] += 1
-                self._uni[(t,C)] += 1
-                self._bi[history[1]][(t,C)] += 1
-                self._tri[tuple(history)][(t,C)] += 1
+                self._wd[w].inc(t)
+                self._uni.inc((t,C))
+                self._bi[history[1]].inc((t,C))
+                self._tri[tuple(history)].inc((t,C))
 
                 history.append((t,C))
                 history.pop(0)
@@ -166,7 +158,7 @@ class TnT(TaggerI):
                 # set local flag C to false for the next word
                 C = False
 
-            self._eos[t]['EOS'] += 1
+            self._eos[t].inc('EOS')
 
 
         # compute lambda values from the trained frequency distributions
@@ -209,7 +201,7 @@ class TnT(TaggerI):
             # for each t3 given t1,t2 in system
             # (NOTE: tag actually represents (tag,C))
             # However no effect within this function
-            for tag in self._tri[history].keys():
+            for tag in self._tri[history].samples():
 
                 # if there has only been 1 occurrence of this tag in the data
                 # then ignore this trigram.
@@ -237,14 +229,14 @@ class TnT(TaggerI):
 
                 # if c3, and c2 are equal and larger than c1
                 elif (c3 == c2) and (c3 > c1):
-                    tl2 += self._tri[history][tag] / 2.0
-                    tl3 += self._tri[history][tag] / 2.0
+                    tl2 += float(self._tri[history][tag]) /2.0
+                    tl3 += float(self._tri[history][tag]) /2.0
 
                 # if c1, and c2 are equal and larger than c3
                 # this might be a dumb thing to do....(not sure yet)
                 elif (c2 == c1) and (c1 > c3):
-                    tl1 += self._tri[history][tag] / 2.0
-                    tl2 += self._tri[history][tag] / 2.0
+                    tl1 += float(self._tri[history][tag]) /2.0
+                    tl2 += float(self._tri[history][tag]) /2.0
 
                 # otherwise there might be a problem
                 # eg: all values = 0
@@ -268,7 +260,7 @@ class TnT(TaggerI):
         if v2 == 0:
             return -1
         else:
-            return v1 / v2
+            return float(v1) / float(v2)
 
     def tagdata(self, data):
         '''
@@ -307,7 +299,7 @@ class TnT(TaggerI):
         returns a list of (word, tag) tuples
         '''
 
-        current_state = [(['BOS', 'BOS'], 0.0)]
+        current_state = [(['BOS', 'BOS'], 1.0)]
 
         sent = list(data)
 
@@ -327,9 +319,9 @@ class TnT(TaggerI):
         :param sent : List of words remaining in the sentence
         :type sent  : [word,]
         :param current_states : List of possible tag combinations for
-                                the sentence so far, and the log probability
+                                the sentence so far, and the probability
                                 associated with each tag combination
-        :type current_states  : [([tag, ], logprob), ]
+        :type current_states  : [([tag, ],prob), ]
 
         Tags the first word in the sentence and
         recursively tags the reminder of sentence
@@ -341,7 +333,7 @@ class TnT(TaggerI):
         # if this word marks the end of the sentance,
         # return the most probable tag
         if sent == []:
-            (h, logp) = current_states[0]
+            (h,p) = current_states[0]
             return h
 
         # otherwise there are more words to be tagged
@@ -356,25 +348,30 @@ class TnT(TaggerI):
 
         # if word is known
         # compute the set of possible tags
-        # and their associated log probabilities
-        if word in self._wd:
+        # and their associated probabilities
+        if word in self._wd.conditions():
             self.known += 1
 
-            for (history, curr_sent_logprob) in current_states:
-                logprobs = []
+            for (history, curr_sent_prob) in current_states:
+                probs = []
 
-                for t in self._wd[word].keys():
-                    tC = (t,C)
-                    p_uni = self._uni.freq(tC)
-                    p_bi = self._bi[history[-1]].freq(tC)
-                    p_tri = self._tri[tuple(history[-2:])].freq(tC)
-                    p_wd = self._wd[word][t] / self._uni[tC]
+                for t in self._wd[word].samples():
+                    p_uni = self._uni.freq((t,C))
+                    p_bi = self._bi[history[-1]].freq((t,C))
+                    p_tri = self._tri[tuple(history[-2:])].freq((t,C))
+                    p_wd = float(self._wd[word][t])/float(self._uni[(t,C)])
                     p = self._l1 *p_uni + self._l2 *p_bi + self._l3 *p_tri
-                    p2 = log(p, 2) + log(p_wd, 2)
+                    p2 = p * p_wd
 
-                    # compute the result of appending each tag to this history
-                    new_states.append((history + [tC],
-                                       curr_sent_logprob + p2))
+                    probs.append(((t,C), p2))
+
+
+                # compute the result of appending each tag to this history
+                for (tag, prob) in probs:
+                    new_states.append((history + [tag], curr_sent_prob*prob))
+
+
+
 
         # otherwise a new word, set of possible tags is unknown
         else:
@@ -392,29 +389,38 @@ class TnT(TaggerI):
                 tag = ('Unk',C)
 
             # otherwise apply the unknown word tagger
-            else:
+            else :
                 [(_w, t)] = list(self._unk.tag([word]))
                 tag = (t,C)
 
-            for (history, logprob) in current_states:
+            for (history, prob) in current_states:
                 history.append(tag)
 
             new_states = current_states
 
+
+
         # now have computed a set of possible new_states
 
-        # sort states by log prob
-        # set is now ordered greatest to least log probability
-        new_states.sort(reverse=True, key=itemgetter(1))
+        # sort states by prob
+        # _cmp_tup is a comparison function,
+        # set is now ordered greatest to least probability
+        new_states.sort(self._cmp_tup)
 
         # del everything after N (threshold)
         # this is the beam search cut
         if len(new_states) > self._N:
             new_states = new_states[:self._N]
 
+
         # compute the tags for the rest of the sentence
         # return the best list of tags for the sentence
         return self._tagword(sent, new_states)
+
+
+
+    def _cmp_tup(self, (_hq, p1), (_h2, p2)):
+        return (1 if (p2-p1) > 0 else -1)
 
 
 ########################################
@@ -473,12 +479,13 @@ def basic_sent_chop(data, raw=True):
 
 
 def demo():
+    from nltk.tag import tnt
     from nltk.corpus import brown
     sents = list(brown.tagged_sents())
     test = list(brown.sents())
 
     # create and train the tagger
-    tagger = TnT()
+    tagger = tnt.TnT()
     tagger.train(sents[200:1000])
 
     # tag some data
@@ -494,19 +501,21 @@ def demo():
 
 
 def demo2():
+    from nltk import tag
+    from nltk.tag import tnt
     from nltk.corpus import treebank
 
     d = list(treebank.tagged_sents())
 
-    t = TnT(N=1000, C=False)
-    s = TnT(N=1000, C=True)
+    t = tnt.TnT(N=1000, C=False)
+    s = tnt.TnT(N=1000, C=True)
     t.train(d[(11)*100:])
     s.train(d[(11)*100:])
 
     for i in range(10):
-        tacc = t.evaluate(d[i*100:((i+1)*100)])
-        tp_un = t.unknown / (t.known + t.unknown)
-        tp_kn = t.known / (t.known + t.unknown)
+        tacc = tag.accuracy(t, d[i*100:((i+1)*100)])
+        tp_un = float(t.unknown) / float(t.known +t.unknown)
+        tp_kn = float(t.known) / float(t.known + t.unknown)
         t.unknown = 0
         t.known = 0
 
@@ -516,9 +525,9 @@ def demo2():
         print('Percentage unknown:', tp_un)
         print('Accuracy over known words:', (tacc / tp_kn))
 
-        sacc = s.evaluate(d[i*100:((i+1)*100)])
-        sp_un = s.unknown / (s.known + s.unknown)
-        sp_kn = s.known / (s.known + s.unknown)
+        sacc = tag.accuracy(s, d[i*100:((i+1)*100)])
+        sp_un = float(s.unknown) / float(s.known +s.unknown)
+        sp_kn = float(s.known) / float(s.known + s.unknown)
         s.unknown = 0
         s.known = 0
 
@@ -529,7 +538,9 @@ def demo2():
         print('Accuracy over known words:', (sacc / sp_kn))
 
 def demo3():
+    from nltk import tag
     from nltk.corpus import treebank, brown
+    from nltk.tag import tnt
 
     d = list(treebank.tagged_sents())
     e = list(brown.tagged_sents())
@@ -549,8 +560,8 @@ def demo3():
 
     for i in range(10):
 
-        t = TnT(N=1000, C=False)
-        s = TnT(N=1000, C=False)
+        t = tnt.TnT(N=1000, C=False)
+        s = tnt.TnT(N=1000, C=False)
 
         dtest = d[(i*d10):((i+1)*d10)]
         etest = e[(i*e10):((i+1)*e10)]
@@ -561,16 +572,16 @@ def demo3():
         t.train(dtrain)
         s.train(etrain)
 
-        tacc = t.evaluate(dtest)
-        tp_un = t.unknown / (t.known + t.unknown)
-        tp_kn = t.known / (t.known + t.unknown)
+        tacc = tag.accuracy(t, dtest)
+        tp_un = float(t.unknown) / float(t.known +t.unknown)
+        tp_kn = float(t.known) / float(t.known + t.unknown)
         tknown += tp_kn
         t.unknown = 0
         t.known = 0
 
-        sacc = s.evaluate(etest)
-        sp_un = s.unknown / (s.known + s.unknown)
-        sp_kn = s.known / (s.known + s.unknown)
+        sacc = tag.accuracy(s, etest)
+        sp_un = float(s.unknown) / float(s.known + s.unknown)
+        sp_kn = float(s.known) / float(s.known + s.unknown)
         sknown += sp_kn
         s.unknown = 0
         s.known = 0
@@ -592,4 +603,7 @@ def demo3():
 
 
 
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod(optionflags=doctest.NORMALIZE_WHITESPACE)
 

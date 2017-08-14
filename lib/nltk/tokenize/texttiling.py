@@ -1,24 +1,20 @@
 # Natural Language Toolkit: TextTiling
 #
-# Copyright (C) 2001-2017 NLTK Project
+# Copyright (C) 2001-2012 NLTK Project
 # Author: George Boutsioukis
 #
-# URL: <http://nltk.org/>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
 import re
 import math
-
-try:
-    import numpy
-except ImportError:
-    pass
+import numpy
 
 from nltk.tokenize.api import TokenizerI
 
-BLOCK_COMPARISON, VOCABULARY_INTRODUCTION = 0, 1
-LC, HC = 0, 1
-DEFAULT_SMOOTHING = [0]
+BLOCK_COMPARISON, VOCABULARY_INTRODUCTION = range(2)
+LC, HC = range(2)
+DEFAULT_SMOOTHING = range(1)
 
 
 class TextTilingTokenizer(TokenizerI):
@@ -52,15 +48,6 @@ class TextTilingTokenizer(TokenizerI):
     :param cutoff_policy: The policy used to determine the number of boundaries:
       `HC` (default) or `LC`
     :type cutoff_policy: constant
-
-    >>> from nltk.corpus import brown
-    >>> tt = TextTilingTokenizer(demo_mode=True)
-    >>> text = brown.raw()[:10000]
-    >>> s, ss, d, b = tt.tokenize(text)
-    >>> b
-    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0,
-     0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0,
-     0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0]
     """
 
     def __init__(self,
@@ -92,8 +79,8 @@ class TextTilingTokenizer(TokenizerI):
         # Tokenization step starts here
 
         # Remove punctuation
-        nopunct_text = ''.join(c for c in lowercase_text
-                               if re.match("[a-z\-\' \n\t]", c))
+        nopunct_text = ''.join([c for c in lowercase_text
+                                      if re.match("[a-z\-\' \n\t]", c)])
         nopunct_par_breaks = self._mark_paragraph_breaks(nopunct_text)
 
         tokseqs = self._divide_to_tokensequences(nopunct_text)
@@ -107,8 +94,8 @@ class TextTilingTokenizer(TokenizerI):
 
         # Filter stopwords
         for ts in tokseqs:
-            ts.wrdindex_list = [wi for wi in ts.wrdindex_list
-                                if wi[0] not in self.stopwords]
+            ts.wrdindex_list = filter(lambda wi: wi[0] not in self.stopwords,
+                                      ts.wrdindex_list)
 
         token_table = self._create_token_table(tokseqs, nopunct_par_breaks)
         # End of the Tokenization step
@@ -231,10 +218,10 @@ class TextTilingTokenizer(TokenizerI):
         current_par = 0
         current_tok_seq = 0
         pb_iter = par_breaks.__iter__()
-        current_par_break = next(pb_iter)
+        current_par_break = pb_iter.next()
         if current_par_break == 0:
             try:
-                current_par_break = next(pb_iter) #skip break at 0
+                current_par_break = pb_iter.next() #skip break at 0
             except StopIteration:
                 raise ValueError(
                     "No paragraph breaks were found(text too short perhaps?)"
@@ -243,7 +230,7 @@ class TextTilingTokenizer(TokenizerI):
             for word, index in ts.wrdindex_list:
                 try:
                     while index > current_par_break:
-                        current_par_break = next(pb_iter)
+                        current_par_break = pb_iter.next()
                         current_par += 1
                 except StopIteration:
                     #hit bottom
@@ -283,17 +270,18 @@ class TextTilingTokenizer(TokenizerI):
         boundaries = [0 for x in depth_scores]
 
         avg = sum(depth_scores)/len(depth_scores)
-        stdev = numpy.std(depth_scores)
+        numpy.stdev = numpy.std(depth_scores)
 
         #SB: what is the purpose of this conditional?
         if self.cutoff_policy == LC:
-            cutoff = avg-stdev/2.0
+            cutoff = avg-numpy.stdev/2.0
         else:
-            cutoff = avg-stdev/2.0
+            cutoff = avg-numpy.stdev/2.0
 
-        depth_tuples = sorted(zip(depth_scores, range(len(depth_scores))))
+        depth_tuples = zip(depth_scores, range(len(depth_scores)))
+        depth_tuples.sort()
         depth_tuples.reverse()
-        hp = list(filter(lambda x:x[0]>cutoff, depth_tuples))
+        hp = filter(lambda x:x[0]>cutoff, depth_tuples)
 
         for dt in hp:
             boundaries[dt[1]] = 1
@@ -315,6 +303,11 @@ class TextTilingTokenizer(TokenizerI):
         clip = min(max(len(scores)/10, 2), 5)
         index = clip
 
+        # SB: next three lines are redundant as depth_scores is already full of zeros
+        for i in range(clip):
+            depth_scores[i] = 0
+            depth_scores[-i-1] = 0
+
         for gapscore in scores[clip:-clip]:
             lpeak = gapscore
             for score in scores[index::-1]:
@@ -323,12 +316,12 @@ class TextTilingTokenizer(TokenizerI):
                 else:
                     break
             rpeak = gapscore
-            for score in scores[index:]:
+            for score in scores[:index:]:
                 if score >= rpeak:
-                    rpeak = score
+                    rpeak=score
                 else:
                     break
-            depth_scores[index] = lpeak + rpeak - 2 * gapscore
+            depth_scores[index] = lpeak + rpeak - 2*gapscore
             index += 1
 
         return depth_scores
@@ -423,7 +416,7 @@ def smooth(x,window_len=11,window='flat'):
     if x.size < window_len:
         raise ValueError("Input vector needs to be bigger than window size.")
 
-    if window_len < 3:
+    if window_len<3:
         return x
 
     if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
@@ -433,28 +426,31 @@ def smooth(x,window_len=11,window='flat'):
 
     #print(len(s))
     if window == 'flat': #moving average
-        w = numpy.ones(window_len,'d')
+        w=numpy.ones(window_len,'d')
     else:
-        w = eval('numpy.' + window + '(window_len)')
+        w=eval('numpy.'+window+'(window_len)')
 
-    y = numpy.convolve(w/w.sum(), s, mode='same')
+    y=numpy.convolve(w/w.sum(),s,mode='same')
 
     return y[window_len-1:-window_len+1]
 
 
 def demo(text=None):
     from nltk.corpus import brown
-    from matplotlib import pylab
-    tt = TextTilingTokenizer(demo_mode=True)
-    if text is None: text = brown.raw()[:10000]
-    s, ss, d, b = tt.tokenize(text)
+    import pylab
+    tt=TextTilingTokenizer(demo_mode=True)
+    if text is None: text=brown.raw()[:10000]
+    s,ss,d,b=tt.tokenize(text)
     pylab.xlabel("Sentence Gap index")
     pylab.ylabel("Gap Scores")
     pylab.plot(range(len(s)), s, label="Gap Scores")
     pylab.plot(range(len(ss)), ss, label="Smoothed Gap scores")
     pylab.plot(range(len(d)), d, label="Depth scores")
-    pylab.stem(range(len(b)), b)
+    pylab.stem(range(len(b)),b)
     pylab.legend()
     pylab.show()
 
 
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod(optionflags=doctest.NORMALIZE_WHITESPACE)

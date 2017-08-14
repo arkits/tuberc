@@ -1,8 +1,8 @@
 # Natural Language Toolkit: Teen Chatbot
 #
-# Copyright (C) 2001-2017 NLTK Project
+# Copyright (C) 2001-2012 NLTK Project
 # Author: Selina Dennis <sjmd@csse.unimelb.edu.au>
-# URL: <http://nltk.org/>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
 """
@@ -10,9 +10,9 @@ This chatbot is a tongue-in-cheek take on the average teen
 anime junky that frequents YahooMessenger or MSNM.
 All spelling mistakes and flawed grammar are intentional.
 """
-from __future__ import print_function
 
-from nltk.chat.util import Chat
+from __future__ import print_function
+from util import Chat
 
 reflections = {
     "am"     : "r",

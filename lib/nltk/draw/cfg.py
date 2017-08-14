@@ -1,58 +1,60 @@
 # Natural Language Toolkit: CFG visualization
 #
-# Copyright (C) 2001-2017 NLTK Project
-# Author: Edward Loper <edloper@gmail.com>
-# URL: <http://nltk.org/>
+# Copyright (C) 2001-2012 NLTK Project
+# Author: Edward Loper <edloper@gradient.cis.upenn.edu>
+# URL: <http://www.nltk.org/>
 # For license information, see LICENSE.TXT
 
 """
 Visualization tools for CFGs.
 """
 
-# Idea for a nice demo:
-#   - 3 panes: grammar, treelet, working area
-#     - grammar is a list of productions
-#     - when you select a production, the treelet that it licenses appears
-#       in the treelet area
-#     - the working area has the text on the bottom, and S at top.  When
-#       you select a production, it shows (ghosted) the locations where
-#       that production's treelet could be attached to either the text
-#       or the tree rooted at S.
-#     - the user can drag the treelet onto one of those (or click on them?)
-#     - the user can delete pieces of the tree from the working area
-#       (right click?)
-#     - connecting top to bottom? drag one NP onto another?
-#
-# +-------------------------------------------------------------+
-# | S -> NP VP   |                 S                            |
-# |[NP -> Det N ]|                / \                           |
-# |     ...      |              NP  VP                          |
-# | N -> 'dog'   |                                              |
-# | N -> 'cat'   |                                              |
-# |     ...      |                                              |
-# +--------------+                                              |
-# |      NP      |                      Det     N               |
-# |     /  \     |                       |      |               |
-# |   Det   N    |  the    cat    saw   the    dog              |
-# |              |                                              |
-# +--------------+----------------------------------------------+
-#
-# Operations:
-#   - connect a new treelet -- drag or click shadow
-#   - delete a treelet -- right click
-#     - if only connected to top, delete everything below
-#     - if only connected to bottom, delete everything above
-#   - connect top & bottom -- drag a leaf to a root or a root to a leaf
-#   - disconnect top & bottom -- right click
-#     - if connected to top & bottom, then disconnect
+"""
+Idea for a nice demo:
+  - 3 panes: grammar, treelet, working area
+    - grammar is a list of productions
+    - when you select a production, the treelet that it licenses appears
+      in the treelet area
+    - the working area has the text on the bottom, and S at top.  When
+      you select a production, it shows (ghosted) the locations where
+      that production's treelet could be attached to either the text
+      or the tree rooted at S.
+    - the user can drag the treelet onto one of those (or click on them?)
+    - the user can delete pieces of the tree from the working area
+      (right click?)
+    - connecting top to bottom? drag one NP onto another?
 
++-------------------------------------------------------------+
+| S -> NP VP   |                 S                            |
+|[NP -> Det N ]|                / \                           |
+|     ...      |              NP  VP                          |
+| N -> 'dog'   |                                              |
+| N -> 'cat'   |                                              |
+|     ...      |                                              |
++--------------+                                              |
+|      NP      |                      Det     N               |
+|     /  \     |                       |      |               |
+|   Det   N    |  the    cat    saw   the    dog              |
+|              |                                              |
++--------------+----------------------------------------------+
+
+Operations:
+  - connect a new treelet -- drag or click shadow
+  - delete a treelet -- right click
+    - if only connected to top, delete everything below
+    - if only connected to bottom, delete everything above
+  - connect top & bottom -- drag a leaf to a root or a root to a leaf
+  - disconnect top & bottom -- right click
+    - if connected to top & bottom, then disconnect
+"""
+
+from __future__ import print_function
 import re
 
-from six import string_types
-from six.moves.tkinter import (Button, Canvas, Entry, Frame, IntVar, Label,
-                               Scrollbar, Text, Tk, Toplevel)
+from Tkinter import (Button, Canvas, Entry, Frame, IntVar, Label,
+                     Scrollbar, Text, Tk, Toplevel)
 
-from nltk.grammar import (CFG, _read_cfg_production,
+from nltk.grammar import (ContextFreeGrammar, parse_cfg_production,
                           Nonterminal, nonterminals)
 from nltk.tree import Tree
 from nltk.draw.tree import TreeSegmentWidget, tree_to_treesegment
@@ -105,7 +107,7 @@ underscores (_).  Nonterminals are colored blue.  If you place the
 mouse over any nonterminal, then all occurrences of that nonterminal
 will be highlighted.
 
-Terminals must be surrounded by single quotes (') or double
+Termianals must be surrounded by single quotes (') or double
 quotes(\").  For example, "dog" and "New York" are terminals.
 Currently, the string within the quotes must consist of alphanumeric
 characters, underscores, and spaces.
@@ -154,7 +156,7 @@ class CFGEditor(object):
     def __init__(self, parent, cfg=None, set_cfg_callback=None):
         self._parent = parent
         if cfg is not None: self._cfg = cfg
-        else: self._cfg = CFG(Nonterminal('S'), [])
+        else: self._cfg = ContextFreeGrammar(Nonterminal('S'), [])
         self._set_cfg_callback = set_cfg_callback
 
         self._highlight_matching_nonterminals = 1
@@ -328,7 +330,7 @@ class CFGEditor(object):
         enough to be done anytime they press '>'.
         """
         arrow = '1.0'
-        while True:
+        while 1:
             arrow = self._textwidget.search('->', arrow, 'end+1char')
             if arrow == '': break
             self._textwidget.delete(arrow, arrow+'+2char')
@@ -336,7 +338,7 @@ class CFGEditor(object):
             self._textwidget.insert(arrow, '\t')
 
         arrow = '1.0'
-        while True:
+        while 1:
             arrow = self._textwidget.search(self.ARROW, arrow+'+1char',
                                             'end+1char')
             if arrow == '': break
@@ -384,7 +386,7 @@ class CFGEditor(object):
         self._clear_tags(linenum)
 
         # Get the line line's text string.
-        line = self._textwidget.get(repr(linenum)+'.0', repr(linenum)+'.end')
+        line = self._textwidget.get(`linenum`+'.0', `linenum`+'.end')
 
         # If it's a valid production, then colorize each token.
         if CFGEditor._PRODUCTION_RE.match(line):
@@ -448,7 +450,7 @@ class CFGEditor(object):
         for line in lines:
             line = line.strip()
             if line=='': continue
-            productions += _read_cfg_production(line)
+            productions += parse_cfg_production(line)
             #if line.strip() == '': continue
             #if not CFGEditor._PRODUCTION_RE.match(line):
             #    raise ValueError('Bad production string %r' % line)
@@ -479,7 +481,7 @@ class CFGEditor(object):
     def _apply(self, *e):
         productions = self._parse_productions()
         start = Nonterminal(self._start.get())
-        cfg = CFG(start, productions)
+        cfg = ContextFreeGrammar(start, productions)
         if self._set_cfg_callback is not None:
             self._set_cfg_callback(cfg)
 
@@ -612,9 +614,9 @@ class CFGDemo(object):
                 widget = tree.subtrees()[i+j]
                 if (isinstance(node, Nonterminal) and
                     isinstance(widget, TreeSegmentWidget) and
-                    node.symbol == widget.label().text()):
+                    node.symbol == widget.node().text()):
                     pass # matching nonterminal
-                elif (isinstance(node, string_types) and
+                elif (isinstance(node, (str, unicode)) and
                       isinstance(widget, TextWidget) and
                       node == widget.text()):
                     pass # matching nonterminal
@@ -663,7 +665,7 @@ class CFGDemo(object):
         self._top.mainloop(*args, **kwargs)
 
 def demo2():
-    from nltk import Nonterminal, Production, CFG
+    from nltk import Nonterminal, Production, ContextFreeGrammar
     nonterminals = 'S VP NP PP P N Name V Det'
     (S, VP, NP, PP, P, N, Name, V, Det) = [Nonterminal(s)
                                            for s in nonterminals.split()]
@@ -688,7 +690,7 @@ def demo2():
         Production(N, ['dog']),  Production(N, ['statue']),
         Production(Det, ['my']),
         )
-    grammar = CFG(S, productions)
+    grammar = ContextFreeGrammar(S, productions)
 
     text = 'I saw a man in the park'.split()
     d=CFGDemo(grammar, text)
@@ -699,12 +701,12 @@ def demo2():
 ######################################################################
 
 def demo():
-    from nltk import Nonterminal, CFG
+    from nltk import Nonterminal, parse_cfg
     nonterminals = 'S VP NP PP P N Name V Det'
     (S, VP, NP, PP, P, N, Name, V, Det) = [Nonterminal(s)
                                            for s in nonterminals.split()]
 
-    grammar = CFG.fromstring("""
+    grammar = parse_cfg("""
     S -> NP VP
     PP -> P NP
     NP -> Det N

@@ -1,7 +1,7 @@
 # Natural Language Toolkit: Chat-80 KB Reader
 # See http://www.w3.org/TR/swbp-skos-core-guide/
 #
-# Copyright (C) 2001-2017 NLTK Project
+# Copyright (C) 2001-2012 NLTK Project
 # Author: Ewan Klein <ewan@inf.ed.ac.uk>,
 # URL: <http://nltk.sourceforge.net>
 # For license information, see LICENSE.TXT
@@ -122,17 +122,15 @@ The set of rules is written to the file ``chat_pnames.cfg`` in the
 current directory.
 
 """
-from __future__ import print_function, unicode_literals
 
+from __future__ import print_function
 import re
 import shelve
 import os
 import sys
 
-from six import string_types
+from nltk.data import find
 
-import nltk.data
-from nltk.compat import python_2_unicode_compatible
 
 ###########################################################################
 # Chat-80 relation metadata bundles needed to build the valuation
@@ -214,7 +212,6 @@ not_unary = ['borders.pl', 'contain.pl']
 
 ###########################################################################
 
-@python_2_unicode_compatible
 class Concept(object):
     """
     A Concept class, loosely based on SKOS
@@ -241,7 +238,7 @@ class Concept(object):
         #keep _extension internally as a set
         self._extension = extension
         #public access is via a list (for slicing)
-        self.extension = sorted(list(extension))
+        self.extension = list(extension)
 
     def __str__(self):
         #_extension = ''
@@ -267,7 +264,7 @@ class Concept(object):
 
         """
         self._extension.add(data)
-        self.extension = sorted(list(self._extension))
+        self.extension = list(self._extension)
         return self._extension
 
 
@@ -328,7 +325,7 @@ class Concept(object):
             trans = self._make_pairs(closed)
             #print sorted(trans)
             self._extension = self._extension.union(trans)
-        self.extension = sorted(list(self._extension))
+        self.extension = list(self._extension)
 
 
 def clause2concepts(filename, rel_name, schema, closures=[]):
@@ -388,23 +385,27 @@ def cities2table(filename, rel_name, dbname, verbose=False, setup=False):
     :param dbname: filename of persistent store
     :type schema: str
     """
-    import sqlite3
-    records = _str2records(filename, rel_name)
-    connection =  sqlite3.connect(dbname)
-    cur = connection.cursor()
-    if setup:
-        cur.execute('''CREATE TABLE city_table
-        (City text, Country text, Population int)''')
+    try:
+        import sqlite3
+        records = _str2records(filename, rel_name)
+        connection =  sqlite3.connect(dbname)
+        cur = connection.cursor()
+        if setup:
+            cur.execute('''CREATE TABLE city_table
+            (City text, Country text, Population int)''')
 
-    table_name = "city_table"
-    for t in records:
-        cur.execute('insert into %s values (?,?,?)' % table_name, t)
+        table_name = "city_table"
+        for t in records:
+            cur.execute('insert into %s values (?,?,?)' % table_name, t)
+            if verbose:
+                print("inserting values into %s: " % table_name, t)
+        connection.commit()
         if verbose:
-            print("inserting values into %s: " % table_name, t)
-    connection.commit()
-    if verbose:
-        print("Committing update to %s" % dbname)
-    cur.close()
+            print("Committing update to %s" % dbname)
+        cur.close()
+    except ImportError:
+        import warnings
+        warnings.warn("To run this function, first install pysqlite, or else use Python 2.5 or later.")
 
 def sql_query(dbname, query):
     """
@@ -414,13 +415,19 @@ def sql_query(dbname, query):
     :param query: SQL query
     :type rel_name: str
     """
-    import sqlite3
     try:
-        path = nltk.data.find(dbname)
-        connection =  sqlite3.connect(str(path))
+        import sqlite3
+        path = find(dbname)
+        connection =  sqlite3.connect(path)
+        # return ASCII strings if possible
+        connection.text_factory = sqlite3.OptimizedUnicode
         cur = connection.cursor()
         return cur.execute(query)
-    except (ValueError, sqlite3.OperationalError):
+    except ImportError:
+        import warnings
+        warnings.warn("To run this function, first install pysqlite, or else use Python 2.5 or later.")
+        raise
+    except ValueError:
         import warnings
         warnings.warn("Make sure the database file %s is installed and uncompressed." % dbname)
         raise
@@ -430,11 +437,12 @@ def _str2records(filename, rel):
     Read a file into memory and convert each relation clause into a list.
     """
     recs = []
-    contents = nltk.data.load("corpora/chat80/%s" % filename, format="text")
-    for line in contents.splitlines():
+    path = find("corpora/chat80/%s" % filename)
+    for line in path.open():
         if line.startswith(rel):
             line = re.sub(rel+r'\(', '', line)
             line = re.sub(r'\)\.$', '', line)
+            line = line[:-1]
             record = line.split(',')
             recs.append(record)
     return recs
@@ -505,9 +513,9 @@ def process_bundle(rels):
     dictionary of concepts, indexed by the relation name.
 
     :param rels: bundle of metadata needed for constructing a concept
-    :type rels: list(dict)
+    :type rels: list of dict
     :return: a dictionary of concepts, indexed by the relation name.
-    :rtype: dict(str): Concept
+    :rtype: dict
     """
     concepts = {}
     for rel in rels:
@@ -551,8 +559,7 @@ def make_valuation(concepts, read=False, lexicon=False):
         # add labels for individuals
         val = label_indivs(val, lexicon=lexicon)
         return val
-    else:
-        return vals
+    else: return vals
 
 
 def val_dump(rels, db):
@@ -564,7 +571,7 @@ def val_dump(rels, db):
     :type rels: list of dict
     :param db: name of file to which data is written.
                The suffix '.db' will be automatically appended.
-    :type db: str
+    :type db: string
     """
     concepts = process_bundle(rels).values()
     valuation = make_valuation(concepts, read=True)
@@ -581,7 +588,7 @@ def val_load(db):
 
     :param db: name of file from which data is read.
                The suffix '.db' should be omitted from the name.
-    :type db: str
+    :type db: string
     """
     dbname = db+".db"
 
@@ -629,8 +636,7 @@ def label_indivs(valuation, lexicon=False):
     pairs = [(e, e) for e in domain]
     if lexicon:
         lex = make_lex(domain)
-        with open("chat_pnames.cfg", 'w') as outfile:
-            outfile.writelines(lex)
+        open("chat_pnames.cfg", mode='w').writelines(lex)
     # read the pairs into the valuation
     valuation.update(pairs)
     return valuation
@@ -643,8 +649,8 @@ def make_lex(symbols):
     create a lexical rule for the proper name 'Zloty'.
 
     :param symbols: a list of individual constants in the semantic representation
-    :type symbols: sequence -- set(str)
-    :rtype: list(str)
+    :type symbols: sequence
+    :rtype: list
     """
     lex = []
     header = """
@@ -659,7 +665,7 @@ def make_lex(symbols):
     for s in symbols:
         parts = s.split('_')
         caps = [p.capitalize() for p in parts]
-        pname = '_'.join(caps)
+        pname = ('_').join(caps)
         rule = template % (s, pname)
         lex.append(rule)
     return lex
@@ -674,11 +680,11 @@ def concepts(items = items):
     Build a list of concepts corresponding to the relation names in ``items``.
 
     :param items: names of the Chat-80 relations to extract
-    :type items: list(str)
+    :type items: list of strings
     :return: the ``Concept`` objects which are extracted from the relations
-    :rtype: list(Concept)
+    :rtype: list
     """
-    if isinstance(items, string_types): items = (items,)
+    if type(items) is str: items = (items,)
 
     rels = [item_metadata[r] for r in items]
 
@@ -744,7 +750,8 @@ Valuation object for use in the NLTK semantics package.
             concepts = concept_map.values()
             # just print out the vocabulary
             if options.vocab:
-                items = sorted([(c.arity, c.prefLabel) for c in concepts])
+                items = [(c.arity, c.prefLabel) for c in concepts]
+                items.sort()
                 for (arity, label) in items:
                     print(label, arity)
                 sys.exit(0)
@@ -771,12 +778,19 @@ def sql_demo():
     """
     Print out every row from the 'city.db' database.
     """
-    print()
-    print("Using SQL to extract rows from 'city.db' RDB.")
-    for row in sql_query('corpora/city_database/city.db', "SELECT * FROM city_table"):
-        print(row)
+    try:
+        import sqlite3
+        print()
+        print("Using SQL to extract rows from 'city.db' RDB.")
+        for row in sql_query('corpora/city_database/city.db', "SELECT * FROM city_table"):
+            print(row)
+    except ImportError:
+        import warnings
+        warnings.warn("To run the SQL demo, first install pysqlite, or else use Python 2.5 or later.")
 
 
 if __name__ == '__main__':
     main()
     sql_demo()
+
+
