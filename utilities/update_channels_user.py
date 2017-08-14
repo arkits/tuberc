@@ -10,6 +10,7 @@ import logging
 from google.appengine.api import users
 from utilities import users_utils
 import ast
+import time
         
     
 class EnqueueTaskHandler(webapp2.RequestHandler):
@@ -33,6 +34,8 @@ class updateChannels(webapp2.RequestHandler):
         user = users.get_current_user()
         tuberuser = users_utils.get_user(user.user_id())
         tuberuser_sub_channels = tuberuser.sub_channels
+        tuberuser.last_request_date = datetime.datetime.now()
+        tuberuser.put()
         
         if len(tuberuser_sub_channels) > 2:
         
@@ -43,8 +46,10 @@ class updateChannels(webapp2.RequestHandler):
                 logging.info('Queing task a channel update task from updateChannels - {}'.format(channel_id))
                 handler = EnqueueTaskHandler()
                 task_response = handler.post(channel_id)
-                
+            
         self.redirect("/main") 
+        
+        
 
 app = webapp2.WSGIApplication([
     ('/update_channels', updateChannels),
