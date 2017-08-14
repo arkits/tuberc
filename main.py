@@ -19,7 +19,7 @@ from utilities import add_channel
 decorator = OAuth2DecoratorFromClientSecrets(os.path.join(os.path.dirname(__file__), 'tuberc.json'),  'https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/plus.login')
 service = build('youtube', 'v3')
 
-# Set jinja Environment
+# Set jinja Environmen
 template_env= jinja2.Environment(loader=jinja2.FileSystemLoader(os.getcwd()))
 
 

@@ -63,6 +63,11 @@ handlers:
   secure: always
   login: required
   
+- url: /autogen
+  script: autogen.app  
+  secure: always
+  login: required
+  
 - url: /oauth2callback
   script: main.app
   secure: always
