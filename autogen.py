@@ -53,12 +53,12 @@ class Autogen(webapp2.RequestHandler):
                 
                 tuberuser_sub_channels = ast.literal_eval(tuberuser_sub_channels)
             
-                categories_dict = lingua.topics(tuberuser_sub_channels)
+                dump = lingua.topics(tuberuser_sub_channels)
 
                 #template = template_env.get_template('/www/category_list.html')
 
                 content = {
-                    'categories_dict' : categories_dict,
+                    'dump' : dump,
                     'tuberuser_email' : tuberuser_email
                 }
                 
