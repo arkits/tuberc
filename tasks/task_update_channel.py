@@ -29,16 +29,15 @@ class taskUpdateChannel(webapp2.RequestHandler):
         
         soup = bs.BeautifulSoup(source,"html.parser")
         
-        video_elements = soup.find_all(attrs={"class": "g-hovercard yt-uix-sessionlink spf-link "})
+        category = "Uncategorized"
         
-        category = 'na'
+        genre = soup.find("meta", {"itemprop":"genre"})
         
-        for element in video_elements:
-            classes = element
-            content = classes.string
+        if genre is not None:
             
-            if content != author:
-                category = content
+            if genre['content'] is not None:
+                
+                category = genre['content']
                 
         return category
     

@@ -23,7 +23,6 @@ def urlsafe(data):
     
     
 
-
 # Set jinja Environment
 template_env= jinja2.Environment(loader=jinja2.FileSystemLoader(os.getcwd()))
 
