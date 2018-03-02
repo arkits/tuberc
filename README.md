@@ -3,6 +3,11 @@
 
 TuberC organizes your YouTube Subscriptions to give you videos from people you love.
 
+## Screenshots
+
+![Category Lsit](https://raw.githubusercontent.com/ArKits/tuberc/master/screenshots/category_list.png)
+
+
 ## Setup
 
 Following are the instruction to fork and setup TubeC by yourself -
