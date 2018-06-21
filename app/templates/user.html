@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<br>
+
+<div class="row">
+        <div class="col s10 push-s2">
+                <h1>{{ user.username }}</h1>
+            </div>
+
+        <div class="col s2 pull-s10">
+                <img src="{{ user.avatar(128) }}">
+        </div>
+</div>
+
+   
+
+    {% if user == current_user %}
+    <p><a href="{{ url_for('edit_profile') }}">Edit your profile</a></p>
+    {% endif %}
+
+    <hr>
+    
+
+    <h4>My Subscription List</h4>
+    {% for post in posts %}
+        <p>
+        {{ post }}
+        </p>
+    {% endfor %}
+{% endblock %}

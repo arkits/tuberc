@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/css/materialize.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /> {% if title %}
+    <title>{{ title }} - reddata</title>
+    {% else %}
+    <title>Welcome to reddata!</title>
+    {% endif %}
+
+</head>
+
+<body>
+
+    <nav>
+        <div class="nav-wrapper red darken-1">
+            <div class="container">
+                <a href="{{ url_for('index') }}" class="brand-logo">tuberc</a>
+
+
+                <ul id="nav-mobile" class="right hide-on-med-and-down">
+                    {% if current_user.is_anonymous %}
+                    <li>
+                        <a href="{{ url_for('login') }}">Login</a>
+                    </li>
+                    {% else %}
+                    <li>
+                        <a href="{{ url_for('user', username=current_user.username) }}">My Profile</a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('feed') }}">Feed</a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('refresh') }}">Refresh</a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('logout') }}">Logout</a>
+                    </li>
+                    {% endif %}
+                    <li>
+                        <a href="{{ url_for('about') }}">About</a>
+                    </li>
+
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+
+
+    <div class="container">
+
+        {% with messages = get_flashed_messages() %} {% if messages %}
+        <br>
+        <ul>
+            {% for message in messages %}
+            <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %} {% endwith %}
+
+
+
+        <br> {% block content %}{% endblock %}
+
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/js/materialize.min.js"></script>
+</body>
+
+</html>
