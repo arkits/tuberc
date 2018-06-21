@@ -3,7 +3,7 @@
 
 TuberC organizes your YouTube Subscriptions to give you videos from people you love. It is meant to be an alternative homepage for your YouTube viewing fun!
 
-The flask branch of TuberC is a re-write of the original TuberC proof-of-concept (originally built on Google App Engine). Re-writing in Flask alsos TuberC to be hosted locally or deployed to Heroku with much ease. This re-writing also implements multithreading for retriving videos. This highly improves the refresh times!
+The flask branch of TuberC is a re-write of the original TuberC proof-of-concept (originally built on Google App Engine). Re-writing in Flask allows TuberC to be hosted locally or deployed to Heroku with much ease. This re-writing also implements multithreading for retriving videos. This highly improves the refresh times!
 
 
 ## Setup
