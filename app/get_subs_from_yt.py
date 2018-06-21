@@ -13,7 +13,7 @@ def get(client, current_user_id):
         if nextPageToken:
             response = client.subscriptions().list(pageToken = nextPageToken, part='snippet',mine=True).execute()
         else:
-            print "Calling yt " 
+            print ("Calling yt ")
             response = client.subscriptions().list(maxResults=50, part='snippet',mine=True).execute()
     
         items = response.get('items')
@@ -32,14 +32,14 @@ def get(client, current_user_id):
         else:
             more = False 
 
-    print "Final subs_channel_id is " +  str(subs_channel_id)
+    print ("Final subs_channel_id is " +  str(subs_channel_id))
 
     u = User.query.get(current_user_id)
     u.sub_chans = str(subs_channel_id)
     db.session.add(u)
     db.session.commit()
 
-    print "Commited succeffully...."
+    print ("Commited succeffully....")
 
 
 

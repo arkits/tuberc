@@ -4,21 +4,19 @@
 
 <br>
 
-<div class="row">
-        <div class="col s10 push-s2">
-                <h1>{{ user.username }}</h1>
-            </div>
+<div class="row valign-wrapper">
 
-        <div class="col s2 pull-s10">
-                <img src="{{ user.avatar(128) }}">
-        </div>
+    <div class="col s12 m4 l2"><p><img src="{{ user.avatar(128) }}"></p></div>
+    <div class="col s12 m4 l6"><p> <h1>{{ user.username }}</h1></p></div>
+    <div class="col s12 m4 l4"><p>
+        <p><a href="{{ url_for('edit_profile') }}">Edit your profile</a></p>
+        <p><a href="{{ url_for('yt') }}">Sync Subscription List from YouTube</a></p>
+    </p></div>
+
 </div>
 
-   
 
-    {% if user == current_user %}
-    <p><a href="{{ url_for('edit_profile') }}">Edit your profile</a></p>
-    {% endif %}
+
 
     <hr>
     
