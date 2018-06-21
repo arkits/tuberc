@@ -8,6 +8,7 @@ from app import feed_builder
 from app import refresh_worker
 import ast
 
+app.debug = True
 
 @app.route('/')
 @app.route('/index')
