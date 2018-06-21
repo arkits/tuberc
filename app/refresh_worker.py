@@ -28,8 +28,6 @@ def refresh(sub_chans):
             
     print ("Elapsed Time: %s" % (time.time() - start))
 
-    return 0
-
 
 class PullFeeds:
     def __init__(self, channel_ids):

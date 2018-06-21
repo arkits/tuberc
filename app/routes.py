@@ -6,9 +6,21 @@ from app.forms import LoginForm, RegistrationForm, EditProfileForm
 from app.models import User, Channel 
 from app import feed_builder
 from app import refresh_worker
+from app import get_subs_from_yt
+import google.oauth2.credentials
+import google_auth_oauthlib.flow
+import googleapiclient.discovery
+import os
+import flask
 import ast
 
 app.debug = True
+
+CLIENT_SECRETS_FILE = "client_secrets.json"
+SCOPES = ['https://www.googleapis.com/auth/youtube']
+API_SERVICE_NAME = 'youtube'
+API_VERSION = 'v3'
+
 
 @app.route('/')
 @app.route('/index')
@@ -77,7 +89,10 @@ def user(username):
         #print list_of_subs
         for c_id in user_list_of_subs:
             c = Channel.query.filter_by(yt_id=c_id).first()
-            pretty_list_of_subs.append(c.name)
+            if hasattr(c, 'name'):
+                pretty_list_of_subs.append(c.name)
+            else:
+                pretty_list_of_subs.append(str(c_id + '... Please refresh to see pretty name'))
 
             
     
@@ -106,5 +121,61 @@ def feed():
 @app.route('/refresh')
 @login_required
 def refresh():
-    posts = refresh_worker.refresh(current_user.sub_chans)
+    refresh_worker.refresh(current_user.sub_chans)
     return redirect(url_for('feed'))
+
+
+@app.route('/yt')
+@login_required
+def yt():
+    if 'credentials' not in flask.session:
+        return flask.redirect('authorize')
+
+    credentials = google.oauth2.credentials.Credentials(
+        **flask.session['credentials'])
+
+    client = googleapiclient.discovery.build(
+        API_SERVICE_NAME, API_VERSION, credentials=credentials)
+    
+    current_user_id = current_user.id
+    get_subs_from_yt.get(client, current_user_id)
+
+    return redirect(url_for('feed'))
+
+
+@app.route('/authorize')
+@login_required
+def authorize():
+    flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+        CLIENT_SECRETS_FILE, scopes=SCOPES)
+    flow.redirect_uri = flask.url_for('oauth2callback', _external=True)
+    authorization_url, state = flow.authorization_url(
+        access_type='offline',
+        include_granted_scopes='true')
+
+    flask.session['state'] = state
+
+    return flask.redirect(authorization_url)
+
+@app.route('/oauth2callback')
+@login_required
+def oauth2callback():
+    state = flask.session['state']
+    flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+        CLIENT_SECRETS_FILE, scopes=SCOPES, state=state)
+    flow.redirect_uri = flask.url_for('oauth2callback', _external=True)
+
+    authorization_response = flask.request.url
+    flow.fetch_token(authorization_response=authorization_response)
+
+    credentials = flow.credentials
+    flask.session['credentials'] = {
+        'token': credentials.token,
+        'refresh_token': credentials.refresh_token,
+        'token_uri': credentials.token_uri,
+        'client_id': credentials.client_id,
+        'client_secret': credentials.client_secret,
+        'scopes': credentials.scopes
+    }
+
+    return flask.redirect(flask.url_for('yt'))

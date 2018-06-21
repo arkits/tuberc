@@ -105,3 +105,6 @@ app.db
 .pylintrc
 .gitattributes
 .DS_Store
+.DS_Store
+.DS_Store
+client_secrets.json

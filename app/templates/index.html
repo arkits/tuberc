@@ -2,9 +2,18 @@
 
 {% block content %}
 
-<h1>Hi, {{ current_user.username }}!</h1>
-{% for post in posts %}
-<div><p>{{ post.author.username }} says: <b>{{ post.body }}</b></p></div>
-{% endfor %}
+<div class="row">
+    <div class = "col s10 offset-s2">
+       <h1 class="header light red-text">Your</h1>
+       <h1 class="header light red-text">YouTube</h1>
+       <h1 class="header light red-text">Organized.</h1>
+       <h4 class="header col s10 flow-text">TuberC organizes your YouTube Subscriptions to give you videos from people you love.</h4>
+       </div>
+    </div>
+
+    <br>
+    <br>
+    <br>
+    <br>
 
 {% endblock %}
