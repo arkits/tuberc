@@ -108,3 +108,4 @@ app.db
 .DS_Store
 .DS_Store
 client_secrets.json
+migrations
